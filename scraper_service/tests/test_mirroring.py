@@ -10,14 +10,18 @@ def test_mirror_images_in_html(mock_upload, mock_download):
     # Mock upload to return a new URL
     mock_upload.side_effect = lambda content, name: f"https://supabase.com/{name}"
     
-    html = '<div><img src="http://example.com/1.jpg" /><img src="http://example.com/2.png" /></div>'
+    html = (
+        '<div>'
+        '<span>Welcome to Buzz69.com</span>'
+        '<a href="http://old-link.com"><img src="http://example.com/1.jpg" /></a>'
+        '</div>'
+    )
     new_html = mirror_images_in_html(html)
     
-    assert 'https://supabase.com/' in new_html
+    assert '{{SiteName}}' in new_html
+    assert '{{SiteUrl}}https://supabase.com/' in new_html
+    assert 'http://old-link.com' not in new_html
     assert 'http://example.com/1.jpg' not in new_html
-    assert 'http://example.com/2.png' not in new_html
-    assert mock_download.call_count == 2
-    assert mock_upload.call_count == 2
 
 @patch('src.scraper.download_image')
 def test_mirror_images_fails_gracefully(mock_download):

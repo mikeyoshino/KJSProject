@@ -83,6 +83,11 @@ def mirror_single_image(img_url: str) -> str:
 def mirror_images_in_html(html: str) -> str:
     if not html:
         return None
+    
+    # Text replacement for branding cleanup
+    html = html.replace("Buzz69.com", "{{SiteName}}")
+    html = html.replace("buzz69.com", "{{SiteName}}")
+    
     soup = BeautifulSoup(html, 'html.parser')
     imgs = soup.find_all('img')
     
@@ -104,6 +109,12 @@ def mirror_images_in_html(html: str) -> str:
         if not new_url:
             return None # Fail the whole post if upload fails
             
+        # Update image src
         img['src'] = new_url
+        
+        # Update parent link if it exists to also use our mirrored link
+        parent = img.parent
+        if parent and parent.name == 'a':
+            parent['href'] = f"{{{{SiteUrl}}}}{new_url}"
                 
     return str(soup)
