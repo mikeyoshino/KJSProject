@@ -67,21 +67,22 @@ def parse_post_page(source_url: str, html: str, fallback_thumb: str = '') -> dic
 
 def mirror_single_image(img_url: str) -> str:
     if not img_url:
-        return ""
+        return None
     # Create unique filename based on the URL hash
     parsed_ext = img_url.split('.')[-1].split('?')[0].lower()
     ext = parsed_ext if parsed_ext in ['jpg', 'jpeg', 'png', 'gif', 'webp'] else 'jpg'
     filename = f"{hashlib.md5(img_url.encode()).hexdigest()}.{ext}"
     
     content = download_image(img_url)
-    if content:
-        new_url = upload_to_supabase(content, filename)
-        return new_url if new_url else img_url
-    return img_url
+    if not content:
+        return None
+        
+    new_url = upload_to_supabase(content, filename)
+    return new_url
 
 def mirror_images_in_html(html: str) -> str:
     if not html:
-        return ""
+        return None
     soup = BeautifulSoup(html, 'html.parser')
     imgs = soup.find_all('img')
     
@@ -96,9 +97,13 @@ def mirror_images_in_html(html: str) -> str:
         filename = f"{hashlib.md5(src.encode()).hexdigest()}.{ext}"
         
         content = download_image(src)
-        if content:
-            new_url = upload_to_supabase(content, filename)
-            if new_url:
-                img['src'] = new_url
+        if not content:
+            return None # Fail the whole post if one image fails
+            
+        new_url = upload_to_supabase(content, filename)
+        if not new_url:
+            return None # Fail the whole post if upload fails
+            
+        img['src'] = new_url
                 
     return str(soup)

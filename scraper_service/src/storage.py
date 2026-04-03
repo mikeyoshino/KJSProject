@@ -21,7 +21,7 @@ def download_image(img_url: str) -> bytes:
 
 def upload_to_supabase(content: bytes, filename: str) -> str:
     if not supabase or not content:
-        return ""
+        return None
     
     bucket_name = "images"
     try:
@@ -29,7 +29,7 @@ def upload_to_supabase(content: bytes, filename: str) -> str:
         supabase.storage.from_(bucket_name).upload(
             path=filename,
             file=content,
-            file_options={"content-type": "image/jpeg"} # Assuming JPEG for now, let's keep it simple
+            file_options={"content-type": "image/jpeg"} # Assuming JPEG for now
         )
         
         # Get public URL
@@ -39,4 +39,4 @@ def upload_to_supabase(content: bytes, filename: str) -> str:
         if "already exists" in str(e).lower():
             return supabase.storage.from_(bucket_name).get_public_url(filename)
         logging.error(f"Failed to upload {filename} to Supabase: {e}")
-        return ""
+        return None

@@ -35,8 +35,15 @@ def job():
                 
                 # Mirror images before insertion
                 logging.info(f"Mirroring images for: {data['title']}...")
-                data['thumbnail_url'] = mirror_single_image(data['thumbnail_url'])
-                data['content_html'] = mirror_images_in_html(data['content_html'])
+                mirrored_thumb = mirror_single_image(data['thumbnail_url'])
+                mirrored_content = mirror_images_in_html(data['content_html'])
+                
+                if not mirrored_thumb or not mirrored_content:
+                    logging.warning(f"Skipping post due to mirroring failure: {data['title']}")
+                    continue
+                
+                data['thumbnail_url'] = mirrored_thumb
+                data['content_html'] = mirrored_content
                 
                 insert_post(data)
                 logging.info(f"Successfully inserted with mirrored images: {data['title']}")
