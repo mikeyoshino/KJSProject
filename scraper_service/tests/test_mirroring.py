@@ -2,8 +2,8 @@ import pytest
 from unittest.mock import patch
 from scraper import mirror_images_in_html
 
-@patch('src.scraper.download_image')
-@patch('src.scraper.upload_to_supabase')
+@patch('scraper.download_image')
+@patch('scraper.upload_to_supabase')
 def test_mirror_images_in_html(mock_upload, mock_download):
     # Mock download to return bytes
     mock_download.return_value = b"fake-bytes"
