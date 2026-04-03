@@ -2,6 +2,7 @@ import requests
 import uuid
 import hashlib
 from bs4 import BeautifulSoup
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from storage import download_image, upload_to_supabase
 
 HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
@@ -91,10 +92,13 @@ def mirror_images_in_html(html: str) -> str:
     soup = BeautifulSoup(html, 'html.parser')
     imgs = soup.find_all('img')
     
-    for img in imgs:
+    if not imgs:
+        return str(soup)
+
+    def process_image(img):
         src = img.get('src')
         if not src:
-            continue
+            return True # Not a failure, just nothing to do
             
         # Create unique filename
         parsed_ext = src.split('.')[-1].split('?')[0].lower()
@@ -103,11 +107,11 @@ def mirror_images_in_html(html: str) -> str:
         
         content = download_image(src)
         if not content:
-            return None # Fail the whole post if one image fails
+            return False # Failure
             
         new_url = upload_to_supabase(content, filename)
         if not new_url:
-            return None # Fail the whole post if upload fails
+            return False # Failure
             
         # Update image src
         img['src'] = new_url
@@ -116,5 +120,19 @@ def mirror_images_in_html(html: str) -> str:
         parent = img.parent
         if parent and parent.name == 'a':
             parent['href'] = f"{{{{SiteUrl}}}}{new_url}"
+        
+        return True # Success
+
+    # Use ThreadPoolExecutor for speed with rate limiting in mind (max 8)
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        future_to_img = {executor.submit(process_image, img): img for img in imgs}
+        for future in as_completed(future_to_img):
+            try:
+                success = future.result()
+                if not success:
+                    return None # Atomic failure: stop and fail the whole post
+            except Exception as e:
+                logging.error(f"Thread execution error during mirroring: {e}")
+                return None # Fail safe
                 
     return str(soup)
