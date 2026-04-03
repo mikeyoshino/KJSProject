@@ -11,10 +11,12 @@ def fetch_html(url: str) -> str:
 def parse_front_page(html: str) -> list[str]:
     soup = BeautifulSoup(html, 'html.parser')
     links = []
-    for h2 in soup.find_all(['h2', 'h1', 'div'], class_=lambda c: c and ('post' in c.lower() or 'article' in c.lower())):
-        a_tag = h2.find('a')
-        if a_tag and a_tag.get('href'):
-            links.append(a_tag['href'])
+    for article in soup.find_all('article'):
+        h2 = article.find(['h2', 'h1'], class_=lambda c: c and 'entry-title' in c)
+        if h2:
+            a_tag = h2.find('a')
+            if a_tag and a_tag.get('href'):
+                links.append(a_tag['href'])
     return links
 
 def parse_post_page(source_url: str, html: str) -> dict:
@@ -29,7 +31,7 @@ def parse_post_page(source_url: str, html: str) -> dict:
     
     rg_link = ''
     for a in soup.find_all('a', href=True):
-        if hasattr(a, 'href') and a['href'] is not None and ('rapidgator.net' in a['href'] or 'rg.to' in a['href']):
+        if hasattr(a, 'href') and a['href'] is not None and ('rapidgator.net/file' in a['href'] or 'rg.to/file' in a['href']):
             rg_link = a['href']
             break
             
