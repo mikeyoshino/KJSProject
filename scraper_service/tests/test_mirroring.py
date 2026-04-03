@@ -27,5 +27,5 @@ def test_mirror_images_fails_gracefully(mock_download):
     html = '<div><img src="http://broken.com/image.jpg" /></div>'
     new_html = mirror_images_in_html(html)
     
-    # Check that original URL is still there
-    assert 'http://broken.com/image.jpg' in new_html
+    # Check that it returns None (failure)
+    assert new_html is None
