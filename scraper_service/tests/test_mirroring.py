@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import patch
-from src.scraper import mirror_images_in_html
+from scraper import mirror_images_in_html
 
 @patch('src.scraper.download_image')
 @patch('src.scraper.upload_to_supabase')
