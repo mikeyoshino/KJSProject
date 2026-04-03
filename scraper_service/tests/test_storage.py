@@ -22,6 +22,9 @@ def test_upload_to_supabase(mock_supabase):
         b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89'
         b'\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82'
     )
+    # Mock public URL response
+    mock_bucket.get_public_url.return_value = "https://supabase.com/img.jpg"
+    
     url = upload_to_supabase(minimal_png, "img.jpg")
     assert url == "https://supabase.com/img.jpg"
     mock_supabase.storage.from_.assert_called_with("images")
