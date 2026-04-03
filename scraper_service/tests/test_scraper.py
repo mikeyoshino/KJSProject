@@ -6,7 +6,7 @@ def test_parse_front_page():
     assert results == [("http://buzz69.com/post1", "thumb.jpg")]
 
 def test_parse_post_page():
-    html = '<html><div class="entry-title">Test Title</div><div class="entry-content">Content</div><a rel="category tag">Category 1</a><a href="https://rapidgator.net/file/1">Link</a></html>'
+    html = '<html><h1 class="entry-title">Test Title</h1><div class="entry-content">Content</div><a rel="category tag">Category 1</a><a href="https://rapidgator.net/file/1">Link</a></html>'
     data = parse_post_page("http://example.com", html)
     
     assert data['title'] == "Test Title"
