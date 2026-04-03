@@ -17,9 +17,11 @@ def test_upload_to_supabase(mock_supabase):
     mock_supabase.storage.from_.return_value = mock_bucket
     mock_bucket.upload.return_value = MagicMock()
     
-    # Mock public URL response
-    mock_bucket.get_public_url.return_value = "https://supabase.com/img.jpg"
-    
-    url = upload_to_supabase(b"bytes", "img.jpg")
+    # Use a minimal valid 1x1 PNG byte sequence for the optimizer to work
+    minimal_png = (
+        b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89'
+        b'\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82'
+    )
+    url = upload_to_supabase(minimal_png, "img.jpg")
     assert url == "https://supabase.com/img.jpg"
     mock_supabase.storage.from_.assert_called_with("images")
