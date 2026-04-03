@@ -1,9 +1,9 @@
 from src.scraper import parse_front_page, parse_post_page
 
 def test_parse_front_page():
-    html = '<article><h2 class="entry-title"><a href="http://buzz69.com/post1">Link</a></h2></article>'
-    links = parse_front_page(html)
-    assert links == ["http://buzz69.com/post1"]
+    html = '<article><a class="penci-image-holder" data-bgset="thumb.jpg?w=100"></a><h2 class="entry-title"><a href="http://buzz69.com/post1">Link</a></h2></article>'
+    results = parse_front_page(html)
+    assert results == [("http://buzz69.com/post1", "thumb.jpg")]
 
 def test_parse_post_page():
     html = '''
