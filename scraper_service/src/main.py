@@ -1,7 +1,7 @@
 import time
 import schedule
 import logging
-from scraper import fetch_html, parse_front_page, parse_post_page
+from scraper import fetch_html, parse_front_page, parse_post_page, mirror_single_image, mirror_images_in_html
 from db import check_post_exists, insert_post
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
@@ -33,8 +33,13 @@ def job():
                 post_html = fetch_html(link)
                 data = parse_post_page(link, post_html, fallback_thumb=thumb_url)
                 
+                # Mirror images before insertion
+                logging.info(f"Mirroring images for: {data['title']}...")
+                data['thumbnail_url'] = mirror_single_image(data['thumbnail_url'])
+                data['content_html'] = mirror_images_in_html(data['content_html'])
+                
                 insert_post(data)
-                logging.info(f"Successfully inserted: {data['title']}")
+                logging.info(f"Successfully inserted with mirrored images: {data['title']}")
                 time.sleep(2) # Polite delay
                 
             page += 1
