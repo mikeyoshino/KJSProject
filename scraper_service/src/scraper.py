@@ -1,5 +1,8 @@
 import requests
+import uuid
+import hashlib
 from bs4 import BeautifulSoup
+from storage import download_image, upload_to_supabase
 
 HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
 
@@ -59,3 +62,41 @@ def parse_post_page(source_url: str, html: str, fallback_thumb: str = '') -> dic
         "content_html": content_html,
         "original_rapidgator_url": rg_link
     }
+
+def mirror_single_image(img_url: str) -> str:
+    if not img_url:
+        return ""
+    # Create unique filename based on the URL hash
+    parsed_ext = img_url.split('.')[-1].split('?')[0].lower()
+    ext = parsed_ext if parsed_ext in ['jpg', 'jpeg', 'png', 'gif', 'webp'] else 'jpg'
+    filename = f"{hashlib.md5(img_url.encode()).hexdigest()}.{ext}"
+    
+    content = download_image(img_url)
+    if content:
+        new_url = upload_to_supabase(content, filename)
+        return new_url if new_url else img_url
+    return img_url
+
+def mirror_images_in_html(html: str) -> str:
+    if not html:
+        return ""
+    soup = BeautifulSoup(html, 'html.parser')
+    imgs = soup.find_all('img')
+    
+    for img in imgs:
+        src = img.get('src')
+        if not src:
+            continue
+            
+        # Create unique filename
+        parsed_ext = src.split('.')[-1].split('?')[0].lower()
+        ext = parsed_ext if parsed_ext in ['jpg', 'jpeg', 'png', 'gif', 'webp'] else 'jpg'
+        filename = f"{hashlib.md5(src.encode()).hexdigest()}.{ext}"
+        
+        content = download_image(src)
+        if content:
+            new_url = upload_to_supabase(content, filename)
+            if new_url:
+                img['src'] = new_url
+                
+    return str(soup)
