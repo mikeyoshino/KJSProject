@@ -49,18 +49,20 @@ def parse_post_page(source_url: str, html: str, fallback_thumb: str = '') -> dic
     content_div = soup.find('div', class_='entry-content') or soup.find('div', class_='content')
     content_html = str(content_div) if content_div else ''
     
-    rg_link = ''
+    rg_links = []
     for a in soup.find_all('a', href=True):
-        if hasattr(a, 'href') and a['href'] is not None and ('rapidgator.net/file' in a['href'] or 'rg.to/file' in a['href']):
-            rg_link = a['href']
-            break
+        href = a['href']
+        if href and ('rapidgator.net/file' in href or 'rg.to/file' in href):
+            # Only add unique links
+            if href not in rg_links:
+                rg_links.append(href)
             
     return {
         "source_url": source_url,
         "title": title,
         "thumbnail_url": thumbnail_url,
         "content_html": content_html,
-        "original_rapidgator_url": rg_link
+        "original_rapidgator_url": rg_links
     }
 
 def mirror_single_image(img_url: str) -> str:

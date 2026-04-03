@@ -17,4 +17,5 @@ def test_parse_post_page():
     data = parse_post_page("http://url", html)
     assert data["title"] == "My Title"
     assert data["thumbnail_url"] == "thumb.jpg"
-    assert "https://rapidgator.net" in data["original_rapidgator_url"]
+    assert "https://rapidgator.net" in data["original_rapidgator_url"][0]
+    assert isinstance(data["original_rapidgator_url"], list)
