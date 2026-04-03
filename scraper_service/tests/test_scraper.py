@@ -12,4 +12,6 @@ def test_parse_post_page():
     assert data['title'] == "Test Title"
     assert data['original_rapidgator_url'] == ["https://rapidgator.net/file/1"]
     assert data['categories'] == ["Category 1"]
+    # Verify link is removed from HTML but remains in rg_links
+    assert "https://rapidgator.net" not in data['content_html']
     assert isinstance(data["original_rapidgator_url"], list)

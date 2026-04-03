@@ -48,11 +48,19 @@ def parse_post_page(source_url: str, html: str, fallback_thumb: str = '') -> dic
         thumbnail_url = img['src'] if img else ''
     
     content_div = soup.find('div', class_='entry-content') or soup.find('div', class_='content')
-    content_html = str(content_div) if content_div else ''
     
-    # Extract original links and categories
+    # Extract original links BEFORE decomposing them
     rg_links = [a['href'] for a in soup.find_all('a', href=True) if 'rapidgator.net' in a['href'] or 'rg.to' in a['href']]
     categories = [a.get_text(strip=True) for a in soup.select('a[rel="category tag"]')]
+    
+    if content_div:
+        # Remove Rapidgator/RG links from content_html as they are stored separately
+        for a in content_div.find_all('a', href=True):
+            href = a['href']
+            if 'rapidgator.net' in href or 'rg.to' in href:
+                a.decompose()
+    
+    content_html = str(content_div) if content_div else ''
     
     return {
         "source_url": source_url,
