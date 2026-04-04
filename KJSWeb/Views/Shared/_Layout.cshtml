@@ -112,6 +112,7 @@
             <!-- Tier 2: Desktop Navigation Links — HIDDEN on mobile via CSS -->
             <nav class="desktop-nav flex flex-wrap justify-center items-center space-x-6 sm:space-x-10 text-[13px] font-bold uppercase tracking-widest">
                 <a asp-controller="Home" asp-action="Index" class="hover:text-orange-accent transition-colors">Home</a>
+                <a asp-controller="AsianScandal" asp-action="Index" class="hover:text-orange-accent transition-colors">Asian Scandal</a>
 
                 <div class="relative dropdown">
                     <button class="flex items-center text-orange-accent hover:opacity-80 transition-opacity uppercase py-4 -my-4">
@@ -148,9 +149,11 @@
             <nav class="mobile-nav" id="mobileNav">
                 <div class="mt-4 border-t border-white/10 pt-4 space-y-0">
                     <a asp-controller="Home" asp-action="Index" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5">Home</a>
-                    <button id="mobileCatToggle" class="w-full text-left py-3 text-[13px] font-bold uppercase tracking-widest text-orange-accent border-b border-white/5 flex items-center justify-between">
+                    <a asp-controller="AsianScandal" asp-action="Index" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5 text-orange-accent italic">Asian Scandal ✨</a>
+                    <button id="mobileCatToggle" class="w-full text-left py-3 text-[13px] font-bold uppercase tracking-widest border-b border-white/5 flex items-center justify-between">
                         Categories <span class="text-[10px]" id="mobileCatArrow">▼</span>
                     </button>
+
                     <div class="mobile-dropdown bg-[#121212]" id="mobileCatDropdown">
                         @await Component.InvokeAsync("CategoryNav")
                     </div>

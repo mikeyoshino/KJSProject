@@ -132,11 +132,12 @@ def mirror_images_in_html(html: str) -> str:
         time.sleep(random.uniform(1.0, 3.0))
         
         src = img.get('src')
-        if not src:
-            return True # Not a failure, just nothing to do
+        if not src or src.startswith('data:') or "supabase.co" in src:
+            return True # Not a failure, just nothing to do or already done
             
         # Create unique filename
         parsed_ext = src.split('.')[-1].split('?')[0].lower()
+
         ext = parsed_ext if parsed_ext in ['jpg', 'jpeg', 'png', 'gif', 'webp'] else 'jpg'
         filename = f"{hashlib.md5(src.encode()).hexdigest()}.{ext}"
         

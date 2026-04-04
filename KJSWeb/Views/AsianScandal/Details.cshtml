@@ -1,0 +1,140 @@
+@model KJSWeb.Models.AsianScandalPost
+@{
+    ViewData["Title"] = Model.Title;
+    var recentPosts = ViewBag.RecentPosts as List<KJSWeb.Models.Post>;
+    var siteName = "Asian Scandal";
+    var siteUrl = Context.Request.Scheme + "://" + Context.Request.Host;
+}
+
+<div class="flex flex-col lg:flex-row gap-10">
+    <!-- Main Content -->
+    <div class="flex-1 min-w-0">
+        <article>
+            <header class="mb-8">
+                @if (Model.Categories != null && Model.Categories.Any())
+                {
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        @foreach (var cat in Model.Categories)
+                        {
+                            <span class="bg-orange-accent text-white text-[9px] font-black uppercase px-2 py-1 tracking-widest cursor-default">@cat</span>
+                        }
+                    </div>
+                }
+                <h1 class="text-4xl font-black leading-tight mb-3 tracking-tighter uppercase italic">@Model.Title</h1>
+                <div class="flex items-center gap-4">
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Added: @Model.CreatedAt.ToString("MMMM dd, yyyy")</p>
+                    <span class="text-orange-accent text-[9px] font-black uppercase tracking-widest border border-orange-accent/30 px-2 py-0.5 rounded-sm">Original</span>
+                </div>
+            </header>
+
+            <div class="prose max-w-none [&_img]:max-w-full [&_img]:h-auto [&_img]:block [&_img]:my-5 [&_img]:rounded-sm">
+                @{
+                    var content = Model.ContentHtml
+                        .Replace("{{SiteName}}", siteName)
+                        .Replace("{{SiteUrl}}", siteUrl);
+                }
+                @Html.Raw(content)
+            </div>
+
+            <!-- Download Section -->
+            @if ((Model.OurDownloadLink != null && Model.OurDownloadLink.Any()) || (Model.OriginalRapidgatorUrls != null && Model.OriginalRapidgatorUrls.Any()))
+            {
+                <div class="mt-16 p-8 bg-black text-white rounded-sm shadow-2xl relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10">
+                        <svg class="w-24 h-24" fill="currentColor" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path></svg>
+                    </div>
+
+                    @if (ViewBag.HasActiveSubscription == true)
+                    {
+                        <div class="relative z-10">
+                            <h3 class="text-2xl font-black mb-6 uppercase italic tracking-tighter">Download Access Ready</h3>
+                            
+                            <!-- Fast Mirror Primary Button -->
+                            @if (Model.OurDownloadLink != null && Model.OurDownloadLink.Any())
+                            {
+                                <div class="mb-8 p-6 bg-white/5 border border-white/10 rounded-sm">
+                                    <h4 class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Premium Fast Mirror (Recommended)</h4>
+                                    @foreach (var link in Model.OurDownloadLink)
+                                    {
+                                        <a href="@link" target="_blank" rel="noopener"
+                                           class="inline-block w-full sm:w-auto bg-orange-accent text-white px-10 py-4 text-sm font-black uppercase tracking-widest hover:brightness-110 transition-all text-center mb-2">
+                                            ⚡ Full Speed Download @(Model.OurDownloadLink.Count > 1 ? "(Mirror " + (Model.OurDownloadLink.IndexOf(link) + 1) + ")" : "")
+                                        </a>
+                                    }
+                                </div>
+                            }
+
+
+                            <!-- Standard Mirrors -->
+                            @if (Model.OriginalRapidgatorUrls != null && Model.OriginalRapidgatorUrls.Any())
+                            {
+                                <div>
+                                    <h4 class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Rapidgator Mirrors</h4>
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach (var url in Model.OriginalRapidgatorUrls)
+                                        {
+                                            <a href="@url" target="_blank" rel="noopener"
+                                               class="bg-white/10 hover:bg-white/20 text-white px-5 py-2.5 text-[11px] font-bold uppercase tracking-wider transition-colors border border-white/5">
+                                                Part @(Model.OriginalRapidgatorUrls.IndexOf(url) + 1)
+                                            </a>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="relative z-10 text-center py-6">
+                            <p class="text-5xl mb-4">💎</p>
+                            <h3 class="text-2xl font-black mb-2 uppercase italic tracking-tighter">Premium Connection Required</h3>
+                            <p class="text-slate-400 text-sm mb-8 max-w-sm mx-auto uppercase tracking-wide font-bold">Unlock exclusive access and high speed mirrors for all Asian Scandal releases.</p>
+                            <a asp-controller="Subscription" asp-action="Pricing"
+                               class="inline-block bg-orange-accent text-white py-4 px-10 text-sm font-black uppercase tracking-widest hover:scale-105 transition-transform">
+                                Upgrade to Premium
+                            </a>
+                        </div>
+                    }
+                </div>
+            }
+
+            <!-- Tags Cloud -->
+            @if (Model.Tags != null && Model.Tags.Any())
+            {
+                <div class="mt-12 border-t border-slate-100 pt-8">
+                    <h3 class="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-4">Metadata Tags</h3>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach (var tag in Model.Tags)
+                        {
+                            <span class="bg-slate-50 text-slate-500 hover:bg-orange-accent hover:text-white px-3 py-1.5 rounded-sm text-[10px] font-bold uppercase tracking-wider transition-colors cursor-default">#@tag</span>
+                        }
+                    </div>
+                </div>
+            }
+        </article>
+    </div>
+
+    <!-- Sidebar (Same as home for consistency) -->
+    <aside class="w-full lg:w-80 shrink-0">
+        @if (recentPosts != null && recentPosts.Any())
+        {
+            <div class="mb-10">
+                <h4 class="text-sm font-bold uppercase tracking-wider border-b-2 border-black pb-2 mb-5">More from Network</h4>
+                <div class="space-y-5">
+                    @foreach (var post in recentPosts)
+                    {
+                        <div class="flex gap-4">
+                            <a asp-controller="Home" asp-action="Details" asp-route-id="@post.Id" class="shrink-0">
+                                <img src="@post.ThumbnailUrl" alt="@post.Title" class="w-20 h-14 object-cover rounded-sm" loading="lazy" />
+                            </a>
+                            <div class="min-w-0">
+                                <a asp-controller="Home" asp-action="Details" asp-route-id="@post.Id" class="text-sm font-semibold leading-tight line-clamp-2 hover:text-orange-accent transition-colors block">@post.Title</a>
+                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1 block">@post.CreatedAt.ToString("MMM dd, yyyy")</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </aside>
+</div>

@@ -294,4 +294,56 @@ public class SupabaseService
         }
         return 0;
     }
+
+    // ──────────────────────────────────────────────
+    //  ASIAN SCANDAL METHODS
+    // ──────────────────────────────────────────────
+
+    public async Task<(List<AsianScandalPost> Posts, int TotalCount)> GetLatestAsianScandalPostsAsync(int page = 1, int pageSize = 24)
+    {
+        var from = (page - 1) * pageSize;
+        var to = from + pageSize - 1;
+
+        var builder = _client.From<AsianScandalPost>();
+        builder.Order("created_at", Constants.Ordering.Descending);
+        builder.Range(from, to);
+        
+        var response = await builder.Get();
+        var total = await GetTotalAsianScandalPostCountAsync();
+
+        return (response.Models, total);
+    }
+
+    public async Task<AsianScandalPost?> GetAsianScandalPostByIdAsync(string id)
+    {
+        var response = await _client.From<AsianScandalPost>()
+            .Filter("id", Constants.Operator.Equals, id)
+            .Single();
+
+        return response;
+    }
+
+    private async Task<int> GetTotalAsianScandalPostCountAsync()
+    {
+        using var http = new HttpClient();
+        var request = new HttpRequestMessage(HttpMethod.Head, $"{_supabaseUrl}/rest/v1/asianscandal_posts?select=id");
+        request.Headers.Add("apikey", _supabaseKey);
+        request.Headers.Add("Authorization", $"Bearer {_supabaseKey}");
+        request.Headers.Add("Prefer", "count=exact");
+
+        var response = await http.SendAsync(request);
+
+        if (response.Content.Headers.TryGetValues("Content-Range", out var values))
+        {
+            var range = values.FirstOrDefault();
+            if (range != null && range.Contains("/"))
+            {
+                var totalStr = range.Split('/').Last();
+                if (totalStr != "*" && int.TryParse(totalStr, out var count))
+                    return count;
+            }
+        }
+        return 0;
+    }
 }
+

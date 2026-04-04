@@ -304,7 +304,13 @@ def mirror_images_in_html(html: str) -> str | None:
         src = img.get('src') or img.get('data-src') or img.get('data-lazy-src', '')
         if not src or src.startswith('data:'):
             return True
+        
+        # SKIP if already mirrored in Supabase
+        if "supabase.co" in src:
+            return True
+
         ext_raw = src.split('.')[-1].split('?')[0].lower()
+
         ext = ext_raw if ext_raw in ('jpg', 'jpeg', 'png', 'gif', 'webp') else 'jpg'
         filename = f"{hashlib.md5(src.encode()).hexdigest()}.{ext}"
         data = download_image(src)
