@@ -1,0 +1,10 @@
+@model List<KJSWeb.Models.Category>
+
+@if (Model != null)
+{
+    @foreach (var cat in Model)
+    {
+        <a asp-controller="Home" asp-action="Category" asp-route-name="@cat.Name"
+           class="block px-6 py-3 text-[11px] border-b border-white/5 hover:bg-orange-accent hover:text-white transition-colors font-bold uppercase tracking-wider">@cat.Name</a>
+    }
+}

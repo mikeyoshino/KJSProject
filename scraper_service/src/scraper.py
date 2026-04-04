@@ -1,16 +1,43 @@
 import requests
 import uuid
 import hashlib
+import logging
+import random
+import time
 from bs4 import BeautifulSoup
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from storage import download_image, upload_to_supabase
 
 HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+BASE_URL = "https://buzz69.com"
+
+def scrape_home_page(page_num: int = 1) -> list:
+    url = BASE_URL if page_num == 1 else f"{BASE_URL}/page/{page_num}/"
+    logging.info(f"Fetching {url}...")
+    try:
+        # Increased timeout to 30s
+        response = requests.get(url, headers=HEADERS, timeout=30)
+        response.raise_for_status()
+    except Exception as e:
+        logging.error(f"Failed to fetch home page: {e}")
+        return []
+    return parse_front_page(response.text)
 
 def fetch_html(url: str) -> str:
-    response = requests.get(url, headers=HEADERS, timeout=10)
-    response.raise_for_status()
-    return response.text
+    retries = 3
+    for attempt in range(retries):
+        try:
+            # Increased timeout and added retry logic
+            response = requests.get(url, headers=HEADERS, timeout=30)
+            response.raise_for_status()
+            return response.text
+        except Exception as e:
+            if attempt < retries - 1:
+                logging.warning(f"Retry {attempt + 1}/{retries} for {url} due to: {e}")
+                time.sleep(2) # Wait 2s before retry
+            else:
+                logging.error(f"Failed to fetch {url} after {retries} attempts: {e}")
+    return ""
 
 def parse_front_page(html: str) -> list[tuple[str, str]]:
     soup = BeautifulSoup(html, 'html.parser')
@@ -101,6 +128,9 @@ def mirror_images_in_html(html: str) -> str:
         return str(soup)
 
     def process_image(img):
+        # Increased delay for maximum stability on slow hosts
+        time.sleep(random.uniform(1.0, 3.0))
+        
         src = img.get('src')
         if not src:
             return True # Not a failure, just nothing to do
@@ -128,8 +158,8 @@ def mirror_images_in_html(html: str) -> str:
         
         return True # Success
 
-    # Use ThreadPoolExecutor for speed with rate limiting in mind (max 8)
-    with ThreadPoolExecutor(max_workers=8) as executor:
+    # Reduced workers to 3 for 'gentle' mirroring to avoid timeouts
+    with ThreadPoolExecutor(max_workers=3) as executor:
         future_to_img = {executor.submit(process_image, img): img for img in imgs}
         for future in as_completed(future_to_img):
             try:

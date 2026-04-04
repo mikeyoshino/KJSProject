@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] - BUZZ69</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'orange-accent': '#FF4500',
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fcfcfc;
+        }
+        .dropdown:hover .dropdown-menu {
+            display: block;
+            animation: fadeIn 0.2s ease-out;
+        }
+        @@keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .content-card:hover .thumbnail-overlay {
+            opacity: 1 !important;
+        }
+        .content-card:hover img {
+            transform: scale(1.05);
+        }
+        .orange-accent {
+            background-color: #FF4500;
+        }
+        .text-orange-accent {
+            color: #FF4500;
+        }
+        .hover\:bg-orange-accent:hover {
+            background-color: #FF4500;
+        }
+        .border-orange-accent {
+            border-color: #FF4500;
+        }
+        .bg-orange-accent {
+            background-color: #FF4500;
+        }
+        /* Custom scrollbar */
+        .custom-scrollbar {
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 10px;
+        }
+
+        /* Mobile: hide/show */
+        .mobile-toggle { display: none; }
+        .mobile-nav { display: none; }
+        .mobile-nav.active { display: block; }
+        .mobile-dropdown { display: none; }
+        .mobile-dropdown.active { display: block; }
+
+        @@media (max-width: 768px) {
+            .desktop-nav { display: none !important; }
+            .mobile-toggle { display: flex !important; }
+            .mobile-toggle span {
+                display: block;
+                width: 24px;
+                height: 2px;
+                background: #fff;
+                transition: all 0.3s;
+            }
+            .mobile-toggle.active span:nth-child(1) {
+                transform: rotate(45deg) translate(4px, 5px);
+            }
+            .mobile-toggle.active span:nth-child(2) {
+                opacity: 0;
+            }
+            .mobile-toggle.active span:nth-child(3) {
+                transform: rotate(-45deg) translate(4px, -5px);
+            }
+        }
+    </style>
+</head>
+<body class="text-slate-900">
+
+    <!-- Header / Navigation (Static, non-sticky) -->
+    <header class="bg-black text-white py-6">
+        <div class="container mx-auto px-4">
+            <!-- Tier 1: Logo -->
+            <div class="flex justify-center mb-6 relative">
+                <div class="cursor-pointer">
+                    <a asp-controller="Home" asp-action="Index" class="text-5xl font-black tracking-tighter text-white hover:text-white">BUZZ69</a>
+                </div>
+                <!-- Mobile hamburger -->
+                <button id="mobileToggle" class="mobile-toggle absolute right-0 top-1/2 -translate-y-1/2 flex-col gap-[5px] p-2 bg-transparent border-0 cursor-pointer" aria-label="Menu">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+
+            <!-- Tier 2: Desktop Navigation Links — HIDDEN on mobile via CSS -->
+            <nav class="desktop-nav flex flex-wrap justify-center items-center space-x-6 sm:space-x-10 text-[13px] font-bold uppercase tracking-widest">
+                <a asp-controller="Home" asp-action="Index" class="hover:text-orange-accent transition-colors">Home</a>
+
+                <div class="relative dropdown">
+                    <button class="flex items-center text-orange-accent hover:opacity-80 transition-opacity uppercase py-4 -my-4">
+                        Categories
+                        <span class="ml-1 text-[10px]">▼</span>
+                    </button>
+                    <div class="dropdown-menu hidden absolute left-1/2 -translate-x-1/2 pt-4 w-52 z-50">
+                        <div class="bg-[#121212] border border-white/10 shadow-2xl custom-scrollbar">
+                            <div class="py-1">
+                                @await Component.InvokeAsync("CategoryNav")
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <a asp-controller="Subscription" asp-action="Pricing" class="hover:text-orange-accent transition-colors">Pricing</a>
+
+                @if (Context.Session.GetString("user_id") != null)
+                {
+                    <span class="text-slate-400 text-[10px] normal-case">@Context.Session.GetString("user_email")</span>
+                    <a asp-controller="Subscription" asp-action="MySubscription" class="hover:text-orange-accent transition-colors">Account</a>
+                    <form method="post" asp-controller="Auth" asp-action="Logout" class="inline">
+                        <button type="submit" class="hover:text-orange-accent transition-colors uppercase">Logout</button>
+                    </form>
+                }
+                else
+                {
+                    <a asp-controller="Auth" asp-action="Login" class="hover:text-orange-accent transition-colors">Login</a>
+                    <a asp-controller="Auth" asp-action="Signup" class="hover:text-orange-accent transition-colors">Sign Up</a>
+                }
+            </nav>
+
+            <!-- Mobile Navigation — ONLY visible when toggled on mobile -->
+            <nav class="mobile-nav" id="mobileNav">
+                <div class="mt-4 border-t border-white/10 pt-4 space-y-0">
+                    <a asp-controller="Home" asp-action="Index" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5">Home</a>
+                    <button id="mobileCatToggle" class="w-full text-left py-3 text-[13px] font-bold uppercase tracking-widest text-orange-accent border-b border-white/5 flex items-center justify-between">
+                        Categories <span class="text-[10px]" id="mobileCatArrow">▼</span>
+                    </button>
+                    <div class="mobile-dropdown bg-[#121212]" id="mobileCatDropdown">
+                        @await Component.InvokeAsync("CategoryNav")
+                    </div>
+                    <a asp-controller="Subscription" asp-action="Pricing" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5">Pricing</a>
+                    @if (Context.Session.GetString("user_id") != null)
+                    {
+                        <a asp-controller="Subscription" asp-action="MySubscription" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5">Account</a>
+                        <form method="post" asp-controller="Auth" asp-action="Logout">
+                            <button type="submit" class="block w-full text-left py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5">Logout</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <a asp-controller="Auth" asp-action="Login" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5">Login</a>
+                        <a asp-controller="Auth" asp-action="Signup" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors">Sign Up</a>
+                    }
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main role="main" class="container mx-auto px-4 py-12">
+        @RenderBody()
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-black text-slate-500 py-16 mt-20 border-t border-white/5">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 text-center md:text-left">
+                <div class="col-span-1 md:col-span-2">
+                    <a asp-controller="Home" asp-action="Index" class="text-3xl font-black tracking-tighter text-white mb-6 block hover:text-white">BUZZ69</a>
+                    <p class="text-xs leading-relaxed max-w-sm mx-auto md:mx-0">Premium content delivery network specializing in high-quality updates and community curation. Est 2026.</p>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-6 uppercase text-[10px] tracking-[0.3em]">Network</h4>
+                    <ul class="space-y-3 text-[11px] font-bold uppercase tracking-wider">
+                        <li><a href="#" class="hover:text-orange-accent transition-colors">Privacy</a></li>
+                        <li><a href="#" class="hover:text-orange-accent transition-colors">Terms</a></li>
+                        <li><a href="#" class="hover:text-orange-accent transition-colors">2257</a></li>
+                        <li><a href="#" class="hover:text-orange-accent transition-colors">DMCA</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-6 uppercase text-[10px] tracking-[0.3em]">Support</h4>
+                    <ul class="space-y-3 text-[11px] font-bold uppercase tracking-wider">
+                        <li><a href="#" class="hover:text-orange-accent transition-colors">Help</a></li>
+                        <li><a href="#" class="hover:text-orange-accent transition-colors">Contact</a></li>
+                        <li><a href="#" class="hover:text-orange-accent transition-colors">Ads</a></li>
+                        <li><a href="#" class="hover:text-orange-accent transition-colors">Affiliates</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-16 pt-8 border-t border-white/5 text-center text-[9px] uppercase tracking-[0.4em]">
+                &copy; @DateTime.Now.Year BUZZ69. Strictly 18+.
+            </div>
+        </div>
+    </footer>
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

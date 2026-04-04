@@ -1,0 +1,113 @@
+@model List<KJSWeb.Models.Post>
+@{
+    var categoryName = ViewBag.CategoryName as string;
+    ViewData["Title"] = !string.IsNullOrEmpty(categoryName) ? categoryName : "Latest Updates";
+    var pagination = ViewBag.Pagination as KJSWeb.Models.PaginationInfo;
+}
+
+<!-- Filter Bar -->
+<div class="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-4">
+    <h1 class="text-2xl font-bold text-slate-800 border-l-4 border-orange-accent pl-4 uppercase tracking-tight">
+        @(string.IsNullOrEmpty(categoryName) ? "Latest Updates" : categoryName)
+    </h1>
+</div>
+
+<!-- Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+    @foreach (var post in Model)
+    {
+        <article class="content-card group cursor-pointer">
+            <a asp-action="Details" asp-route-id="@post.Id">
+                <div class="relative overflow-hidden rounded-sm bg-slate-200 aspect-video mb-4 shadow-sm">
+                    <img src="@post.ThumbnailUrl" alt="@post.Title" class="w-full h-full object-cover transition-transform duration-700" loading="lazy">
+                    <!-- Play Button Overlay -->
+                    <div class="thumbnail-overlay opacity-0 absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity duration-300">
+                        <div class="w-14 h-14 rounded-full bg-orange-accent flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition-transform">
+                            <svg class="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+                        </div>
+                    </div>
+                    @if (post.Categories != null && post.Categories.Any())
+                    {
+                        <span class="absolute top-0 left-0 orange-accent text-white text-[9px] font-black uppercase px-2 py-1 tracking-widest">@post.Categories.First()</span>
+                    }
+                </div>
+            </a>
+            <div class="space-y-1.5 text-center">
+                <h2 class="text-base font-bold leading-tight group-hover:text-orange-accent transition-colors">
+                    <a asp-action="Details" asp-route-id="@post.Id">@post.Title</a>
+                </h2>
+                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">@post.CreatedAt.ToString("MMMM dd, yyyy")</p>
+            </div>
+        </article>
+    }
+</div>
+
+<!-- Pagination -->
+@if (pagination != null && pagination.TotalPages > 1)
+{
+    <div class="mt-20 flex justify-center items-center space-x-1 sm:space-x-2">
+        @* Previous Arrow *@
+        @if (pagination.HasPrevious)
+        {
+            @if (!string.IsNullOrEmpty(categoryName))
+            {
+                <a asp-action="Category" asp-route-name="@categoryName" asp-route-page="@(pagination.CurrentPage - 1)"
+                   class="w-10 h-10 rounded flex items-center justify-center bg-slate-200 text-slate-600 hover:bg-orange-accent hover:text-white transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                </a>
+            }
+            else
+            {
+                <a asp-action="Index" asp-route-page="@(pagination.CurrentPage - 1)"
+                   class="w-10 h-10 rounded flex items-center justify-center bg-slate-200 text-slate-600 hover:bg-orange-accent hover:text-white transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                </a>
+            }
+        }
+
+        @* Page Numbers with Dots *@
+        @foreach (var pageNum in pagination.GetPageNumbers())
+        {
+            if (pageNum == null)
+            {
+                <span class="px-2 text-slate-300 font-bold">…</span>
+            }
+            else if (pageNum == pagination.CurrentPage)
+            {
+                <span class="w-10 h-10 rounded flex items-center justify-center bg-orange-accent text-white font-bold text-sm">@pageNum</span>
+            }
+            else
+            {
+                @if (!string.IsNullOrEmpty(categoryName))
+                {
+                    <a asp-action="Category" asp-route-name="@categoryName" asp-route-page="@pageNum"
+                       class="w-10 h-10 rounded flex items-center justify-center bg-slate-200 text-slate-600 hover:bg-orange-accent hover:text-white transition-all font-bold text-sm">@pageNum</a>
+                }
+                else
+                {
+                    <a asp-action="Index" asp-route-page="@pageNum"
+                       class="w-10 h-10 rounded flex items-center justify-center bg-slate-200 text-slate-600 hover:bg-orange-accent hover:text-white transition-all font-bold text-sm">@pageNum</a>
+                }
+            }
+        }
+
+        @* Next Arrow *@
+        @if (pagination.HasNext)
+        {
+            @if (!string.IsNullOrEmpty(categoryName))
+            {
+                <a asp-action="Category" asp-route-name="@categoryName" asp-route-page="@(pagination.CurrentPage + 1)"
+                   class="w-10 h-10 rounded flex items-center justify-center bg-slate-200 text-slate-600 hover:bg-orange-accent hover:text-white transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </a>
+            }
+            else
+            {
+                <a asp-action="Index" asp-route-page="@(pagination.CurrentPage + 1)"
+                   class="w-10 h-10 rounded flex items-center justify-center bg-slate-200 text-slate-600 hover:bg-orange-accent hover:text-white transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </a>
+            }
+        }
+    </div>
+}

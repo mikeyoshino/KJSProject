@@ -1,0 +1,56 @@
+@model KJSWeb.Models.Subscription
+@{
+    ViewData["Title"] = "My Subscription";
+    var plans = ViewBag.Plans as Dictionary<string, (string Label, decimal PriceUsd, int DurationDays, string SaveText)>;
+}
+
+<div class="max-w-lg mx-auto">
+    @if (Model != null)
+    {
+        <div class="bg-black text-white p-10 shadow-2xl text-center">
+            <h1 class="text-2xl font-black tracking-tight mb-2">My Subscription</h1>
+            <p class="text-slate-400 text-[11px] uppercase tracking-widest mb-8">Account Details</p>
+
+            <div class="space-y-4 mb-8">
+                <div class="bg-[#121212] border border-white/10 p-5">
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Plan</p>
+                    <p class="text-lg font-bold">
+                        @(plans != null && plans.ContainsKey(Model.Plan) ? plans[Model.Plan].Label : Model.Plan)
+                    </p>
+                </div>
+
+                <div class="bg-[#121212] border border-white/10 p-5">
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Status</p>
+                    <p class="text-lg font-bold text-green-400">✓ Active</p>
+                </div>
+
+                <div class="bg-[#121212] border border-white/10 p-5">
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Expires</p>
+                    <p class="text-lg font-bold">@Model.ExpiresAt?.ToString("MMMM dd, yyyy")</p>
+                </div>
+
+                <div class="bg-[#121212] border border-white/10 p-5">
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Amount Paid</p>
+                    <p class="text-lg font-bold">$@Model.AmountUsd.ToString("0.00") <span class="text-slate-500 text-sm">(₿ @Model.AmountBtc?.ToString("0.00000000"))</span></p>
+                </div>
+            </div>
+
+            <a asp-action="Pricing" asp-controller="Subscription"
+               class="inline-block bg-orange-accent text-white py-3 px-8 text-[13px] font-bold uppercase tracking-widest hover:opacity-90 transition-opacity">
+                Renew / Upgrade
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="bg-black text-white p-10 shadow-2xl text-center">
+            <h1 class="text-2xl font-black tracking-tight mb-2">No Active Subscription</h1>
+            <p class="text-slate-400 text-sm mb-8">You don't have an active subscription. Choose a plan to unlock premium downloads.</p>
+
+            <a asp-action="Pricing" asp-controller="Subscription"
+               class="inline-block bg-orange-accent text-white py-3 px-8 text-[13px] font-bold uppercase tracking-widest hover:opacity-90 transition-opacity">
+                View Plans
+            </a>
+        </div>
+    }
+</div>

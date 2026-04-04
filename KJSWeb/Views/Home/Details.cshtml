@@ -1,0 +1,93 @@
+@model KJSWeb.Models.Post
+@{
+    ViewData["Title"] = Model.Title;
+    var recentPosts = ViewBag.RecentPosts as List<KJSWeb.Models.Post>;
+    var siteName = "Buzz69";
+    var siteUrl = Context.Request.Scheme + "://" + Context.Request.Host;
+}
+
+<div class="flex flex-col lg:flex-row gap-10">
+    <!-- Main Content -->
+    <div class="flex-1 min-w-0">
+        <article>
+            <header class="mb-8">
+                @if (Model.Categories != null && Model.Categories.Any())
+                {
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        @foreach (var cat in Model.Categories)
+                        {
+                            <a asp-controller="Home" asp-action="Category" asp-route-name="@cat"
+                               class="bg-orange-accent text-white text-[9px] font-black uppercase px-2 py-1 tracking-widest hover:opacity-80 transition-opacity">@cat</a>
+                        }
+                    </div>
+                }
+                <h1 class="text-3xl font-bold leading-tight mb-3">@Model.Title</h1>
+                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">@Model.CreatedAt.ToString("MMMM dd, yyyy")</p>
+            </header>
+
+            <div class="prose max-w-none [&_img]:max-w-full [&_img]:h-auto [&_img]:block [&_img]:my-5 [&_img]:rounded-sm">
+                @{
+                    var content = Model.ContentHtml
+                        .Replace("{{SiteName}}", siteName)
+                        .Replace("{{SiteUrl}}", siteUrl);
+                }
+                @Html.Raw(content)
+            </div>
+
+            @if (Model.OriginalRapidgatorUrls != null && Model.OriginalRapidgatorUrls.Any())
+            {
+                @if (ViewBag.HasActiveSubscription == true)
+                {
+                    <div class="mt-12 p-8 bg-slate-50 border-l-4 border-orange-accent">
+                        <h3 class="text-lg font-bold mb-4">🚀 Download Links</h3>
+                        <div class="flex flex-wrap gap-3">
+                            @foreach (var url in Model.OriginalRapidgatorUrls)
+                            {
+                                <a href="@url" target="_blank" rel="noopener"
+                                   class="bg-black text-white px-6 py-3 text-[13px] font-bold uppercase tracking-wider hover:bg-orange-accent transition-colors">
+                                    Download Part @(Model.OriginalRapidgatorUrls.IndexOf(url) + 1)
+                                </a>
+                            }
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="mt-12 p-8 bg-black text-white text-center">
+                        <p class="text-3xl mb-2">🔒</p>
+                        <h3 class="text-lg font-bold mb-2">Premium Content</h3>
+                        <p class="text-slate-400 text-sm mb-6">Subscribe to unlock @Model.OriginalRapidgatorUrls.Count download link(s) for this post.</p>
+                        <a asp-controller="Subscription" asp-action="Pricing"
+                           class="inline-block bg-orange-accent text-white py-3 px-8 text-[13px] font-bold uppercase tracking-widest hover:opacity-90 transition-opacity">
+                            ₿ Subscribe to Download
+                        </a>
+                    </div>
+                }
+            }
+        </article>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="w-full lg:w-80 shrink-0">
+        @if (recentPosts != null && recentPosts.Any())
+        {
+            <div class="mb-10">
+                <h4 class="text-sm font-bold uppercase tracking-wider border-b-2 border-black pb-2 mb-5">Recent Posts</h4>
+                <div class="space-y-5">
+                    @foreach (var post in recentPosts)
+                    {
+                        <div class="flex gap-4">
+                            <a asp-action="Details" asp-route-id="@post.Id" class="shrink-0">
+                                <img src="@post.ThumbnailUrl" alt="@post.Title" class="w-20 h-14 object-cover rounded-sm" loading="lazy" />
+                            </a>
+                            <div class="min-w-0">
+                                <a asp-action="Details" asp-route-id="@post.Id" class="text-sm font-semibold leading-tight line-clamp-2 hover:text-orange-accent transition-colors block">@post.Title</a>
+                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1 block">@post.CreatedAt.ToString("MMM dd, yyyy")</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </aside>
+</div>

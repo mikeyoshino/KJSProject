@@ -1,0 +1,106 @@
+@model KJSWeb.Models.Subscription
+@{
+    ViewData["Title"] = "Payment";
+    var btcPrice = (decimal)(ViewBag.BtcPrice ?? 0m);
+}
+
+<div class="max-w-lg mx-auto">
+    <div class="bg-black text-white p-10 shadow-2xl text-center">
+        <h1 class="text-2xl font-black tracking-tight mb-2">Complete Payment</h1>
+        <p class="text-slate-400 text-[11px] uppercase tracking-widest mb-8">
+            @(KJSWeb.Models.SubscriptionPlans.All.ContainsKey(Model.Plan)
+                ? KJSWeb.Models.SubscriptionPlans.All[Model.Plan].Label
+                : Model.Plan) Plan — $@Model.AmountUsd.ToString("0.00")
+        </p>
+
+        <!-- Status Badge -->
+        <div id="statusBadge" class="mb-6">
+            @if (Model.Status == "pending")
+            {
+                <span class="inline-block bg-yellow-500/20 text-yellow-400 text-[11px] font-bold uppercase tracking-widest px-4 py-2">
+                    ⏳ Awaiting Payment
+                </span>
+            }
+            else if (Model.Status == "confirming")
+            {
+                <span class="inline-block bg-blue-500/20 text-blue-400 text-[11px] font-bold uppercase tracking-widest px-4 py-2">
+                    🔄 Confirming Transaction...
+                </span>
+            }
+            else if (Model.Status == "active")
+            {
+                <span class="inline-block bg-green-500/20 text-green-400 text-[11px] font-bold uppercase tracking-widest px-4 py-2">
+                    ✓ Payment Confirmed!
+                </span>
+            }
+        </div>
+
+        <!-- QR Code -->
+        <div class="mb-6">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=bitcoin:@Model.BtcAddress?amount=@Model.AmountBtc?.ToString("0.00000000")"
+                 alt="Bitcoin QR Code"
+                 class="mx-auto bg-white p-3"
+                 id="qrCode" />
+        </div>
+
+        <!-- BTC Amount -->
+        <div class="bg-[#121212] border border-white/10 p-5 mb-4">
+            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2">Send Exactly</p>
+            <p class="text-2xl font-black text-orange-accent" id="btcAmount">
+                ₿ @Model.AmountBtc?.ToString("0.00000000")
+            </p>
+            <p class="text-slate-500 text-xs mt-1">≈ $@Model.AmountUsd.ToString("0.00") USD</p>
+        </div>
+
+        <!-- BTC Address -->
+        <div class="bg-[#121212] border border-white/10 p-5 mb-6">
+            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2">To This Address</p>
+            <div class="flex items-center gap-2">
+                <input type="text" value="@Model.BtcAddress" readonly id="btcAddress"
+                       class="flex-1 bg-transparent text-sm text-white font-mono text-center border-0 outline-none" />
+                <button onclick="copyAddress()" id="copyBtn"
+                        class="bg-orange-accent text-white text-[10px] font-bold uppercase px-3 py-2 hover:opacity-80 transition-opacity">
+                    Copy
+                </button>
+            </div>
+        </div>
+
+        <p class="text-slate-500 text-[10px] uppercase tracking-wider">
+            Payment will be detected automatically. Do not close this page.
+        </p>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function copyAddress() {
+        var addr = document.getElementById('btcAddress');
+        navigator.clipboard.writeText(addr.value).then(function() {
+            var btn = document.getElementById('copyBtn');
+            btn.textContent = 'Copied!';
+            setTimeout(function() { btn.textContent = 'Copy'; }, 2000);
+        });
+    }
+
+    // Poll for payment status every 10 seconds
+    var address = '@Model.BtcAddress';
+    var pollInterval = setInterval(function() {
+        fetch('/api/subscription/status/' + address)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var badge = document.getElementById('statusBadge');
+                if (data.status === 'confirming') {
+                    badge.innerHTML = '<span class="inline-block bg-blue-500/20 text-blue-400 text-[11px] font-bold uppercase tracking-widest px-4 py-2">🔄 Confirming Transaction...</span>';
+                } else if (data.status === 'active') {
+                    badge.innerHTML = '<span class="inline-block bg-green-500/20 text-green-400 text-[11px] font-bold uppercase tracking-widest px-4 py-2">✓ Payment Confirmed!</span>';
+                    clearInterval(pollInterval);
+                    // Redirect after 3 seconds
+                    setTimeout(function() {
+                        window.location.href = '/Subscription/MySubscription';
+                    }, 3000);
+                }
+            })
+            .catch(function() {});
+    }, 10000);
+</script>
+}

@@ -1,0 +1,112 @@
+@{
+    ViewData["Title"] = "Pricing";
+    var plans = ViewBag.Plans as Dictionary<string, (string Label, decimal PriceUsd, int DurationDays, string SaveText)>;
+    var activeSub = ViewBag.ActiveSubscription as KJSWeb.Models.Subscription;
+    var userId = Context.Session.GetString("user_id");
+}
+
+<!-- Pricing Header -->
+<div class="text-center mb-16">
+    <h1 class="text-4xl font-black tracking-tight mb-4">Choose Your Plan</h1>
+    <p class="text-slate-500 text-sm max-w-lg mx-auto">Unlock premium downloads with Bitcoin. Direct wallet-to-wallet payments — no middleman, no data shared.</p>
+</div>
+
+@if (TempData["Error"] != null)
+{
+    <div class="max-w-2xl mx-auto bg-red-500/10 border border-red-500/30 text-red-600 px-4 py-3 text-sm mb-8 text-center">
+        @TempData["Error"]
+    </div>
+}
+
+@if (activeSub != null)
+{
+    <div class="max-w-2xl mx-auto bg-green-500/10 border border-green-500/30 text-green-700 px-6 py-4 text-sm mb-8 text-center">
+        <span class="font-bold">✓ Active Subscription:</span>
+        @(plans != null && plans.ContainsKey(activeSub.Plan) ? plans[activeSub.Plan].Label : activeSub.Plan)
+        — expires @(activeSub.ExpiresAt?.ToString("MMMM dd, yyyy") ?? "N/A")
+    </div>
+}
+
+<!-- Pricing Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+    @if (plans != null)
+    {
+        var planKeys = new[] { "monthly", "3month", "yearly" };
+        var highlights = new[] { false, true, false }; // 3-month is highlighted
+        var badges = new[] { "", "BEST VALUE", "MOST POPULAR" };
+
+        @for (int i = 0; i < planKeys.Length; i++)
+        {
+            var key = planKeys[i];
+            if (!plans.ContainsKey(key)) continue;
+            var plan = plans[key];
+            var isHighlighted = highlights[i];
+            var badge = badges[i];
+            var perMonth = Math.Round(plan.PriceUsd / (plan.DurationDays / 30m), 2);
+
+            <div class="relative @(isHighlighted ? "bg-black text-white scale-105 shadow-2xl" : "bg-white border border-slate-200 shadow-sm") p-8 text-center transition-transform hover:scale-[1.02]">
+                @if (!string.IsNullOrEmpty(badge))
+                {
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-orange-accent text-white text-[9px] font-black uppercase px-4 py-1 tracking-widest">
+                        @badge
+                    </div>
+                }
+
+                <h3 class="text-[11px] font-bold uppercase tracking-widest @(isHighlighted ? "text-slate-400" : "text-slate-500") mb-4">@plan.Label</h3>
+
+                <div class="mb-4">
+                    <span class="text-5xl font-black">$@plan.PriceUsd.ToString("0")</span>
+                    @if (!string.IsNullOrEmpty(plan.SaveText))
+                    {
+                        <span class="block text-orange-accent text-[11px] font-bold mt-1">@plan.SaveText</span>
+                    }
+                </div>
+
+                <p class="text-sm @(isHighlighted ? "text-slate-400" : "text-slate-500") mb-8">
+                    $@perMonth.ToString("0.00")/month
+                </p>
+
+                <ul class="text-left text-sm space-y-3 mb-8 @(isHighlighted ? "text-slate-300" : "text-slate-600")">
+                    <li class="flex items-center gap-2">
+                        <span class="text-orange-accent font-bold">✓</span> Unlimited Downloads
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <span class="text-orange-accent font-bold">✓</span> Full HD Content
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <span class="text-orange-accent font-bold">✓</span> No Ads
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <span class="text-orange-accent font-bold">✓</span> Early Access
+                    </li>
+                </ul>
+
+                @if (string.IsNullOrEmpty(userId))
+                {
+                    <a asp-action="Login" asp-controller="Auth"
+                       class="block w-full @(isHighlighted ? "bg-orange-accent" : "bg-black") text-white py-3 text-[13px] font-bold uppercase tracking-widest hover:opacity-90 transition-opacity text-center">
+                        Login to Subscribe
+                    </a>
+                }
+                else
+                {
+                    <form method="post" asp-action="Subscribe" asp-controller="Subscription">
+                        <input type="hidden" name="plan" value="@key" />
+                        <button type="submit"
+                                class="w-full @(isHighlighted ? "bg-orange-accent" : "bg-black") text-white py-3 text-[13px] font-bold uppercase tracking-widest hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                            <span>₿</span> Pay with Bitcoin
+                        </button>
+                    </form>
+                }
+            </div>
+        }
+    }
+</div>
+
+<!-- Trust Badges -->
+<div class="flex flex-wrap justify-center gap-8 mt-16 text-slate-400 text-[10px] font-bold uppercase tracking-widest">
+    <span>🔒 Secure Payment</span>
+    <span>₿ Bitcoin Only</span>
+    <span>⚡ Instant Access</span>
+    <span>🚫 No KYC Required</span>
+</div>

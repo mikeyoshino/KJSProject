@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BUZZ69 - Professional Content Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fcfcfc;
+        }
+
+        .dropdown:hover .dropdown-menu {
+            display: block;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .content-card:hover .thumbnail-overlay {
+            opacity: 1;
+        }
+
+        .content-card:hover img {
+            transform: scale(1.05);
+        }
+
+        .orange-accent {
+            background-color: #FF4500;
+        }
+
+        .text-orange-accent {
+            color: #FF4500;
+        }
+
+        /* Custom scrollbar for categories if they get too long */
+        .dropdown-menu {
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .dropdown-menu::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .dropdown-menu::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body class="text-slate-900">
+
+    <!-- Header / Navigation (Static, non-sticky) -->
+    <header class="bg-black text-white py-6">
+        <div class="container mx-auto px-4">
+            <!-- Tier 1: Logo -->
+            <div class="flex justify-center mb-6">
+                <div class="cursor-pointer">
+                    <span class="text-5xl font-black tracking-tighter text-white">BUZZ69</span>
+                </div>
+            </div>
+
+            <!-- Tier 2: Navigation Links -->
+            <nav
+                class="flex flex-wrap justify-center items-center space-x-6 sm:space-x-10 text-[13px] font-bold uppercase tracking-widest">
+                <a href="#" class="hover:text-orange-accent transition-colors">Home</a>
+
+                <div class="relative dropdown">
+                    <button class="flex items-center text-orange-accent hover:opacity-80 transition-opacity uppercase">
+                        Categories
+                        <span class="ml-1 text-[10px]">▼</span>
+                    </button>
+                    <!-- Dropdown Menu (Matches the dark list style in image) -->
+                    <div
+                        class="dropdown-menu hidden absolute left-1/2 -translate-x-1/2 mt-4 w-52 bg-[#121212] border border-white/10 shadow-2xl z-50">
+                        <div class="py-1">
+                            <a href="#"
+                                class="block px-6 py-3 text-[11px] border-b border-white/5 hover:bg-orange-accent hover:text-white transition-colors">Australia</a>
+                            <a href="#"
+                                class="block px-6 py-3 text-[11px] border-b border-white/5 hover:bg-orange-accent hover:text-white transition-colors">Canada</a>
+                            <a href="#"
+                                class="block px-6 py-3 text-[11px] border-b border-white/5 hover:bg-orange-accent hover:text-white transition-colors">Celebs</a>
+                            <a href="#"
+                                class="block px-6 py-3 text-[11px] border-b border-white/5 hover:bg-orange-accent hover:text-white transition-colors">China</a>
+                            <a href="#"
+                                class="block px-6 py-3 text-[11px] border-b border-white/5 hover:bg-orange-accent hover:text-white transition-colors">England</a>
+                            <a href="#"
+                                class="block px-6 py-3 text-[11px] border-b border-white/5 hover:bg-orange-accent hover:text-white transition-colors">German</a>
+                            <a href="#"
+                                class="block px-6 py-3 text-[11px] border-b border-white/5 hover:bg-orange-accent hover:text-white transition-colors">India</a>
+                            <a href="#"
+                                class="block px-6 py-3 text-[11px] border-b border-white/5 hover:bg-orange-accent hover:text-white transition-colors">Japan</a>
+                            <a href="#"
+                                class="block px-6 py-3 text-[11px] border-b border-white/5 hover:bg-orange-accent hover:text-white transition-colors">Korea</a>
+                            <a href="#"
+                                class="block px-6 py-3 text-[11px] border-b border-white/5 hover:bg-orange-accent hover:text-white transition-colors">New
+                                Zealand</a>
+                            <a href="#"
+                                class="block px-6 py-3 text-[11px] border-b border-white/5 hover:bg-orange-accent hover:text-white transition-colors">Philippines</a>
+                            <a href="#"
+                                class="block px-6 py-3 text-[11px] border-b border-white/5 hover:bg-orange-accent hover:text-white transition-colors">Polish</a>
+                            <a href="#"
+                                class="block px-6 py-3 text-[11px] border-b border-white/5 hover:bg-orange-accent hover:text-white transition-colors">Russia</a>
+                            <a href="#"
+                                class="block px-6 py-3 text-[11px] border-b border-white/5 hover:bg-orange-accent hover:text-white transition-colors">Singapore</a>
+                            <a href="#"
+                                class="block px-6 py-3 text-[11px] border-b border-white/5 hover:bg-orange-accent hover:text-white transition-colors">Sweden</a>
+                            <a href="#"
+                                class="block px-6 py-3 text-[11px] border-b border-white/5 hover:bg-orange-accent hover:text-white transition-colors">USA</a>
+                            <a href="#"
+                                class="block px-6 py-3 text-[11px] hover:bg-orange-accent hover:text-white transition-colors">Vietnam</a>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="#" class="hover:text-orange-accent transition-colors">Trending</a>
+                <a href="#" class="hover:text-orange-accent transition-colors">Live</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-12">
+
+        <!-- Filter Bar -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-4">
+            <h1 class="text-2xl font-bold text-slate-800 border-l-4 border-orange-accent pl-4 uppercase tracking-tight">
+                Latest Updates</h1>
+            <div class="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
+                <button
+                    class="px-4 py-1.5 rounded bg-slate-200 text-[11px] font-bold uppercase hover:bg-orange-accent hover:text-white transition-all whitespace-nowrap">Newest</button>
+                <button
+                    class="px-4 py-1.5 rounded bg-slate-200 text-[11px] font-bold uppercase hover:bg-orange-accent hover:text-white transition-all whitespace-nowrap">Most
+                    Viewed</button>
+                <button
+                    class="px-4 py-1.5 rounded bg-slate-200 text-[11px] font-bold uppercase hover:bg-orange-accent hover:text-white transition-all whitespace-nowrap">Top
+                    Rated</button>
+            </div>
+        </div>
+
+        <!-- Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+
+            <!-- Item 1 -->
+            <article class="content-card group cursor-pointer">
+                <div class="relative overflow-hidden rounded-sm bg-slate-200 aspect-video mb-4 shadow-sm">
+                    <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80"
+                        alt="Content" class="w-full h-full object-cover transition-transform duration-700">
+                    <div
+                        class="thumbnail-overlay opacity-0 absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity duration-300">
+                        <div
+                            class="w-14 h-14 rounded-full bg-orange-accent flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition-transform">
+                            <svg class="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <span
+                        class="absolute top-0 left-0 orange-accent text-white text-[9px] font-black uppercase px-2 py-1 tracking-widest">Vietnam</span>
+                    <span
+                        class="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-sm">12:45</span>
+                </div>
+                <div class="space-y-1.5 text-center">
+                    <h2 class="text-base font-bold leading-tight group-hover:text-orange-accent transition-colors">
+                        Vietnamese Beauty Blogger Documentary: Behind the Scenes</h2>
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">April 04, 2026</p>
+                </div>
+            </article>
+
+            <!-- Item 2 -->
+            <article class="content-card group cursor-pointer">
+                <div class="relative overflow-hidden rounded-sm bg-slate-200 aspect-video mb-4 shadow-sm">
+                    <img src="https://images.unsplash.com/photo-1554151228-14d9def656e4?auto=format&fit=crop&w=800&q=80"
+                        alt="Content" class="w-full h-full object-cover transition-transform duration-700">
+                    <div
+                        class="thumbnail-overlay opacity-0 absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity duration-300">
+                        <div
+                            class="w-14 h-14 rounded-full bg-orange-accent flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition-transform">
+                            <svg class="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <span
+                        class="absolute top-0 left-0 orange-accent text-white text-[9px] font-black uppercase px-2 py-1 tracking-widest">Canada</span>
+                    <span
+                        class="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-sm">08:22</span>
+                </div>
+                <div class="space-y-1.5 text-center">
+                    <h2 class="text-base font-bold leading-tight group-hover:text-orange-accent transition-colors">
+                        Emilia Lam: Exclusive Interview and Studio Tour</h2>
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">April 01, 2026</p>
+                </div>
+            </article>
+
+            <!-- Item 3 -->
+            <article class="content-card group cursor-pointer">
+                <div class="relative overflow-hidden rounded-sm bg-slate-200 aspect-video mb-4 shadow-sm">
+                    <img src="https://images.unsplash.com/photo-1542103749-8ef59b94f47e?auto=format&fit=crop&w=800&q=80"
+                        alt="Content" class="w-full h-full object-cover transition-transform duration-700">
+                    <div
+                        class="thumbnail-overlay opacity-0 absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity duration-300">
+                        <div
+                            class="w-14 h-14 rounded-full bg-orange-accent flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition-transform">
+                            <svg class="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <span
+                        class="absolute top-0 left-0 orange-accent text-white text-[9px] font-black uppercase px-2 py-1 tracking-widest">USA</span>
+                    <span
+                        class="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-sm">24:10</span>
+                </div>
+                <div class="space-y-1.5 text-center">
+                    <h2 class="text-base font-bold leading-tight group-hover:text-orange-accent transition-colors">
+                        Franzel Franceliso: Late Night Stories and Vlogs</h2>
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">March 31, 2026</p>
+                </div>
+            </article>
+
+            <!-- Item 4 -->
+            <article class="content-card group cursor-pointer">
+                <div class="relative overflow-hidden rounded-sm bg-slate-200 aspect-video mb-4 shadow-sm">
+                    <img src="https://images.unsplash.com/photo-1552374196-c4e7ffc6e126?auto=format&fit=crop&w=800&q=80"
+                        alt="Content" class="w-full h-full object-cover transition-transform duration-700">
+                    <div
+                        class="thumbnail-overlay opacity-0 absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity duration-300">
+                        <div
+                            class="w-14 h-14 rounded-full bg-orange-accent flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition-transform">
+                            <svg class="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <span
+                        class="absolute top-0 left-0 orange-accent text-white text-[9px] font-black uppercase px-2 py-1 tracking-widest">Korea</span>
+                    <span
+                        class="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-sm">15:30</span>
+                </div>
+                <div class="space-y-1.5 text-center">
+                    <h2 class="text-base font-bold leading-tight group-hover:text-orange-accent transition-colors">Drunk
+                        and Slurring Her Words: Night in Seoul</h2>
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">March 30, 2026</p>
+                </div>
+            </article>
+
+            <!-- Item 5 -->
+            <article class="content-card group cursor-pointer">
+                <div class="relative overflow-hidden rounded-sm bg-slate-200 aspect-video mb-4 shadow-sm">
+                    <img src="https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=800&q=80"
+                        alt="Content" class="w-full h-full object-cover transition-transform duration-700">
+                    <div
+                        class="thumbnail-overlay opacity-0 absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity duration-300">
+                        <div
+                            class="w-14 h-14 rounded-full bg-orange-accent flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition-transform">
+                            <svg class="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <span
+                        class="absolute top-0 left-0 orange-accent text-white text-[9px] font-black uppercase px-2 py-1 tracking-widest">Korea</span>
+                    <span
+                        class="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-sm">19:05</span>
+                </div>
+                <div class="space-y-1.5 text-center">
+                    <h2 class="text-base font-bold leading-tight group-hover:text-orange-accent transition-colors">Cha
+                        Gandan: 21-Year-Old Woman Profile</h2>
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">March 28, 2026</p>
+                </div>
+            </article>
+
+            <!-- Item 6 -->
+            <article class="content-card group cursor-pointer">
+                <div class="relative overflow-hidden rounded-sm bg-slate-200 aspect-video mb-4 shadow-sm">
+                    <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80"
+                        alt="Content" class="w-full h-full object-cover transition-transform duration-700">
+                    <div
+                        class="thumbnail-overlay opacity-0 absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity duration-300">
+                        <div
+                            class="w-14 h-14 rounded-full bg-orange-accent flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition-transform">
+                            <svg class="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <span
+                        class="absolute top-0 left-0 orange-accent text-white text-[9px] font-black uppercase px-2 py-1 tracking-widest">Japan</span>
+                    <span
+                        class="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-sm">05:55</span>
+                </div>
+                <div class="space-y-1.5 text-center">
+                    <h2 class="text-base font-bold leading-tight group-hover:text-orange-accent transition-colors">Tokyo
+                        Nightlife and Cultural Exploration</h2>
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">March 25, 2026</p>
+                </div>
+            </article>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-20 flex justify-center items-center space-x-1 sm:space-x-2">
+            <button
+                class="w-10 h-10 rounded flex items-center justify-center bg-slate-200 text-slate-600 hover:bg-orange-accent hover:text-white transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+            </button>
+            <button
+                class="w-10 h-10 rounded flex items-center justify-center bg-orange-accent text-white font-bold text-sm">1</button>
+            <button
+                class="w-10 h-10 rounded flex items-center justify-center bg-slate-200 text-slate-600 hover:bg-orange-accent hover:text-white transition-all font-bold text-sm">2</button>
+            <button
+                class="w-10 h-10 rounded flex items-center justify-center bg-slate-200 text-slate-600 hover:bg-orange-accent hover:text-white transition-all font-bold text-sm">3</button>
+            <span class="px-2 text-slate-300">...</span>
+            <button
+                class="w-10 h-10 rounded flex items-center justify-center bg-slate-200 text-slate-600 hover:bg-orange-accent hover:text-white transition-all font-bold text-sm">42</button>
+            <button
+                class="w-10 h-10 rounded flex items-center justify-center bg-slate-200 text-slate-600 hover:bg-orange-accent hover:text-white transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+            </button>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-black text-slate-500 py-16 mt-20 border-t border-white/5">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 text-center md:text-left">
+                <div class="col-span-1 md:col-span-2">
+                    <span class="text-3xl font-black tracking-tighter text-white mb-6 block">BUZZ69</span>
+                    <p class="text-xs leading-relaxed max-w-sm mx-auto md:mx-0">Premium content delivery network
+                        specializing in high-quality updates and community curation. Est 2026.</p>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-6 uppercase text-[10px] tracking-[0.3em]">Network</h4>
+                    <ul class="space-y-3 text-[11px] font-bold uppercase tracking-wider">
+                        <li><a href="#" class="hover:text-orange-accent transition-colors">Privacy</a></li>
+                        <li><a href="#" class="hover:text-orange-accent transition-colors">Terms</a></li>
+                        <li><a href="#" class="hover:text-orange-accent transition-colors">2257</a></li>
+                        <li><a href="#" class="hover:text-orange-accent transition-colors">DMCA</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-6 uppercase text-[10px] tracking-[0.3em]">Support</h4>
+                    <ul class="space-y-3 text-[11px] font-bold uppercase tracking-wider">
+                        <li><a href="#" class="hover:text-orange-accent transition-colors">Help</a></li>
+                        <li><a href="#" class="hover:text-orange-accent transition-colors">Contact</a></li>
+                        <li><a href="#" class="hover:text-orange-accent transition-colors">Ads</a></li>
+                        <li><a href="#" class="hover:text-orange-accent transition-colors">Affiliates</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-16 pt-8 border-t border-white/5 text-center text-[9px] uppercase tracking-[0.4em]">
+                © 2026 BUZZ69. Strictly 18+.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('BUZZ69 Professional Static Layout Loaded');
+        });
+    </script>
+</body>
+
+</html>

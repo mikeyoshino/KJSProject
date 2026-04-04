@@ -25,9 +25,8 @@ def job():
                 
             for link, thumb_url in results:
                 if check_post_exists(link):
-                    logging.info(f"Stopping execution. Reached existing post: {link}")
-                    found_existing = True
-                    break
+                    logging.info(f"Post already exists, skipping: {link}")
+                    continue
                 
                 logging.info(f"Scraping new post: {link}")
                 post_html = fetch_html(link)

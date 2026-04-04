@@ -13,12 +13,15 @@ key: str = os.getenv("SUPABASE_KEY", "")
 
 supabase: Client = create_client(url, key) if url and key else None
 
+# Mimic a browser to avoid bot-blocking/throttling
+HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
+
 def download_image(img_url: str) -> bytes:
     retries = 3
     for attempt in range(retries):
         try:
-            # Increased timeout to 30s to handle slow image hosts
-            response = requests.get(img_url, timeout=30)
+            # mimic browser and 60s timeout for stability
+            response = requests.get(img_url, headers=HEADERS, timeout=60)
             response.raise_for_status()
             return response.content
         except Exception as e:
@@ -42,11 +45,13 @@ def optimize_image(content: bytes, max_width: int = 1400) -> bytes:
         if img.width > max_width:
             w_percent = (max_width / float(img.width))
             h_size = int((float(img.height) * float(w_percent)))
-            img = img.resize((max_width, h_size), Image.Resampling.LANCZOS)
+            img = img.resize((max_width, h_size), Image.Resampling.BICUBIC)
         
         output = io.BytesIO()
-        img.save(output, format="JPEG", quality=85, optimize=True)
-        return output.getvalue()
+        img.save(output, format="JPEG", quality=85)
+        res = output.getvalue()
+        img.close()
+        return res
     except Exception as e:
         logging.error(f"Failed to optimize image: {e}")
         return None
