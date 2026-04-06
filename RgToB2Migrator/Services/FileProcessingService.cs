@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using SharpCompress.Archives;
 using SharpCompress.Common;
 using System.IO.Compression;
+using System.Linq;
 using System.Text;
 
 namespace RgToB2Migrator.Services;
@@ -145,9 +146,9 @@ public class FileProcessingService
     // ──────────────────────────────────────────────────────────
 
     public async Task CreateZipAsync(
-        List<ProcessedFile> files, string zipPath, CancellationToken ct)
+        IEnumerable<ProcessedFile> files, string zipPath, CancellationToken ct)
     {
-        _logger.LogInformation("Creating ZIP {ZipPath} with {Count} file(s)", zipPath, files.Count);
+        _logger.LogInformation("Creating ZIP {ZipPath} with {Count} file(s)", zipPath, files.Count());
 
         await Task.Run(() =>
         {
@@ -208,6 +209,7 @@ public class FileProcessingService
         FileCounter counter,
         Dictionary<string, int> textFileCountPerDir)
     {
+        string newFileName;
         lock (_processingLock)
         {
             if (IsTextFile(originalPath))
