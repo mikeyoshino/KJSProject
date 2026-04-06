@@ -6,3 +6,4 @@ python-dotenv==1.0.1
 pytest==8.0.0
 websockets>=13.0
 Pillow
+boto3>=1.34.0

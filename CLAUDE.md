@@ -69,6 +69,39 @@ API endpoints (all require `Authorization: Bearer <supabase-jwt>`):
 
 Config sections: `Rapidgator`, `Proxy` (optional HTTP proxy address/credentials), `Cache`, `Supabase`, `Cors`.
 
+## Testing Locally
+
+### Expose local server with Cloudflare Tunnel
+```bash
+cloudflared tunnel --url http://localhost:5000
+# Prints a public URL like https://random-words.trycloudflare.com
+dotnet run --project KJSWeb --urls http://localhost:5000
+```
+
+### Test Blockonomics subscription callback manually
+Simulates a confirmed Bitcoin payment (status=2) without sending real BTC. Use the BTC address shown on the payment page after subscribing:
+```
+GET https://your-tunnel.trycloudflare.com/api/blockonomics/callback?status=2&addr={BTC_ADDRESS}&value=500000&txid=faketxid123&secret={Blockonomics:CallbackSecret}
+```
+Status codes: `0` = unconfirmed, `1` = partially confirmed, `2` = fully confirmed (activates subscription).  
+Expected log output:
+```
+Blockonomics callback: status=2, addr=..., value=500000, txid=faketxid123
+Subscription activated for address: ..., plan: monthly, days: 30
+```
+
+### Test CrakRevenue CPA postback manually
+Simulates a completed CPA offer. Get the `session_key` from your browser session cookie `cpa_session_key` and a real `post_id` from Supabase:
+```
+GET https://your-tunnel.trycloudflare.com/api/cpa/postback?post_id={POST_ID}&session_key={SESSION_KEY}&table=posts&secret={CrakRevenue:PostbackSecret}
+```
+Expected response: `1` with status 200. Then revisit the post — download buttons should appear.
+
+### CrakRevenue SmartLink postback URL (set in CrakRevenue dashboard)
+```
+https://your-domain.com/api/cpa/postback?post_id={aff_sub}&session_key={aff_sub2}&table={aff_sub3}&secret={CrakRevenue:PostbackSecret}
+```
+
 ## Supabase Tables
 
 - `posts` — main content posts with `original_rapidgator_urls`, `our_download_link`, `migration_status`
