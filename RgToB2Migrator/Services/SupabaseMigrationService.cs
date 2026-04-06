@@ -125,9 +125,9 @@ public class SupabaseMigrationService
         using var http = CreateHttpClient();
         var payload = JsonConvert.SerializeObject(new { download_status = "pending" });
 
-        // Reset rows where status=done but our_download_link is empty [] or contains an empty string [""]
-        // In PostgREST/Supabase, we use eq.{} (empty array) or eq.{""} (array with empty string)
-        string[] filters = { "our_download_link=eq.{}", "our_download_link=eq.{{\"\"}}" };
+        // Reset rows where status=done but our_download_link is empty [], contains an empty string [""], or is NULL
+        // In PostgREST/Supabase, we use eq.{} (empty array), eq.{""} (array with empty string), or is.null
+        string[] filters = { "our_download_link=eq.{}", "our_download_link=eq.{{\"\"}}", "our_download_link=is.null" };
 
         foreach (var filter in filters)
         {

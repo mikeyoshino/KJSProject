@@ -37,8 +37,10 @@ public class MigrationOrchestrator
         {
             _logger.LogInformation("Starting Rapidgator → Gofile migration");
 
-            // Reset rows stuck in 'processing' for more than 1 hour back to 'pending'
+            _logger.LogInformation("Repairing database status before migration run...");
+            // Reset rows stuck in 'processing' or 'done' but empty back to 'pending'
             await _supabaseService.ResetStuckProcessingRowsAsync(ct);
+            _logger.LogInformation("Database repair complete.");
 
             int batchSize = limit ?? 50;
 
