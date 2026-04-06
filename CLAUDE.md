@@ -1,0 +1,77 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Build & Run Commands
+
+All projects target **net10.0**.
+
+```bash
+# Build entire solution
+dotnet build KJSProject.sln
+
+# Run the web frontend
+dotnet run --project KJSWeb
+
+# Run the proxy API
+dotnet run --project RapidgatorProxy/src/RapidgatorProxy.Api
+
+# Run the migrator (all pending posts)
+dotnet run --project RgToB2Migrator
+
+# Run the migrator with a post limit
+dotnet run --project RgToB2Migrator -- --limit 10
+```
+
+There are no automated tests in this solution.
+
+## Architecture Overview
+
+This is a three-project solution centered around serving content scraped/migrated from Rapidgator.
+
+### KJSWeb — ASP.NET Core MVC Frontend
+The user-facing website. Uses **Supabase** as the backend database (via the `Supabase` C# SDK and raw HTTP calls to the Supabase REST API). Key concerns:
+
+- **SupabaseService** wraps all DB access. Uses the Supabase SDK for reads (`posts`, `asianscandal_posts`, `categories`) but falls back to raw `HttpClient` calls for operations where the SDK has naming conflicts with `IConfiguration` (e.g. `GetTotalPostCountAsync` uses `HEAD` with `Prefer: count=exact`).
+- **Authentication** is session-based (cookie `BUZZ69_Session`, 24h). JWT validation via `System.IdentityModel.Tokens.Jwt`.
+- **BlockonomicsService** handles Bitcoin payment webhooks for subscriptions.
+- Two content sections: main posts (`HomeController`) and an asian-scandal section (`AsianScandalController`), each with their own Supabase table.
+- Config keys: `Supabase:Url`, `Supabase:Key`, `Supabase:ServiceKey`.
+
+### RgToB2Migrator — Console Migration Tool
+Batch migrates files from Rapidgator → Backblaze B2 (S3-compatible). Pipeline per post:
+
+1. **SupabaseMigrationService** — fetches `pending` posts from `posts` / `asianscandal_posts` tables, marks status as `processing` / `done` / `failed` / `pending`.
+2. **RapidgatorDownloadService** — authenticates with Rapidgator API v2, resolves download links, handles folder URL expansion, streams files to disk.
+3. **FileProcessingService** — detects file type by magic bytes, extracts archives (zip/rar/7z/tar via SharpCompress), renames extracted files sequentially.
+4. **B2UploadService** — uploads via AWSSDK.S3 to Backblaze B2 using S3-compatible endpoint.
+5. **MigrationOrchestrator** — drives the pipeline with parallelism (2 URLs at a time per post via `SemaphoreSlim`), retry logic (3 attempts, exponential backoff), and `RapidgatorTrafficExceededException` handling (stops the run early, resets post to `pending`).
+
+On startup, the orchestrator resets any rows stuck in `processing` state back to `pending` before fetching a new batch.
+
+Config sections: `Supabase` (Url, ServiceKey), `Rapidgator` (Username, Password, ApiBaseUrl, RequestDelayMs), `B2` (ApplicationKeyId, ApplicationKey, BucketName, Region, ServiceUrl), `Migrator` (TempFolder, RateLimitDelayMs).
+
+### RapidgatorProxy — ASP.NET Core Web API
+An on-demand caching proxy for Rapidgator files. Used by the frontend to let subscribers download files without exposing Rapidgator credentials. Key design:
+
+- **DownloadCoordinator** — entry point for download requests. Per-URL locking (`ConcurrentDictionary<string, SemaphoreSlim>`) prevents duplicate downloads. Global concurrency cap via `SemaphoreSlim` (configured by `Rapidgator:MaxConcurrentDownloads`).
+- **CacheManagerService** — manages a local disk cache directory, evicts oldest files when `Cache:MaxSizeGB` is exceeded.
+- **FileDownloadService** — streams files from Rapidgator to disk, updating `DownloadedBytes` on the `DownloadEntry` for progress reporting.
+- **AuthService** — validates Supabase JWTs from the `Authorization: Bearer` header.
+- **AppDbContext** — SQLite (EF Core), single `DownloadEntries` table tracking each download's status and cached filename.
+- File serving: uses `X-Accel-Redirect` for NGINX to serve cached files directly; falls back to Kestrel in development.
+- **CacheCleanupService** — background hosted service that periodically evicts expired entries.
+
+API endpoints (all require `Authorization: Bearer <supabase-jwt>`):
+- `POST /api/download/request` — enqueue or return cached download
+- `GET /api/download/status/{downloadId}` — poll progress
+- `GET /api/download/file/{downloadId}` — retrieve file
+
+Config sections: `Rapidgator`, `Proxy` (optional HTTP proxy address/credentials), `Cache`, `Supabase`, `Cors`.
+
+## Supabase Tables
+
+- `posts` — main content posts with `original_rapidgator_urls`, `our_download_link`, `migration_status`
+- `asianscandal_posts` — same schema, separate table
+- `categories` — category list for the main posts section
+- `subscriptions` — user subscription records with BTC payment tracking

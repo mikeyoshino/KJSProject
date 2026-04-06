@@ -23,6 +23,11 @@ env/
 artifacts/
 tmp/
 
+# Secrets (contain real credentials — use appsettings.Example.json as template)
+RgToB2Migrator/appsettings.json
+KJSWeb/appsettings.json
+RapidgatorProxy/src/RapidgatorProxy.Api/appsettings.json
+
 # Build
 bin/
 obj/
