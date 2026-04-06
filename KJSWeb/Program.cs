@@ -4,6 +4,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddSingleton<KJSWeb.Services.SupabaseService>();
 builder.Services.AddSingleton<KJSWeb.Services.BlockonomicsService>();
+builder.Services.AddSingleton<KJSWeb.Services.TokenGenService>();
 
 // Add session support for auth
 builder.Services.AddDistributedMemoryCache();

@@ -8,11 +8,15 @@ namespace KJSWeb.Controllers;
 public class AsianScandalController : Controller
 {
     private readonly SupabaseService _supabase;
+    private readonly TokenGenService _tokenGen;
+    private readonly IConfiguration _config;
     private const int PageSize = 24;
 
-    public AsianScandalController(SupabaseService supabase)
+    public AsianScandalController(SupabaseService supabase, TokenGenService tokenGen, IConfiguration config)
     {
         _supabase = supabase;
+        _tokenGen = tokenGen;
+        _config = config;
     }
 
     public async Task<IActionResult> Index(int page = 1)
@@ -57,5 +61,35 @@ public class AsianScandalController : Controller
         }
         
         return View(post);
+    }
+
+    [Route("download")]
+    public async Task<IActionResult> Download(string b2Path)
+    {
+        if (string.IsNullOrEmpty(b2Path)) return BadRequest();
+
+        var userId = HttpContext.Session.GetString("user_id");
+        if (string.IsNullOrEmpty(userId))
+        {
+            return RedirectToAction("Login", "Auth", new { returnUrl = $"/asian-scandal" });
+        }
+
+        var activeSub = await _supabase.GetActiveSubscriptionAsync(userId);
+        if (activeSub == null)
+        {
+            return RedirectToAction("Pricing", "Subscription");
+        }
+
+        // Clean the path
+        if (b2Path.StartsWith("/")) b2Path = b2Path.Substring(1);
+
+        // Generate JWT
+        var token = _tokenGen.GenerateDownloadToken(userId, b2Path);
+
+        var workerBaseUrl = _config["CloudflareWorker:WorkerBaseUrl"] ?? "https://dl.yourdomain.com";
+
+        // Redirect to Cloudflare Worker
+        var downloadUrl = $"{workerBaseUrl}/download?file={Uri.EscapeDataString(b2Path)}&token={Uri.EscapeDataString(token)}";
+        return Redirect(downloadUrl);
     }
 }

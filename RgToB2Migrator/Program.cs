@@ -40,16 +40,16 @@ builder.ConfigureServices((context, services) =>
 {
     services.Configure<SupabaseSettings>(context.Configuration.GetSection("Supabase"));
     services.Configure<RapidgatorSettings>(context.Configuration.GetSection("Rapidgator"));
-    services.Configure<GofileSettings>(context.Configuration.GetSection("Gofile"));
+    services.Configure<B2Settings>(context.Configuration.GetSection("B2"));
     services.Configure<MigratorSettings>(context.Configuration.GetSection("Migrator"));
 
     // Infinite timeout on both clients — downloads and uploads can be 10 GB+
     services.AddHttpClient("Rapidgator", client => client.Timeout = Timeout.InfiniteTimeSpan);
-    services.AddHttpClient("Gofile",     client => client.Timeout = Timeout.InfiniteTimeSpan);
+    // (B2 uses AWSSDK.S3 so no custom HttpClient needed here, but keeping placeholder space if desired)
 
     services.AddSingleton<RapidgatorDownloadService>();
     services.AddSingleton<FileProcessingService>();
-    services.AddSingleton<GofileUploadService>();
+    services.AddSingleton<B2UploadService>();
     services.AddSingleton<SupabaseMigrationService>();
     services.AddSingleton<MigrationOrchestrator>();
 });

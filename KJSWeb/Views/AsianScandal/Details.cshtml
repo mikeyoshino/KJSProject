@@ -56,7 +56,7 @@
                                     <h4 class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Premium Fast Mirror (Recommended)</h4>
                                     @foreach (var link in Model.OurDownloadLink)
                                     {
-                                        <a href="@link" target="_blank" rel="noopener"
+                                        <a href="@Url.Action("Download", "AsianScandal", new { b2Path = link })" target="_blank" rel="noopener"
                                            class="inline-block w-full sm:w-auto bg-orange-accent text-white px-10 py-4 text-sm font-black uppercase tracking-widest hover:brightness-110 transition-all text-center mb-2">
                                             ⚡ Full Speed Download @(Model.OurDownloadLink.Count > 1 ? "(Mirror " + (Model.OurDownloadLink.IndexOf(link) + 1) + ")" : "")
                                         </a>

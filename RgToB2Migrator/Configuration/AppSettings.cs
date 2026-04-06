@@ -14,15 +14,14 @@ public class RapidgatorSettings
     public int RequestDelayMs { get; set; } = 3000;
 }
 
-public class GofileSettings
+public class B2Settings
 {
-    // Account API token — required for folder creation and permanent file retention.
-    // Get from: https://gofile.io/myProfile
-    public string Token { get; set; } = "";
-
-    // Optional: upload all posts under a specific folder in your account.
-    // Leave empty to upload to account root.
-    public string ParentFolderId { get; set; } = "";
+    public string ApplicationKeyId { get; set; } = "";
+    public string ApplicationKey { get; set; } = "";
+    public string BucketName { get; set; } = "";
+    public string Region { get; set; } = "us-east-005";
+    public string ServiceUrl { get; set; } = "https://s3.us-east-005.backblazeb2.com";
+    public string PublicBaseUrl { get; set; } = "";
 }
 
 public class MigratorSettings

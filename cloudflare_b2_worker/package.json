@@ -1,0 +1,17 @@
+{
+  "name": "cloudflare-b2-worker",
+  "version": "1.0.0",
+  "description": "Gatekeeper proxy for Backblaze B2 downloads",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "aws4fetch": "^1.0.19",
+    "jose": "^5.2.3"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}

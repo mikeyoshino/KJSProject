@@ -77,6 +77,22 @@ public class RapidgatorDownloadService
     public async Task<(string downloadUrl, string fileName, long fileSize)> GetDownloadLinkAsync(
         string rapidgatorUrl, CancellationToken ct = default)
     {
+        try
+        {
+            return await GetDownloadLinkInternalAsync(rapidgatorUrl, ct);
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("status=401"))
+        {
+            _logger.LogWarning("Rapidgator session 401 detected. Invalidate and retrying once...");
+            _sessionId = null;
+            _sessionExpiry = DateTime.MinValue;
+            return await GetDownloadLinkInternalAsync(rapidgatorUrl, ct);
+        }
+    }
+
+    private async Task<(string downloadUrl, string fileName, long fileSize)> GetDownloadLinkInternalAsync(
+        string rapidgatorUrl, CancellationToken ct = default)
+    {
         var sessionId = await GetSessionIdAsync(ct);
         var url = $"{_settings.ApiBaseUrl}/file/download?sid={sessionId}&url={Uri.EscapeDataString(rapidgatorUrl)}";
 
@@ -203,43 +219,46 @@ public class RapidgatorDownloadService
 
             var totalBytes = response.Content.Headers.ContentLength ?? 0;
 
-            await using var networkStream = await response.Content.ReadAsStreamAsync(ct);
-            await using var fileStream = new FileStream(tempPath,
-                FileMode.Create, FileAccess.Write, FileShare.None,
-                bufferSize: 1 * 1024 * 1024,
-                useAsync: true);
-
-            var buffer = new byte[1 * 1024 * 1024]; // 1 MB
-            long downloaded = 0;
-            var lastLog = DateTime.UtcNow;
-            int read;
-
-            while ((read = await networkStream.ReadAsync(buffer, ct)) > 0)
             {
-                await fileStream.WriteAsync(buffer.AsMemory(0, read), ct);
-                downloaded += read;
+                await using var networkStream = await response.Content.ReadAsStreamAsync(ct);
+                await using var fileStream = new FileStream(tempPath,
+                    FileMode.Create, FileAccess.Write, FileShare.None,
+                    bufferSize: 1 * 1024 * 1024,
+                    useAsync: true);
 
-                if (DateTime.UtcNow - lastLog >= TimeSpan.FromSeconds(10))
+                var buffer = new byte[1 * 1024 * 1024]; // 1 MB
+                long downloaded = 0;
+                var lastLog = DateTime.UtcNow;
+                int read;
+
+                while ((read = await networkStream.ReadAsync(buffer, ct)) > 0)
                 {
-                    lastLog = DateTime.UtcNow;
-                    if (totalBytes > 0)
-                        _logger.LogInformation("Downloading {File}: {Done:N0} / {Total:N0} MB ({Pct:F0}%)",
-                            Path.GetFileName(destPath),
-                            downloaded / 1_048_576, totalBytes / 1_048_576,
-                            100.0 * downloaded / totalBytes);
-                    else
-                        _logger.LogInformation("Downloading {File}: {Done:N0} MB",
-                            Path.GetFileName(destPath), downloaded / 1_048_576);
+                    await fileStream.WriteAsync(buffer.AsMemory(0, read), ct);
+                    downloaded += read;
+
+                    if (DateTime.UtcNow - lastLog >= TimeSpan.FromSeconds(10))
+                    {
+                        lastLog = DateTime.UtcNow;
+                        if (totalBytes > 0)
+                            _logger.LogInformation("Downloading {File}: {Done:N0} / {Total:N0} MB ({Pct:F0}%)",
+                                Path.GetFileName(destPath),
+                                downloaded / 1_048_576, totalBytes / 1_048_576,
+                                100.0 * downloaded / totalBytes);
+                        else
+                            _logger.LogInformation("Downloading {File}: {Done:N0} MB",
+                                Path.GetFileName(destPath), downloaded / 1_048_576);
+                    }
                 }
             }
 
             // Move temp file to final location
             if (File.Exists(destPath))
                 File.Delete(destPath);
+
             File.Move(tempPath, destPath);
 
             _logger.LogInformation("Downloaded {File}: {Size:N0} MB",
-                Path.GetFileName(destPath), downloaded / 1_048_576);
+                Path.GetFileName(destPath), new FileInfo(destPath).Length / 1_048_576);
         }
         catch (Exception ex)
         {

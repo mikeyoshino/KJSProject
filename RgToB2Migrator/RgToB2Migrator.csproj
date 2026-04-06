@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <!-- Archive extraction (zip, rar, 7z, tar, etc.) -->
+    <PackageReference Include="AWSSDK.S3" Version="4.0.20.3" />
     <PackageReference Include="SharpCompress" Version="0.37.2" />
 
     <!-- JSON parsing (same as RapidgatorProxy) -->
