@@ -145,11 +145,20 @@ public class MigrationOrchestrator
             }
             else
             {
-                _logger.LogWarning("No files processed for post {Id}", postId);
+                _logger.LogWarning("No files were successfully processed/collected for post {Id} from {Count} source URL(s)", 
+                    postId, fileUrls.Count);
             }
 
-            // Store the B2 object key (or empty if failed)
-            await _supabaseService.MarkDoneAsync(postId, tableName, [b2ObjectKey], ct);
+            // ── Store the B2 object key or mark as failed ──────────────────────
+            if (!string.IsNullOrWhiteSpace(b2ObjectKey))
+            {
+                await _supabaseService.MarkDoneAsync(postId, tableName, [b2ObjectKey], ct);
+            }
+            else
+            {
+                _logger.LogWarning("Post {Id} in {Table} produced no B2 archive; marking as failed", postId, tableName);
+                await _supabaseService.MarkFailedAsync(postId, tableName, ct);
+            }
         }
         catch (RapidgatorTrafficExceededException)
         {
@@ -201,6 +210,8 @@ public class MigrationOrchestrator
                 _logger.LogDebug("Skipping non-file URL: {Url}", url);
             }
         }
+        
+        _logger.LogInformation("Post {Id} expanded to {Count} individual Rapidgator URL(s)", postId, result.Count);
         return result;
     }
 
@@ -290,6 +301,10 @@ public class MigrationOrchestrator
             var extractionFolder = await _fileProcessingService.ExtractArchiveAsync(
                 archivePath, postTempFolder, ct);
             processedFiles = _fileProcessingService.ProcessExtractedFiles(extractionFolder, fileCounter);
+            
+            if (processedFiles.Count == 0)
+                _logger.LogWarning("Archive extraction yielded 0 files: {FileName}", fileName);
+                
             TryDelete(archivePath);
         }
         else

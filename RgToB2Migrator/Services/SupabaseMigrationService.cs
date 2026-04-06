@@ -115,6 +115,35 @@ public class SupabaseMigrationService
     {
         await ResetStuckInTableAsync("posts", ct);
         await ResetStuckInTableAsync("asianscandal_posts", ct);
+        
+        await ResetBrokenDoneRowsAsync("posts", ct);
+        await ResetBrokenDoneRowsAsync("asianscandal_posts", ct);
+    }
+
+    private async Task ResetBrokenDoneRowsAsync(string table, CancellationToken ct)
+    {
+        using var http = CreateHttpClient();
+        var payload = JsonConvert.SerializeObject(new { download_status = "pending" });
+
+        // Reset rows where status=done but our_download_link is empty [] or contains an empty string [""]
+        // In PostgREST/Supabase, we use eq.{} (empty array) or eq.{""} (array with empty string)
+        string[] filters = { "our_download_link=eq.{}", "our_download_link=eq.{{\"\"}}" };
+
+        foreach (var filter in filters)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Patch,
+                $"{_supabaseUrl}/rest/v1/{table}?download_status=eq.done&{filter}")
+            {
+                Content = new StringContent(payload, Encoding.UTF8, "application/json")
+            };
+
+            var response = await http.SendAsync(request, ct);
+            if (response.IsSuccessStatusCode)
+                _logger.LogInformation("Reset broken 'done' rows in {Table} using filter {Filter}", table, filter);
+            else
+                _logger.LogDebug("No broken 'done' rows found in {Table} for filter {Filter} (Status: {Status})", 
+                    table, filter, response.StatusCode);
+        }
     }
 
     private async Task ResetStuckInTableAsync(string table, CancellationToken ct)
