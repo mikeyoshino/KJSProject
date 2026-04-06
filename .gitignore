@@ -1,6 +1,7 @@
 # Environments
 .env
 .env.*
+appsettings.Development.json
 
 # Python
 __pycache__/
