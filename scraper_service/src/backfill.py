@@ -25,9 +25,9 @@ def run_backfill(total_pages=29, start_page=1, spread_days=365, is_sync=False):
         
         page_added = 0
         for link, thumb_url in results:
-            if is_sync and check_post_exists(link):
-                logging.info(f"  -> Found existing post in sync mode, stopping collection: {link}")
-                break
+            if check_post_exists(link):
+                logging.info(f"  -> Post already exists, skipping collection for this link: {link}")
+                continue
             all_post_links.append((link, thumb_url))
             page_added += 1
             
@@ -55,8 +55,8 @@ def run_backfill(total_pages=29, start_page=1, spread_days=365, is_sync=False):
 
     # 2. Process posts
     for i, (link, thumb_url) in enumerate(all_post_links):
-        if not is_sync and check_post_exists(link):
-            logging.info(f"Post already exists, skipping: {link}")
+        if check_post_exists(link):
+            logging.info(f"Post already exists in database, skipping: {link}")
             continue
             
         logging.info(f"Processing post [{i+1}/{total_posts}]: {link}")
@@ -81,8 +81,8 @@ def run_backfill(total_pages=29, start_page=1, spread_days=365, is_sync=False):
         mirrored_thumb = mirror_single_image(data['thumbnail_url'])
         mirrored_content = mirror_images_in_html(data['content_html'])
         
-        if not mirrored_thumb or not mirrored_content:
-            logging.warning(f"Skipping post due to mirroring failure: {data['title']}")
+        if mirrored_thumb is None or mirrored_content is None:
+            logging.warning(f"Skipping post due to critical mirroring failure (returned None): {data['title']}")
             continue
             
         data['thumbnail_url'] = mirrored_thumb

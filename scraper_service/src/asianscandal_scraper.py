@@ -279,20 +279,22 @@ def parse_post_page(source_url: str, html: str, fallback_thumb: str = '') -> dic
 def mirror_single_image(img_url: str) -> str | None:
     """Download and re-upload one image to Supabase storage."""
     if not img_url:
-        return None
+        return ""
     ext_raw = img_url.split('.')[-1].split('?')[0].lower()
     ext = ext_raw if ext_raw in ('jpg', 'jpeg', 'png', 'gif', 'webp') else 'jpg'
     filename = f"{hashlib.md5(img_url.encode()).hexdigest()}.{ext}"
     content = download_image(img_url)
-    if not content:
-        return None
-    return upload_to_supabase(content, filename)
+    new_url = upload_to_supabase(content, filename)
+    if not new_url:
+        logging.warning(f"  -> Failed to upload thumbnail, falling back to original: {img_url}")
+        return img_url
+    return new_url
 
 
 def mirror_images_in_html(html: str) -> str | None:
     """Re-host all images in an HTML string to Supabase storage."""
     if not html:
-        return None
+        return ""
 
     soup = BeautifulSoup(html, 'html.parser')
     imgs = soup.find_all('img')
@@ -315,10 +317,12 @@ def mirror_images_in_html(html: str) -> str | None:
         filename = f"{hashlib.md5(src.encode()).hexdigest()}.{ext}"
         data = download_image(src)
         if not data:
-            return False
+            logging.warning(f"  -> Failed to download content image, keeping original: {src}")
+            return True
         new_url = upload_to_supabase(data, filename)
         if not new_url:
-            return False
+            logging.warning(f"  -> Failed to upload content image, keeping original: {src}")
+            return True
         img['src'] = new_url
         # Update parent <a> href if it wraps the image
         if img.parent and img.parent.name == 'a':

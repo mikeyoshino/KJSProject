@@ -33,8 +33,15 @@ public class FileProcessingService
 
     public record ProcessedFile(string RelativePath, string LocalPath);
 
-    /// <summary>Mutable counter passed between async methods to avoid ref limitations.</summary>
-    public sealed class FileCounter { public int Value = 1; }
+    /// <summary>Thread-safe counter passed between async tasks.</summary>
+    public sealed class FileCounter
+    {
+        private int _value = 1;
+        public int Value => _value;
+        public int Increment() => Interlocked.Increment(ref _value);
+    }
+
+    private readonly object _processingLock = new();
 
     public FileProcessingService(ILogger<FileProcessingService> logger)
     {
@@ -201,54 +208,57 @@ public class FileProcessingService
         FileCounter counter,
         Dictionary<string, int> textFileCountPerDir)
     {
-        string newFileName;
-
-        if (IsTextFile(originalPath))
+        lock (_processingLock)
         {
-            // Determine collision-free name within this directory
-            var key = fileDir;
-            if (!textFileCountPerDir.TryGetValue(key, out int textCount))
-                textCount = 0;
-
-            newFileName = textCount == 0
-                ? "scandal69.com"
-                : $"scandal69({textCount + 1}).com";
-
-            textFileCountPerDir[key] = textCount + 1;
-
-            // Write replacement content (creates or overwrites the destination file)
-            var newPath = Path.Combine(fileDir, newFileName);
-            File.WriteAllText(newPath, TextContent, Encoding.UTF8);
-
-            // Delete the original if it was renamed
-            if (!string.Equals(originalPath, newPath, StringComparison.OrdinalIgnoreCase))
-                File.Delete(originalPath);
-
-            _logger.LogDebug("Text file: {Original} → {New}", Path.GetFileName(originalPath), newFileName);
-        }
-        else
-        {
-            // Rename to scandal69{N}.ext — detect type from magic bytes if no extension
-            var ext = Path.GetExtension(originalPath);
-            if (string.IsNullOrEmpty(ext))
-                ext = DetectExtension(originalPath);
-            newFileName = $"scandal69{counter.Value}{ext}";
-            counter.Value++;
-
-            var newPath = Path.Combine(fileDir, newFileName);
-
-            // Guard against collision (shouldn't happen with per-post counter, but be safe)
-            while (File.Exists(newPath) && !string.Equals(newPath, originalPath, StringComparison.OrdinalIgnoreCase))
+            if (IsTextFile(originalPath))
             {
-                newFileName = $"scandal69{counter.Value}{ext}";
-                counter.Value++;
-                newPath = Path.Combine(fileDir, newFileName);
+                // Determine collision-free name within this directory
+                var key = fileDir;
+                if (!textFileCountPerDir.TryGetValue(key, out int textCount))
+                    textCount = 0;
+
+                newFileName = textCount == 0
+                    ? "scandal69.txt"
+                    : $"scandal69({textCount + 1}).txt";
+
+                textFileCountPerDir[key] = textCount + 1;
+
+                // Write replacement content (creates or overwrites the destination file)
+                var newPath = Path.Combine(fileDir, newFileName);
+                File.WriteAllText(newPath, TextContent, Encoding.UTF8);
+
+                // Delete the original if it was renamed
+                if (!string.Equals(originalPath, newPath, StringComparison.OrdinalIgnoreCase))
+                    File.Delete(originalPath);
+
+                _logger.LogDebug("Text file: {Original} → {New}", Path.GetFileName(originalPath), newFileName);
             }
+            else
+            {
+                // Rename to scandal69{N}.ext — detect type from magic bytes if no extension
+                var ext = Path.GetExtension(originalPath);
+                if (string.IsNullOrEmpty(ext))
+                    ext = DetectExtension(originalPath);
 
-            if (!string.Equals(originalPath, newPath, StringComparison.OrdinalIgnoreCase))
-                File.Move(originalPath, newPath, overwrite: false);
+                // Safely get a unique counter value
+                int currentVal = counter.Increment() - 1;
+                newFileName = $"scandal69{currentVal}{ext}";
 
-            _logger.LogDebug("File: {Original} → {New}", Path.GetFileName(originalPath), newFileName);
+                var newPath = Path.Combine(fileDir, newFileName);
+
+                // Guard against collision (shouldn't happen with per-post counter, but be safe)
+                while (File.Exists(newPath) && !string.Equals(newPath, originalPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    currentVal = counter.Increment() - 1;
+                    newFileName = $"scandal69{currentVal}{ext}";
+                    newPath = Path.Combine(fileDir, newFileName);
+                }
+
+                if (!string.Equals(originalPath, newPath, StringComparison.OrdinalIgnoreCase))
+                    File.Move(originalPath, newPath, overwrite: false);
+
+                _logger.LogDebug("File: {Original} → {New}", Path.GetFileName(originalPath), newFileName);
+            }
         }
 
         // Build relative path from root for B2 upload (use forward slashes)

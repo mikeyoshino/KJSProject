@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RgToB2Migrator.Configuration;
 using RgToB2Migrator.Models;
+using System.Collections.Concurrent;
 
 namespace RgToB2Migrator.Services;
 
@@ -10,7 +11,7 @@ public class MigrationOrchestrator
     private readonly SupabaseMigrationService _supabaseService;
     private readonly RapidgatorDownloadService _rapidgatorService;
     private readonly FileProcessingService _fileProcessingService;
-    private readonly GofileUploadService _gofileService;
+    private readonly B2UploadService _b2Service;
     private readonly MigratorSettings _settings;
     private readonly ILogger<MigrationOrchestrator> _logger;
 
@@ -18,14 +19,14 @@ public class MigrationOrchestrator
         SupabaseMigrationService supabaseService,
         RapidgatorDownloadService rapidgatorService,
         FileProcessingService fileProcessingService,
-        GofileUploadService gofileService,
+        B2UploadService b2Service,
         IOptions<MigratorSettings> settings,
         ILogger<MigrationOrchestrator> logger)
     {
         _supabaseService = supabaseService;
         _rapidgatorService = rapidgatorService;
         _fileProcessingService = fileProcessingService;
-        _gofileService = gofileService;
+        _b2Service = b2Service;
         _settings = settings.Value;
         _logger = logger;
     }
@@ -99,9 +100,8 @@ public class MigrationOrchestrator
             await _supabaseService.MarkProcessingAsync(postId, tableName, ct);
             Directory.CreateDirectory(postTempFolder);
 
-            // ── Create one Gofile folder for the whole post ────────────────────
-            var (folderId, downloadPageUrl) = await _gofileService.CreatePostFolderAsync(
-                postId.ToString(), ct);
+            // (B2 uses flat object keys, so no folder creation is necessary)
+            string b2ObjectKey = string.Empty;
 
             // ── Counter shared across all archives in this post ────────────────
             var fileCounter = new FileProcessingService.FileCounter();
@@ -109,48 +109,47 @@ public class MigrationOrchestrator
             // Expand folder URLs → individual file URLs, drop non-Rapidgator junk
             var fileUrls = await ExpandUrlsAsync(urls, postId, ct);
 
-            // ── Process each URL: download → extract → rename → collect files ──
-            var allProcessedFiles = new List<FileProcessingService.ProcessedFile>();
-
-            for (int i = 0; i < fileUrls.Count; i++)
+            // ── Process each URL in parallel (2 at a time) ──────────────────────
+            var allProcessedFiles = new ConcurrentBag<FileProcessingService.ProcessedFile>();
+            using var semaphore = new SemaphoreSlim(2);
+            
+            var tasks = fileUrls.Select(async (url, i) =>
             {
-                if (ct.IsCancellationRequested) break;
-
-                _logger.LogDebug("URL {Index}/{Total}: {Url}", i + 1, fileUrls.Count, fileUrls[i]);
-
+                await semaphore.WaitAsync(ct);
                 try
                 {
-                    var files = await ProcessOneUrlAsync(fileUrls[i], postTempFolder, fileCounter, ct);
-                    allProcessedFiles.AddRange(files);
+                    // Small staggered start to avoid simultaneous Rapidgator API hits
+                    if (i > 0) await Task.Delay(1000, ct); 
+                    
+                    var files = await ProcessOneUrlWithRetryAsync(url, postTempFolder, fileCounter, i + 1, fileUrls.Count, ct);
+                    foreach (var file in files) allProcessedFiles.Add(file);
                 }
-                catch (RapidgatorTrafficExceededException)
+                finally
                 {
-                    throw;
+                    semaphore.Release();
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to process URL {Index}/{Total}: {Url}",
-                        i + 1, fileUrls.Count, fileUrls[i]);
-                }
+            });
 
-                if (i < fileUrls.Count - 1)
-                    await Task.Delay(_settings.RateLimitDelayMs, ct);
-            }
+            await Task.WhenAll(tasks);
 
             // ── Zip all renamed files and upload as one archive ────────────────
             if (allProcessedFiles.Count > 0)
             {
-                var zipPath = Path.Combine(postTempFolder, $"{postId}.zip");
+                var zipName = $"{postId}.zip";
+                var zipPath = Path.Combine(postTempFolder, zipName);
                 await _fileProcessingService.CreateZipAsync(allProcessedFiles, zipPath, ct);
-                await _gofileService.UploadFileAsync(zipPath, $"{postId}.zip", folderId, ct);
+                
+                // Upload zip to B2 using prefix posts/{postId}/{postId}.zip
+                var key = $"posts/{postId}/{zipName}";
+                b2ObjectKey = await _b2Service.UploadFileAsync(zipPath, key, ct);
             }
             else
             {
                 _logger.LogWarning("No files processed for post {Id}", postId);
             }
 
-            // Store the single Gofile folder URL (one per post)
-            await _supabaseService.MarkDoneAsync(postId, tableName, [downloadPageUrl], ct);
+            // Store the B2 object key (or empty if failed)
+            await _supabaseService.MarkDoneAsync(postId, tableName, [b2ObjectKey], ct);
         }
         catch (RapidgatorTrafficExceededException)
         {
@@ -203,6 +202,52 @@ public class MigrationOrchestrator
             }
         }
         return result;
+    }
+
+    /// <summary>
+    /// Wrapper around ProcessOneUrlAsync that adds retry logic.
+    /// </summary>
+    private async Task<List<FileProcessingService.ProcessedFile>> ProcessOneUrlWithRetryAsync(
+        string rapidgatorUrl,
+        string postTempFolder,
+        FileProcessingService.FileCounter fileCounter,
+        int index,
+        int total,
+        CancellationToken ct)
+    {
+        int maxRetries = 3;
+        int delayMs = 5000;
+
+        for (int attempt = 1; attempt <= maxRetries; attempt++)
+        {
+            try
+            {
+                _logger.LogInformation("[{Index}/{Total}] Processing URL (Attempt {Attempt}/{Max})", 
+                    index, total, attempt, maxRetries);
+                
+                return await ProcessOneUrlAsync(rapidgatorUrl, postTempFolder, fileCounter, ct);
+            }
+            catch (RapidgatorTrafficExceededException)
+            {
+                throw; // Don't retry traffic exceeded
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("Attempt {Attempt} failed for URL {Url}: {Message}", 
+                    attempt, rapidgatorUrl, ex.Message);
+                
+                if (attempt == maxRetries)
+                {
+                    _logger.LogError(ex, "URL failed after {Max} attempts: {Url}", maxRetries, rapidgatorUrl);
+                    return new List<FileProcessingService.ProcessedFile>();
+                }
+                
+                // Exponential backoff
+                await Task.Delay(delayMs * attempt, ct);
+            }
+        }
+
+        return new List<FileProcessingService.ProcessedFile>();
     }
 
     /// <summary>

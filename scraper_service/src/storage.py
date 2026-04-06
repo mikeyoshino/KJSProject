@@ -20,17 +20,24 @@ def download_image(img_url: str) -> bytes:
     retries = 3
     for attempt in range(retries):
         try:
-            # mimic browser and 60s timeout for stability
-            response = requests.get(img_url, headers=HEADERS, timeout=60)
+            # Use (connect_timeout, read_timeout) — fail fast on connection issues
+            response = requests.get(img_url, headers=HEADERS, timeout=(10, 30))
             response.raise_for_status()
             return response.content
+        except (requests.exceptions.ConnectionError, ConnectionResetError) as e:
+            logging.warning(f"Attempt {attempt+1}/{retries} connection error for {img_url}: {e}")
+            if attempt < retries - 1:
+                time.sleep(2)  # Brief wait, don't hang forever
+            else:
+                logging.error(f"Connection permanently refused for: {img_url}")
         except Exception as e:
             logging.warning(f"Attempt {attempt+1}/{retries} failed for {img_url}: {e}")
             if attempt < retries - 1:
-                time.sleep(1) # Short wait before retry
+                time.sleep(1)
             else:
                 logging.error(f"Failed to download image after {retries} attempts: {img_url}")
     return None
+
 
 def optimize_image(content: bytes, max_width: int = 1400) -> bytes:
     if not content:
@@ -53,8 +60,8 @@ def optimize_image(content: bytes, max_width: int = 1400) -> bytes:
         img.close()
         return res
     except Exception as e:
-        logging.error(f"Failed to optimize image: {e}")
-        return None
+        logging.error(f"Failed to optimize image, using original content: {e}")
+        return content
 
 def upload_to_supabase(content: bytes, filename: str) -> str:
     if not supabase or not content:
@@ -78,7 +85,21 @@ def upload_to_supabase(content: bytes, filename: str) -> str:
         return supabase.storage.from_(bucket_name).get_public_url(filename)
     except Exception as e:
         # Check if file already exists
-        if "already exists" in str(e).lower():
+        err_msg = str(e).lower()
+        if "already exists" in err_msg or "duplicate" in err_msg:
+            logging.info(f"Image {filename} already exists in storage, skipping upload.")
             return supabase.storage.from_(bucket_name).get_public_url(filename)
-        logging.error(f"Failed to upload {filename} to Supabase: {e}")
+        
+        # Verbose logging for any other failure (like 400 Bad Request)
+        logging.error("=" * 60)
+        logging.error(f"SUPABASE UPLOAD FAILURE: {filename}")
+        logging.error(f"Error Type: {type(e).__name__}")
+        logging.error(f"Error Detail: {str(e)}")
+        if hasattr(e, 'message'): logging.error(f"Error Message: {e.message}")
+        if hasattr(e, 'response'): 
+            try:
+                logging.error(f"Response Status: {e.response.status_code}")
+                logging.error(f"Response Text: {e.response.text}")
+            except: pass
+        logging.error("=" * 60)
         return None

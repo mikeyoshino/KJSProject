@@ -100,7 +100,7 @@ def parse_post_page(source_url: str, html: str, fallback_thumb: str = '') -> dic
 
 def mirror_single_image(img_url: str) -> str:
     if not img_url:
-        return None
+        return "" # Don't return None, just an empty string
     # Create unique filename based on the URL hash
     parsed_ext = img_url.split('.')[-1].split('?')[0].lower()
     ext = parsed_ext if parsed_ext in ['jpg', 'jpeg', 'png', 'gif', 'webp'] else 'jpg'
@@ -111,11 +111,15 @@ def mirror_single_image(img_url: str) -> str:
         return None
         
     new_url = upload_to_supabase(content, filename)
+    if not new_url:
+        logging.warning(f"Failed to upload image, falling back to original: {img_url}")
+        return img_url
+        
     return new_url
 
 def mirror_images_in_html(html: str) -> str:
     if not html:
-        return None
+        return "" # Don't return None
     
     # Text replacement for branding cleanup
     html = html.replace("Buzz69.com", "{{SiteName}}")
@@ -143,11 +147,13 @@ def mirror_images_in_html(html: str) -> str:
         
         content = download_image(src)
         if not content:
-            return False # Failure
+            logging.warning(f"Failed to download image, keeping original src: {src}")
+            return True # Non-fatal, just continue
             
         new_url = upload_to_supabase(content, filename)
         if not new_url:
-            return False # Failure
+            logging.warning(f"Failed to upload image, keeping original src: {src}")
+            return True # Non-fatal, just continue
             
         # Update image src
         img['src'] = new_url
@@ -169,6 +175,7 @@ def mirror_images_in_html(html: str) -> str:
                     return None # Atomic failure: stop and fail the whole post
             except Exception as e:
                 logging.error(f"Thread execution error during mirroring: {e}")
-                return None # Fail safe
+                # Don't return None, just keep going with what we 
+                # have so far in the soup
                 
     return str(soup)
