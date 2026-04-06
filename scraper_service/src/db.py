@@ -52,6 +52,18 @@ def fetch_asianscandal_posts_missing_content(limit: int = 100, offset: int = 0) 
     )
     return response.data or []
 
+def fetch_all_asianscandal_posts(limit: int = 100, offset: int = 0) -> list:
+    """Fetch all posts (regardless of content_html), returning id + source_url + title."""
+    if not supabase: return []
+    response = (
+        supabase.table("asianscandal_posts")
+        .select("id, source_url, title")
+        .order("created_at", desc=False)
+        .range(offset, offset + limit - 1)
+        .execute()
+    )
+    return response.data or []
+
 def update_asianscandal_content_html(post_id: str, content_html: str) -> bool:
     """Update content_html for a single post by id. Returns True on success."""
     if not supabase: return False

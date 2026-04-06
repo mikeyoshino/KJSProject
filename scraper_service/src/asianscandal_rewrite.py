@@ -13,7 +13,8 @@ Pipeline per post:
 
 Usage:
     cd scraper_service/src
-    python asianscandal_rewrite.py                  # process all missing
+    python asianscandal_rewrite.py                  # process posts with missing content_html
+    python asianscandal_rewrite.py --all            # rewrite ALL posts (overwrite existing)
     python asianscandal_rewrite.py --limit 50       # first 50
     python asianscandal_rewrite.py --dry-run        # scrape + clean, no DB write
     python asianscandal_rewrite.py --no-ai          # skip Ollama step
@@ -36,7 +37,7 @@ from asianscandal_scraper import fetch_html, parse_post_page
 from storage import download_image
 from storage_b2 import upload_image_to_b2, b2_key_for_url
 from ai_rewriter import rewrite_content, check_ollama_available
-from db import fetch_asianscandal_posts_missing_content
+from db import fetch_asianscandal_posts_missing_content, fetch_all_asianscandal_posts
 
 logging.basicConfig(
     level=logging.INFO,
@@ -209,11 +210,14 @@ def process_post(post: dict, dry_run: bool = False, use_ai: bool = True) -> bool
         return False
 
 
-def run(limit: int = None, delay: float = 1.5, dry_run: bool = False, use_ai: bool = True):
+def run(limit: int = None, delay: float = 1.5, dry_run: bool = False, use_ai: bool = True, all_posts: bool = False):
+    fetch_fn = fetch_all_asianscandal_posts if all_posts else fetch_asianscandal_posts_missing_content
+
     logging.info("=" * 60)
     logging.info("AsianScandal Content Rewrite")
+    logging.info(f"  Mode: {'ALL posts' if all_posts else 'Missing content_html only'}")
     if dry_run:
-        logging.info("  MODE: DRY RUN (no DB writes)")
+        logging.info("  DB writes: DRY RUN (disabled)")
     if not use_ai:
         logging.info("  AI rewrite: DISABLED")
     logging.info("=" * 60)
@@ -235,7 +239,7 @@ def run(limit: int = None, delay: float = 1.5, dry_run: bool = False, use_ai: bo
     total_processed = 0
 
     while True:
-        posts = fetch_asianscandal_posts_missing_content(limit=batch_size, offset=offset)
+        posts = fetch_fn(limit=batch_size, offset=offset)
         if not posts:
             break
 
@@ -275,6 +279,7 @@ if __name__ == "__main__":
     parser.add_argument("--delay", type=float, default=1.5, help="Seconds between posts (default 1.5)")
     parser.add_argument("--dry-run", action="store_true", help="Scrape and clean but do not write to DB")
     parser.add_argument("--no-ai", action="store_true", help="Skip Ollama AI rewrite step")
+    parser.add_argument("--all", dest="all_posts", action="store_true", help="Rewrite ALL posts, not just missing content")
     args = parser.parse_args()
 
     run(
@@ -282,4 +287,5 @@ if __name__ == "__main__":
         delay=args.delay,
         dry_run=args.dry_run,
         use_ai=not args.no_ai,
+        all_posts=args.all_posts,
     )
