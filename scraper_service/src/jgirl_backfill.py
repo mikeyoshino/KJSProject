@@ -117,7 +117,13 @@ def unrestrict_link(url: str) -> dict | None:
         if resp.status_code == 503:
             logging.warning("Real-Debrid: service unavailable (503)")
             return None
-        resp.raise_for_status()
+        if not resp.ok:
+            try:
+                err = resp.json()
+            except Exception:
+                err = resp.text
+            logging.warning(f"Real-Debrid error {resp.status_code} for {url}: {err}")
+            return None
         data = resp.json()
         if "download" not in data:
             logging.warning(f"Real-Debrid: no download URL in response: {data}")
