@@ -54,6 +54,7 @@ from jgirl_scraper import (
     parse_post_page,
     upload_thumbnail,
     upload_preview_images,
+    upload_post_images,
     close_browser,
 )
 from db import (
@@ -236,6 +237,7 @@ def process_post(
         "tags":                    parsed["tags"],
         "original_download_links": parsed["original_download_links"],
         "thumbnail_url":           parsed["thumbnail_url"],
+        "post_images":             [],
         "images":                  [],
         "download_links":          [],
         "download_status":         "pending",
@@ -251,13 +253,18 @@ def process_post(
 
     success = False
     try:
-        # Upload thumbnail + preview images
+        # Upload thumbnail + images
         new_thumb = parsed["thumbnail_url"]
+        new_post_images = parsed["post_images"]
         new_images = parsed["images"]
         if upload_images:
             new_thumb = upload_thumbnail(post_id, parsed["thumbnail_url"])
-            new_images = upload_preview_images(post_id, parsed["images"])
-            logging.info(f"  Uploaded thumbnail + {len(new_images)} previews")
+            if parsed["post_images"]:
+                new_post_images = upload_post_images(post_id, parsed["post_images"])
+                logging.info(f"  Uploaded thumbnail + {len(new_post_images)} post images")
+            if parsed["images"]:
+                new_images = upload_preview_images(post_id, parsed["images"])
+                logging.info(f"  Uploaded {len(new_images)} preview frames")
 
         # Download file via Real-Debrid → B2
         b2_download_url = None
@@ -282,6 +289,7 @@ def process_post(
         now_iso = datetime.now(timezone.utc).isoformat()
         update_jgirl_post(post_id, {
             "thumbnail_url":   new_thumb,
+            "post_images":     new_post_images,
             "images":          new_images,
             "download_links":  [b2_download_url] if b2_download_url else [],
             "scraped_at":      now_iso,
@@ -398,6 +406,7 @@ def _process_parsed(
         "tags":                    parsed["tags"],
         "original_download_links": parsed["original_download_links"],
         "thumbnail_url":           parsed["thumbnail_url"],
+        "post_images":             [],
         "images":                  [],
         "download_links":          [],
         "download_status":         "pending",
@@ -413,11 +422,16 @@ def _process_parsed(
 
     try:
         new_thumb = parsed["thumbnail_url"]
+        new_post_images = parsed["post_images"]
         new_images = parsed["images"]
         if upload_images:
             new_thumb = upload_thumbnail(post_id, parsed["thumbnail_url"])
-            new_images = upload_preview_images(post_id, parsed["images"])
-            logging.info(f"  Uploaded thumbnail + {len(new_images)} previews")
+            if parsed["post_images"]:
+                new_post_images = upload_post_images(post_id, parsed["post_images"])
+                logging.info(f"  Uploaded thumbnail + {len(new_post_images)} post images")
+            if parsed["images"]:
+                new_images = upload_preview_images(post_id, parsed["images"])
+                logging.info(f"  Uploaded {len(new_images)} preview frames")
 
         b2_download_url = None
         if do_download and parsed["original_download_links"]:
@@ -437,6 +451,7 @@ def _process_parsed(
         now_iso = datetime.now(timezone.utc).isoformat()
         update_jgirl_post(post_id, {
             "thumbnail_url":   new_thumb,
+            "post_images":     new_post_images,
             "images":          new_images,
             "download_links":  [b2_download_url] if b2_download_url else [],
             "scraped_at":      now_iso,

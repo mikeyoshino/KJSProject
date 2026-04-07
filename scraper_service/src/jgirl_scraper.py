@@ -232,17 +232,38 @@ def parse_post_page(source_url: str, html: str, source: str) -> dict:
             if text and text not in tags:
                 tags.append(text)
 
-    # Thumbnail — full-size poster img.img-fluid.mx-auto (check data-src first for lazy load)
     thumbnail_url = ""
-    poster = soup.find(
-        "img",
-        class_=lambda c: c and "img-fluid" in c and "mx-auto" in c,
-    )
-    if poster:
-        thumbnail_url = poster.get("data-src") or poster.get("src", "")
+    post_images = []    # static photos (photo posts): 1.jpg, 2.jpg, 3.jpg...
+    preview_images = [] # video slideshow frames: mov1001.jpg, mov1002.jpg...
 
-    # Preview images — scoped to div.bgg-dark.post-item (main video player only)
-    preview_images = []
+    # ── Photo post layout ────────────────────────────────────────────────────
+    # div.side-scroll contains: poster.jpg (thumbnail) + 1.jpg, 2.jpg... (photos)
+    side_scroll = soup.find("div", class_=lambda c: c and "side-scroll" in c)
+    if side_scroll:
+        for img in side_scroll.find_all("img"):
+            src = img.get("src") or img.get("data-src", "")
+            if not src or src.startswith("/img/"):
+                continue
+            classes = img.get("class", [])
+            if "ms-1" in classes:
+                # Numbered photo (1.jpg, 2.jpg...)
+                if src not in post_images:
+                    post_images.append(src)
+            elif not thumbnail_url:
+                # First img without ms-1 is the poster/thumbnail
+                thumbnail_url = src
+
+    # ── Video post layout ────────────────────────────────────────────────────
+    # img.img-fluid.mx-auto is the poster; lazyload-preview are slideshow frames
+    if not thumbnail_url:
+        poster = soup.find(
+            "img",
+            class_=lambda c: c and "img-fluid" in c and "mx-auto" in c,
+        )
+        if poster:
+            thumbnail_url = poster.get("data-src") or poster.get("src", "")
+
+    # Video preview slideshow — scoped to first div.bgg-dark.post-item
     main_player = soup.find("div", class_=lambda c: c and "bgg-dark" in c and "post-item" in c)
     img_scope = main_player if main_player else soup
     for img in img_scope.find_all("img", class_="lazyload-preview"):
@@ -264,7 +285,8 @@ def parse_post_page(source_url: str, html: str, source: str) -> dict:
         "source_url": source_url,
         "title": title,
         "thumbnail_url": thumbnail_url,
-        "images": preview_images,
+        "post_images": post_images,       # photo post: 1.jpg, 2.jpg, 3.jpg...
+        "images": preview_images,         # video post: mov1001.jpg, mov1002.jpg...
         "tags": tags,
         "original_download_links": download_links,
         "download_links": [],
@@ -322,6 +344,36 @@ def upload_preview_images(post_id: str, image_urls: list[str]) -> list[str]:
         content = download_image(url)
         if not content:
             logging.warning(f"  Could not download preview {idx + 1}: {url}")
+            b2_urls.append(url)
+            continue
+        new_url = upload_file_to_b2(content, b2_key, content_type="image/jpeg", optimize_images=True)
+        b2_urls.append(new_url or url)
+        time.sleep(0.2)
+
+    return b2_urls
+
+
+def upload_post_images(post_id: str, image_urls: list[str]) -> list[str]:
+    """
+    Download and upload photo-post images to B2 under JGirls/{post_id}/images/{n:04d}.jpg.
+    These are the static gallery photos (1.jpg, 2.jpg, 3.jpg...) from photo-type posts.
+    Returns list of B2 public URLs (original URL kept on failure).
+    """
+    if not image_urls:
+        return []
+    try:
+        from storage import download_image
+        from storage_b2 import upload_file_to_b2
+    except ImportError:
+        logging.warning("storage/storage_b2 not importable, skipping post image upload")
+        return image_urls
+
+    b2_urls = []
+    for idx, url in enumerate(image_urls):
+        b2_key = f"JGirls/{post_id}/images/{idx + 1:04d}.jpg"
+        content = download_image(url)
+        if not content:
+            logging.warning(f"  Could not download post image {idx + 1}: {url}")
             b2_urls.append(url)
             continue
         new_url = upload_file_to_b2(content, b2_key, content_type="image/jpeg", optimize_images=True)
