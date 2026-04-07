@@ -28,12 +28,22 @@ import random
 import logging
 import argparse
 import mimetypes
+import socket
 from datetime import datetime, timedelta, timezone
 
 sys.path.insert(0, os.path.dirname(__file__))
 
 import requests
 from dotenv import load_dotenv
+
+# ── Force IPv4 for all outbound connections ───────────────────────────────────
+# Real-Debrid blocks datacenter IPv6 (error_code 22). Patching getaddrinfo to
+# return only AF_INET results forces requests/boto3 to connect over IPv4.
+_orig_getaddrinfo = socket.getaddrinfo
+def _ipv4_only_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+    return _orig_getaddrinfo(host, port, socket.AF_INET, type, proto, flags)
+socket.getaddrinfo = _ipv4_only_getaddrinfo
+# ─────────────────────────────────────────────────────────────────────────────
 
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 
