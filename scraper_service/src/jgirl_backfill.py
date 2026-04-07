@@ -56,7 +56,10 @@ from jgirl_scraper import (
     upload_preview_images,
     close_browser,
 )
-from db import check_jgirl_post_exists, insert_jgirl_post, update_jgirl_post
+from db import (
+    check_jgirl_post_exists, insert_jgirl_post, update_jgirl_post,
+    fetch_jgirl_posts_for_download,
+)
 from storage_b2 import stream_upload_to_b2, delete_b2_folder, _B2_PUBLIC_BASE, _B2_BUCKET
 
 logging.basicConfig(
@@ -67,6 +70,11 @@ logging.basicConfig(
 
 RD_API_BASE = "https://api.real-debrid.com/rest/1.0"
 RD_API_KEY = os.getenv("RD_API_KEY", "")
+
+# Optional SOCKS5 proxy for Real-Debrid calls (bypasses VPS IP block).
+# Set RD_PROXY=socks5://127.0.0.1:1080 in .env when using SSH tunnel.
+_RD_PROXY = os.getenv("RD_PROXY", "")
+_RD_PROXIES = {"https": _RD_PROXY, "http": _RD_PROXY} if _RD_PROXY else None
 
 # Provider priority — highest first
 _PROVIDER_PRIORITY = ["katfile.vip", "katfile.online", "ddownload.com", "rapidgator.net"]
@@ -120,6 +128,7 @@ def unrestrict_link(url: str) -> dict | None:
             headers=_rd_headers(),
             data={"link": url},
             timeout=30,
+            proxies=_RD_PROXIES,
         )
         if resp.status_code == 401:
             logging.error("Real-Debrid: invalid API key (401)")
@@ -172,7 +181,7 @@ def download_and_upload_to_b2(post_id: str, rd_result: dict) -> str | None:
 
     logging.info(f"  Streaming {filename} → B2 ({rd_result.get('filesize', '?')} bytes)")
     try:
-        resp = requests.get(download_url, stream=True, timeout=(30, None))
+        resp = requests.get(download_url, stream=True, timeout=(30, None), proxies=_RD_PROXIES)
         resp.raise_for_status()
         resp.raw.decode_content = True
         url = stream_upload_to_b2(resp.raw, b2_key, content_type)
