@@ -108,3 +108,103 @@ def upload_image_to_b2(content: bytes, filename: str) -> str | None:
 def b2_key_for_url(img_url: str) -> str:
     """Derive the B2 filename (md5 hash + .jpg) from a source URL."""
     return f"{hashlib.md5(img_url.encode()).hexdigest()}.jpg"
+
+
+def upload_file_to_b2(
+    content: bytes,
+    b2_key: str,
+    content_type: str = "application/octet-stream",
+    optimize_images: bool = False,
+) -> str | None:
+    """
+    Upload with a caller-supplied full key, e.g. 'JGirls/{postId}/preview/0001.jpg'.
+    Unlike upload_image_to_b2() which always writes under scandal69/, this accepts any path.
+    Idempotent: skips upload if the object already exists.
+    Returns public URL or None on failure.
+    """
+    if not content:
+        return None
+    try:
+        client = _get_client()
+        try:
+            client.head_object(Bucket=_B2_BUCKET, Key=b2_key)
+            logging.info(f"  B2 already exists, skipping: {b2_key}")
+            return f"{_B2_PUBLIC_BASE}/{b2_key}" if _B2_PUBLIC_BASE else None
+        except client.exceptions.ClientError as e:
+            if e.response["Error"]["Code"] != "404":
+                raise
+
+        body = content
+        if optimize_images and content_type.startswith("image/"):
+            body = _optimize(content)
+            content_type = "image/jpeg"
+
+        client.put_object(Bucket=_B2_BUCKET, Key=b2_key, Body=body, ContentType=content_type)
+        url = f"{_B2_PUBLIC_BASE}/{b2_key}" if _B2_PUBLIC_BASE else None
+        logging.info(f"  B2 upload OK: {b2_key}")
+        return url
+    except Exception as e:
+        logging.error(f"B2 upload failed for {b2_key}: {e}")
+        return None
+
+
+def stream_upload_to_b2(
+    response_raw,
+    b2_key: str,
+    content_type: str = "application/octet-stream",
+) -> str | None:
+    """
+    Stream a file directly from an open HTTP response into B2 multipart upload.
+    No full-file buffering — safe for 1GB+ files.
+
+    Args:
+        response_raw: requests response.raw (file-like object, decode_content=True)
+        b2_key:       Full B2 object key, e.g. 'JGirls/{postId}/file.mp4'
+        content_type: MIME type of the file
+
+    Returns: public URL or None on failure.
+    """
+    try:
+        from boto3.s3.transfer import TransferConfig
+        client = _get_client()
+        config = TransferConfig(
+            multipart_threshold=100 * 1024 * 1024,
+            multipart_chunksize=100 * 1024 * 1024,
+            max_concurrency=4,
+        )
+        client.upload_fileobj(
+            response_raw,
+            Bucket=_B2_BUCKET,
+            Key=b2_key,
+            Config=config,
+            ExtraArgs={"ContentType": content_type},
+        )
+        url = f"{_B2_PUBLIC_BASE}/{b2_key}" if _B2_PUBLIC_BASE else None
+        logging.info(f"  B2 stream upload OK: {b2_key}")
+        return url
+    except Exception as e:
+        logging.error(f"B2 stream upload failed for {b2_key}: {e}")
+        return None
+
+
+def delete_b2_folder(prefix: str) -> int:
+    """
+    Delete all B2 objects whose key starts with prefix.
+    e.g. 'JGirls/abc-123/' deletes thumbnail, previews, and downloaded files.
+    Returns count of deleted objects.
+    """
+    try:
+        client = _get_client()
+        deleted = 0
+        paginator = client.get_paginator("list_objects_v2")
+        for page in paginator.paginate(Bucket=_B2_BUCKET, Prefix=prefix):
+            for obj in page.get("Contents", []):
+                client.delete_object(Bucket=_B2_BUCKET, Key=obj["Key"])
+                logging.info(f"  B2 deleted: {obj['Key']}")
+                deleted += 1
+        if deleted:
+            logging.info(f"  B2 folder cleanup: {deleted} objects deleted under '{prefix}'")
+        return deleted
+    except Exception as e:
+        logging.error(f"B2 folder delete failed for '{prefix}': {e}")
+        return 0

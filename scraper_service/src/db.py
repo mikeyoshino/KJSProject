@@ -53,11 +53,11 @@ def fetch_asianscandal_posts_missing_content(limit: int = 100, offset: int = 0) 
     return response.data or []
 
 def fetch_all_asianscandal_posts(limit: int = 100, offset: int = 0) -> list:
-    """Fetch all posts (regardless of content_html), returning id + source_url + title."""
+    """Fetch all posts (regardless of content_html), returning id + source_url + title + content_html."""
     if not supabase: return []
     response = (
         supabase.table("asianscandal_posts")
-        .select("id, source_url, title")
+        .select("id, source_url, title, content_html")
         .order("created_at", desc=False)
         .range(offset, offset + limit - 1)
         .execute()
@@ -74,3 +74,49 @@ def update_asianscandal_content_html(post_id: str, content_html: str) -> bool:
         .execute()
     )
     return bool(response.data)
+
+# ──────────────────────────────────────────────
+#  JGIRL_POSTS TABLE HELPERS
+# ──────────────────────────────────────────────
+
+def check_jgirl_post_exists(source_url: str) -> bool:
+    if not supabase: return False
+    response = supabase.table("jgirl_posts").select("id").eq("source_url", source_url).execute()
+    return len(response.data) > 0
+
+def insert_jgirl_post(post_data: dict) -> dict:
+    """Insert stub row; returns dict with auto-generated 'id' UUID."""
+    if not supabase: return {}
+    response = supabase.table("jgirl_posts").insert(post_data).execute()
+    return response.data[0] if response.data else {}
+
+def update_jgirl_post(post_id: str, updates: dict) -> bool:
+    if not supabase: return False
+    response = supabase.table("jgirl_posts").update(updates).eq("id", post_id).execute()
+    return bool(response.data)
+
+def fetch_jgirl_posts_for_download(limit: int = 50, offset: int = 0) -> list:
+    """Fetch posts where download_status='pending' and original_download_links is not empty."""
+    if not supabase: return []
+    response = (
+        supabase.table("jgirl_posts")
+        .select("id, source_url, title, original_download_links")
+        .eq("download_status", "pending")
+        .neq("original_download_links", "{}")
+        .order("created_at", desc=False)
+        .range(offset, offset + limit - 1)
+        .execute()
+    )
+    return response.data or []
+
+def fetch_jgirl_posts_pending(limit: int = 100, offset: int = 0) -> list:
+    if not supabase: return []
+    response = (
+        supabase.table("jgirl_posts")
+        .select("id, source_url, title, original_download_links")
+        .eq("download_status", "pending")
+        .order("created_at", desc=False)
+        .range(offset, offset + limit - 1)
+        .execute()
+    )
+    return response.data or []

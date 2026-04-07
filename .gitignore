@@ -20,13 +20,16 @@ env/
 
 # AI & Temporary
 .gemini/
+.claude/
 artifacts/
 tmp/
+
+# Scraper runtime state (contains Cloudflare cookies — generate with jgirl_auth.py)
+scraper_service/src/jgirl_state.json
 
 # Secrets (contain real credentials — use appsettings.Example.json as template)
 RgToB2Migrator/appsettings.json
 KJSWeb/appsettings.json
-RapidgatorProxy/src/RapidgatorProxy.Api/appsettings.json
 
 # Build
 bin/
