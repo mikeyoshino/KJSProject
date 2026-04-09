@@ -6,10 +6,17 @@ Scrapes, processes, and migrates AsianScandal.net posts into Supabase + Backblaz
 
 ```bash
 cd scraper_service
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
+
+> **Every new terminal session:** activate the venv before running any scripts:
+> ```bash
+> cd scraper_service
+> source .venv/bin/activate
+> cd src
+> ```
 
 Configure `.env` (copy from the example below):
 
@@ -199,6 +206,52 @@ python asianscandal_rewrite.py \
   --dry-run \      # scrape + clean but do not save
   --no-ai          # skip Ollama step
 ```
+
+---
+
+### `jgirl_backfill.py` — Scrape + download JGirl posts
+
+Scrapes posts from JGirl sources (upskirt, ksiroto, fc2, bathroom), uploads images + thumbnails to B2, and downloads files via Real-Debrid.
+
+```bash
+# Scrape all sources incrementally (new posts only)
+python jgirl_backfill.py
+
+# Scrape a specific source
+python jgirl_backfill.py --source bathroom
+
+# Limit number of posts
+python jgirl_backfill.py --source bathroom --limit 200
+
+# Full backfill (all pages, not just new posts)
+python jgirl_backfill.py --source bathroom --mode backfill
+
+# Scrape N pages
+python jgirl_backfill.py --source bathroom --pages 10
+
+# Skip image upload (faster, thumbnails/previews not uploaded to B2)
+python jgirl_backfill.py --source bathroom --no-images
+
+# Skip Real-Debrid download step
+python jgirl_backfill.py --source bathroom --no-download
+
+# Dry run (scrape but do not write to DB or B2)
+python jgirl_backfill.py --source bathroom --dry-run
+
+# Full options
+python jgirl_backfill.py \
+  --source bathroom \       # upskirt | ksiroto | fc2 | bathroom | all
+  --mode incremental \      # incremental (new only) | backfill (all pages)
+  --limit 200 \             # max posts to process
+  --pages 10 \              # max pages to scrape (0 = unlimited)
+  --spread-days 365 \       # spread created_at timestamps across N days
+  --delay 1.5 \             # delay between requests (seconds)
+  --no-images \             # skip B2 image upload
+  --no-download \           # skip Real-Debrid download
+  --dry-run                 # scrape only, no DB/B2 writes
+```
+
+**Sources:** `upskirt`, `ksiroto`, `fc2`, `bathroom`, `all`
 
 ---
 
