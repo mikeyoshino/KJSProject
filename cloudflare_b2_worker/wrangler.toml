@@ -7,8 +7,7 @@ compatibility_flags = ["nodejs_compat"]
 B2_ENDPOINT = "https://s3.us-east-005.backblazeb2.com"
 B2_REGION = "us-east-005"
 B2_BUCKET = "KJSProject"
-JWT_SECRET = "CHANGE_ME_TO_A_SECURE_RANDOM_STRING_SHARED_WITH_KJSWEB"
-
-# Use Wrangler secrets to securely store B2 credentials:
+# Use Wrangler secrets to securely store credentials (never put these in vars):
 # npx wrangler secret put B2_APPLICATION_KEY_ID
 # npx wrangler secret put B2_APPLICATION_KEY
+# npx wrangler secret put JWT_SECRET

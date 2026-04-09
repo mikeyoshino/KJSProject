@@ -1,3 +1,4 @@
+import re
 import requests
 import uuid
 import hashlib
@@ -47,8 +48,10 @@ def parse_front_page(html: str) -> list[tuple[str, str]]:
         thumb_tag = article.find('a', class_='penci-image-holder')
         thumb_url = ''
         if thumb_tag and thumb_tag.get('data-bgset'):
-            # Extract the URL part from data-bgset attribute
-            thumb_url = thumb_tag['data-bgset'].split('?')[0]
+            # data-bgset may be a lazysizes srcset like "url1 300w, url2 585w"
+            # Take the first space-delimited token to get the URL while preserving query params
+            raw = thumb_tag['data-bgset'].strip()
+            thumb_url = raw.split()[0].rstrip(',') if raw else ''
             
         h2 = article.find(['h2', 'h1'], class_=lambda c: c and 'entry-title' in c)
         if h2:
@@ -77,7 +80,11 @@ def parse_post_page(source_url: str, html: str, fallback_thumb: str = '') -> dic
     content_div = soup.find('div', class_='entry-content') or soup.find('div', class_='content')
     
     # Extract original links BEFORE decomposing them
-    rg_links = [a['href'] for a in soup.find_all('a', href=True) if 'rapidgator.net' in a['href'] or 'rg.to' in a['href']]
+    rg_links = [
+        a['href'] for a in soup.find_all('a', href=True)
+        if ('rapidgator.net' in a['href'] or 'rg.to' in a['href'])
+        and re.search(r'/(file|folder)/', a['href'], re.IGNORECASE)
+    ]
     categories = [a.get_text(strip=True) for a in soup.select('a[rel="category tag"]')]
     
     if content_div:

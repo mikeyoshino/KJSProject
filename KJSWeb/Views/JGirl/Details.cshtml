@@ -1,0 +1,213 @@
+@model KJSWeb.Models.JGirlPost
+@using System.Text.Json
+@{
+    ViewData["Title"] = Model.Title;
+    var framesJson = JsonSerializer.Serialize(Model.Images);
+}
+
+<div class="max-w-4xl mx-auto">
+
+    <!-- Header -->
+    <header class="mb-8">
+        <div class="flex items-center gap-2 mb-3 flex-wrap">
+            @if (!string.IsNullOrEmpty(Model.Source))
+            {
+                <a href="/jgirl?source=@Uri.EscapeDataString(Model.Source)"
+                   class="bg-slate-900 text-white text-[9px] font-black uppercase px-2 py-1 tracking-widest hover:bg-orange-accent transition-colors">@Model.Source</a>
+            }
+        </div>
+        <h1 class="text-2xl font-bold leading-tight mb-3">@Model.Title</h1>
+        <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">@Model.CreatedAt.ToString("MMMM dd, yyyy")</p>
+    </header>
+
+    <!-- Frame viewer (scrubber) -->
+    @if (Model.Images.Any())
+    {
+        <div class="mb-10" id="detail-scrubber" data-frames="@framesJson">
+            <div class="relative bg-slate-900 rounded-sm overflow-hidden aspect-video shadow-lg select-none">
+                <img id="detail-frame-img"
+                     src="@Model.Images.First()" alt="@Model.Title"
+                     class="w-full h-full object-contain" draggable="false" />
+
+                <!-- Frame counter -->
+                <div class="absolute top-3 right-3 bg-black/60 text-white text-xs font-black px-2 py-1 rounded tabular-nums">
+                    <span id="detail-frame-num">1</span> / @Model.Images.Count
+                </div>
+
+                <!-- Prev / Next -->
+                <button id="detail-prev"
+                        class="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 hover:bg-orange-accent text-white flex items-center justify-center transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                <button id="detail-next"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 hover:bg-orange-accent text-white flex items-center justify-center transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                </button>
+            </div>
+
+            <!-- Scrubber bar -->
+            <div class="mt-2 px-0.5">
+                <div id="detail-scrubber-bar"
+                     class="relative h-2 bg-slate-200 rounded-full cursor-pointer group/bar">
+                    <div id="detail-scrubber-fill"
+                         class="h-full bg-orange-accent rounded-full w-0 pointer-events-none transition-none"></div>
+                    <div id="detail-scrubber-knob"
+                         class="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-orange-accent border-2 border-white shadow -ml-2 pointer-events-none"
+                         style="left:0"></div>
+                </div>
+                <div class="flex justify-between mt-1 text-[10px] text-slate-400 font-bold">
+                    <span>Drag to scrub frames</span>
+                    <span id="detail-frame-label" class="tabular-nums">1 / @Model.Images.Count</span>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Post images gallery -->
+    @if (Model.PostImages.Any())
+    {
+        <section class="mb-10">
+            <h3 class="text-[11px] font-black uppercase tracking-[0.3em] border-b-2 border-black pb-2 mb-5">Images</h3>
+            <div class="columns-2 sm:columns-3 gap-3 space-y-3">
+                @foreach (var img in Model.PostImages)
+                {
+                    <div class="break-inside-avoid">
+                        <img src="@img" alt="@Model.Title"
+                             class="w-full rounded-sm shadow-sm hover:shadow-md transition-shadow duration-200"
+                             loading="lazy" />
+                    </div>
+                }
+            </div>
+        </section>
+    }
+
+    <!-- Download links -->
+    @if (Model.DownloadLinks.Any())
+    {
+        <section class="mb-10">
+            <div class="p-8 bg-black text-white rounded-sm shadow-2xl">
+                <h3 class="text-lg font-black mb-5 uppercase tracking-tighter">Downloads</h3>
+                <div class="flex flex-wrap gap-3">
+                    @for (int i = 0; i < Model.DownloadLinks.Count; i++)
+                    {
+                        <a href="@Model.DownloadLinks[i]" target="_blank" rel="noopener"
+                           class="inline-flex items-center gap-2 bg-orange-accent text-white px-6 py-3 text-sm font-black uppercase tracking-wider hover:brightness-110 transition-all">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                            Download @(Model.DownloadLinks.Count > 1 ? (i + 1).ToString() : "")
+                        </a>
+                    }
+                </div>
+            </div>
+        </section>
+    }
+
+    <!-- Tags -->
+    @if (Model.Tags.Any())
+    {
+        <section class="border-t border-slate-100 pt-6">
+            <div class="flex flex-wrap gap-2">
+                @foreach (var tag in Model.Tags)
+                {
+                    <span class="bg-slate-50 text-slate-500 hover:bg-orange-accent hover:text-white px-3 py-1.5 rounded-sm text-[10px] font-bold uppercase tracking-wider transition-colors cursor-default">#@tag</span>
+                }
+            </div>
+        </section>
+    }
+
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    // ── Detail page scrubber ─────────────────────────────────────
+    const el     = document.getElementById('detail-scrubber');
+    if (!el) return;
+
+    const frames  = JSON.parse(el.dataset.frames || '[]');
+    if (!frames.length) return;
+
+    const img     = document.getElementById('detail-frame-img');
+    const bar     = document.getElementById('detail-scrubber-bar');
+    const fill    = document.getElementById('detail-scrubber-fill');
+    const knob    = document.getElementById('detail-scrubber-knob');
+    const numEl   = document.getElementById('detail-frame-num');
+    const labelEl = document.getElementById('detail-frame-label');
+    const prevBtn = document.getElementById('detail-prev');
+    const nextBtn = document.getElementById('detail-next');
+    let   current = 0;
+
+    // Preload all frames in background (4 concurrent at a time)
+    const loadedSet = new Set([0]);
+    (function preloadAll() {
+        const CONCURRENCY = 4;
+        let qi = 1; // frame 0 is already in the HTML
+        function next() {
+            if (qi >= frames.length) return;
+            const i = qi++;
+            const pi = new Image();
+            pi.onload = pi.onerror = () => { loadedSet.add(i); next(); };
+            pi.src = frames[i];
+        }
+        for (let b = 0; b < Math.min(CONCURRENCY, frames.length - 1); b++) next();
+    })();
+
+    function setFrame(idx) {
+        idx = Math.max(0, Math.min(frames.length - 1, idx));
+
+        // Find nearest already-loaded frame so there's no blank flash while scrubbing
+        let displayIdx = idx;
+        if (!loadedSet.has(idx)) {
+            for (let d = 1; d < frames.length; d++) {
+                if (idx - d >= 0 && loadedSet.has(idx - d)) { displayIdx = idx - d; break; }
+                if (idx + d < frames.length && loadedSet.has(idx + d)) { displayIdx = idx + d; break; }
+            }
+        }
+
+        // Always update position indicators to reflect requested position
+        const pct = frames.length > 1 ? idx / (frames.length - 1) : 0;
+        fill.style.width  = `${pct * 100}%`;
+        knob.style.left   = `${pct * 100}%`;
+        numEl.textContent  = idx + 1;
+        labelEl.textContent = `${idx + 1} / ${frames.length}`;
+
+        if (displayIdx === current && img.src === frames[displayIdx]) return;
+        current = displayIdx;
+        img.src = frames[displayIdx];
+    }
+
+    function pctFromEvent(clientX) {
+        const rect = bar.getBoundingClientRect();
+        return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    }
+
+    let dragging = false;
+
+    bar.addEventListener('mousedown', e => {
+        dragging = true;
+        setFrame(Math.round(pctFromEvent(e.clientX) * (frames.length - 1)));
+    });
+    document.addEventListener('mousemove', e => {
+        if (dragging) setFrame(Math.round(pctFromEvent(e.clientX) * (frames.length - 1)));
+    });
+    document.addEventListener('mouseup', () => { dragging = false; });
+
+    bar.addEventListener('touchstart', e => {
+        e.preventDefault();
+        setFrame(Math.round(pctFromEvent(e.touches[0].clientX) * (frames.length - 1)));
+    }, { passive: false });
+    bar.addEventListener('touchmove', e => {
+        e.preventDefault();
+        setFrame(Math.round(pctFromEvent(e.touches[0].clientX) * (frames.length - 1)));
+    }, { passive: false });
+
+    prevBtn?.addEventListener('click', () => setFrame(current - 1));
+    nextBtn?.addEventListener('click', () => setFrame(current + 1));
+
+    // Keyboard arrow keys
+    document.addEventListener('keydown', e => {
+        if (e.key === 'ArrowLeft')  setFrame(current - 1);
+        if (e.key === 'ArrowRight') setFrame(current + 1);
+    });
+})();
+</script>
+}

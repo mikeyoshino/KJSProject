@@ -3,15 +3,21 @@ storage_b2.py
 -------------
 Backblaze B2 image upload helper (S3-compatible via boto3).
 
-Images are stored at: scandal69/{md5_hash}.jpg
-Public URL:           {B2_PUBLIC_BASE_URL}/scandal69/{md5_hash}.jpg
+Images are stored at: posts/images/{md5_hash}.jpg (legacy content images)
+                    posts/{post_id}/images/{increment}.{ext} (backfill content images: 1.jpg, 2.jpg, ...)
+                    posts/{post_id}/thumbnail.{ext} (backfill thumbnails)
+Public URL:          {B2_PUBLIC_BASE_URL}/posts/...
+
+B2 bucket is PRIVATE. Images are served through the Cloudflare Worker proxy
+(cloudflare_b2_worker) which signs requests with B2 credentials at the edge.
+Set B2_PUBLIC_BASE_URL to the worker's custom domain, not the direct B2 URL.
 
 Environment variables (add to scraper_service/.env):
   B2_APPLICATION_KEY_ID   - Backblaze key ID
   B2_APPLICATION_KEY      - Backblaze application key
   B2_BUCKET_NAME          - e.g. KJSProject
   B2_SERVICE_URL          - e.g. https://s3.us-east-005.backblazeb2.com
-  B2_PUBLIC_BASE_URL      - e.g. https://f005.backblazeb2.com/file/KJSProject
+  B2_PUBLIC_BASE_URL      - Cloudflare Worker domain, e.g. https://cdn.scandal69.com
 """
 
 import os
@@ -67,14 +73,19 @@ def _optimize(content: bytes, max_width: int = 1400) -> bytes:
 
 def upload_image_to_b2(content: bytes, filename: str) -> str | None:
     """
-    Upload image bytes to B2 under scandal69/{filename}.
+    Upload image bytes to B2 under the given key.
+    If filename is just a filename (no slashes), it's prefixed with posts/images/.
     Returns the public URL, or None on failure.
     Idempotent: skips upload if the object already exists.
     """
     if not content:
         return None
 
-    key = f"scandal69/{filename}"
+    # If filename has no path separator, prefix with posts/images/ (legacy behavior)
+    if "/" not in filename:
+        key = f"posts/images/{filename}"
+    else:
+        key = filename
 
     try:
         client = _get_client()
@@ -83,7 +94,7 @@ def upload_image_to_b2(content: bytes, filename: str) -> str | None:
         try:
             client.head_object(Bucket=_B2_BUCKET, Key=key)
             logging.info(f"  B2 already exists, skipping upload: {key}")
-            return f"{_B2_PUBLIC_BASE}/{key}" if _B2_PUBLIC_BASE else None
+            return key
         except client.exceptions.ClientError as e:
             if e.response["Error"]["Code"] != "404":
                 raise
@@ -96,9 +107,8 @@ def upload_image_to_b2(content: bytes, filename: str) -> str | None:
             ContentType="image/jpeg",
         )
 
-        url = f"{_B2_PUBLIC_BASE}/{key}" if _B2_PUBLIC_BASE else None
         logging.info(f"  B2 upload OK: {key}")
-        return url
+        return key
 
     except Exception as e:
         logging.error(f"B2 upload failed for {key}: {e}")
@@ -117,8 +127,7 @@ def upload_file_to_b2(
     optimize_images: bool = False,
 ) -> str | None:
     """
-    Upload with a caller-supplied full key, e.g. 'JGirls/{postId}/preview/0001.jpg'.
-    Unlike upload_image_to_b2() which always writes under scandal69/, this accepts any path.
+    Upload bytes to B2 at the given key (used for image uploads from scrapers).
     Idempotent: skips upload if the object already exists.
     Returns public URL or None on failure.
     """
@@ -148,6 +157,89 @@ def upload_file_to_b2(
         return None
 
 
+def upload_disk_file_to_b2(file_path: str, b2_key: str) -> str | None:
+    """
+    Upload a large file from disk to B2 (used for zip/rar downloads).
+    Uses multipart upload for files > 10 MB.
+    Idempotent: skips upload if the object already exists.
+    Returns b2_key on success, None on failure.
+    """
+    if not os.path.isfile(file_path):
+        logging.error(f"upload_disk_file_to_b2: file not found: {file_path}")
+        return None
+
+    try:
+        client = _get_client()
+
+        try:
+            client.head_object(Bucket=_B2_BUCKET, Key=b2_key)
+            logging.info(f"  B2 already exists, skipping: {b2_key}")
+            return b2_key
+        except client.exceptions.ClientError as e:
+            if e.response["Error"]["Code"] != "404":
+                raise
+
+        file_size = os.path.getsize(file_path)
+        part_size = 10 * 1024 * 1024  # 10 MB parts for multipart
+
+        if file_size > part_size:
+            _multipart_upload(client, file_path, b2_key, part_size)
+        else:
+            with open(file_path, "rb") as f:
+                client.put_object(
+                    Bucket=_B2_BUCKET,
+                    Key=b2_key,
+                    Body=f,
+                    ContentType="application/octet-stream",
+                )
+
+        logging.info(f"  B2 file upload OK: {b2_key} ({file_size / 1_048_576:.1f} MB)")
+        return b2_key
+
+    except Exception as e:
+        logging.error(f"B2 file upload failed for {b2_key}: {e}")
+        return None
+
+
+def _multipart_upload(client, file_path: str, b2_key: str, part_size: int):
+    """Multipart upload for large files."""
+    mpu = client.create_multipart_upload(
+        Bucket=_B2_BUCKET,
+        Key=b2_key,
+        ContentType="application/octet-stream",
+    )
+    upload_id = mpu["UploadId"]
+    parts = []
+
+    try:
+        with open(file_path, "rb") as f:
+            part_num = 1
+            while True:
+                data = f.read(part_size)
+                if not data:
+                    break
+                resp = client.upload_part(
+                    Bucket=_B2_BUCKET,
+                    Key=b2_key,
+                    PartNumber=part_num,
+                    UploadId=upload_id,
+                    Body=data,
+                )
+                parts.append({"PartNumber": part_num, "ETag": resp["ETag"]})
+                logging.info(f"  Uploaded part {part_num} ({len(data) / 1_048_576:.1f} MB)")
+                part_num += 1
+
+        client.complete_multipart_upload(
+            Bucket=_B2_BUCKET,
+            Key=b2_key,
+            UploadId=upload_id,
+            MultipartUpload={"Parts": parts},
+        )
+    except Exception:
+        client.abort_multipart_upload(Bucket=_B2_BUCKET, Key=b2_key, UploadId=upload_id)
+        raise
+
+
 def stream_upload_to_b2(
     response_raw,
     b2_key: str,
@@ -156,13 +248,6 @@ def stream_upload_to_b2(
     """
     Stream a file directly from an open HTTP response into B2 multipart upload.
     No full-file buffering — safe for 1GB+ files.
-
-    Args:
-        response_raw: requests response.raw (file-like object, decode_content=True)
-        b2_key:       Full B2 object key, e.g. 'JGirls/{postId}/file.mp4'
-        content_type: MIME type of the file
-
-    Returns: public URL or None on failure.
     """
     try:
         from boto3.s3.transfer import TransferConfig
@@ -190,7 +275,6 @@ def stream_upload_to_b2(
 def delete_b2_folder(prefix: str) -> int:
     """
     Delete all B2 objects whose key starts with prefix.
-    e.g. 'JGirls/abc-123/' deletes thumbnail, previews, and downloaded files.
     Returns count of deleted objects.
     """
     try:

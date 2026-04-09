@@ -112,35 +112,61 @@
             <!-- Tier 2: Desktop Navigation Links — HIDDEN on mobile via CSS -->
             <nav class="desktop-nav flex flex-wrap justify-center items-center space-x-6 sm:space-x-10 text-[13px] font-bold uppercase tracking-widest">
                 <a asp-controller="Home" asp-action="Index" class="hover:text-orange-accent transition-colors">Home</a>
+                <a asp-controller="Home" asp-action="Buzz69" class="hover:text-orange-accent transition-colors">Buzz69</a>
                 <a asp-controller="AsianScandal" asp-action="Index" class="hover:text-orange-accent transition-colors">Asian Scandal</a>
+                <a asp-controller="JGirl" asp-action="Index" class="hover:text-orange-accent transition-colors">JGirl</a>
 
-                <div class="relative dropdown">
-                    <button class="flex items-center text-orange-accent hover:opacity-80 transition-opacity uppercase py-4 -my-4">
-                        Categories
-                        <span class="ml-1 text-[10px]">▼</span>
-                    </button>
-                    <div class="dropdown-menu hidden absolute left-1/2 -translate-x-1/2 pt-4 w-52 z-50">
-                        <div class="bg-[#121212] border border-white/10 shadow-2xl custom-scrollbar">
-                            <div class="py-1">
-                                @await Component.InvokeAsync("CategoryNav")
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <a asp-controller="Subscription" asp-action="Pricing" class="hover:text-orange-accent transition-colors">Upgrade</a>
 
-                <a asp-controller="Subscription" asp-action="Pricing" class="hover:text-orange-accent transition-colors">Pricing</a>
+                <button id="searchOpen" aria-label="Search" class="hover:text-orange-accent transition-colors p-1 -m-1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+                    </svg>
+                </button>
 
                 @if (Context.Session.GetString("user_id") != null)
                 {
-                    <span class="text-slate-400 text-[10px] normal-case">@Context.Session.GetString("user_email")</span>
-                    <a asp-controller="Subscription" asp-action="MySubscription" class="hover:text-orange-accent transition-colors">Account</a>
-                    <form method="post" asp-controller="Auth" asp-action="Logout" class="inline">
-                        <button type="submit" class="hover:text-orange-accent transition-colors uppercase">Logout</button>
-                    </form>
+                    <!-- Profile dropdown (desktop) -->
+                    <div class="relative dropdown">
+                        <button class="flex items-center gap-2 py-4 -my-4 hover:opacity-80 transition-opacity">
+                            <div class="w-8 h-8 rounded-full bg-orange-accent flex items-center justify-center text-white text-[13px] font-black select-none">
+                                @(Context.Session.GetString("user_email")?[0].ToString().ToUpper() ?? "U")
+                            </div>
+                            <span class="text-[10px]">▼</span>
+                        </button>
+                        <div class="dropdown-menu hidden absolute right-0 pt-4 w-56 z-50">
+                            <div class="bg-[#121212] border border-white/10 shadow-2xl">
+                                <div class="px-4 py-3 border-b border-white/10">
+                                    <p class="text-[10px] text-slate-400 uppercase tracking-widest">Signed in as</p>
+                                    <p class="text-white text-xs font-bold truncate mt-0.5">@Context.Session.GetString("user_email")</p>
+                                </div>
+                                <div class="py-1">
+                                    <a asp-controller="Subscription" asp-action="MySubscription"
+                                       class="flex items-center gap-3 px-4 py-3 text-[12px] font-bold uppercase tracking-widest hover:bg-white/5 hover:text-orange-accent transition-colors">
+                                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>
+                                        My Subscription
+                                    </a>
+                                    <a asp-controller="Subscription" asp-action="Pricing"
+                                       class="flex items-center gap-3 px-4 py-3 text-[12px] font-bold uppercase tracking-widest hover:bg-white/5 hover:text-orange-accent transition-colors">
+                                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        Upgrade
+                                    </a>
+                                </div>
+                                <div class="border-t border-white/10 py-1">
+                                    <form method="post" asp-controller="Auth" asp-action="Logout">
+                                        <button type="submit" class="flex items-center gap-3 w-full px-4 py-3 text-[12px] font-bold uppercase tracking-widest hover:bg-white/5 hover:text-orange-accent transition-colors text-left">
+                                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                                            Logout
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 }
                 else
                 {
-                    <a asp-controller="Auth" asp-action="Login" class="hover:text-orange-accent transition-colors">Login</a>
+                    <a asp-controller="Auth" asp-action="Login" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" class="hover:text-orange-accent transition-colors">Login</a>
                     <a asp-controller="Auth" asp-action="Signup" class="hover:text-orange-accent transition-colors">Sign Up</a>
                 }
             </nav>
@@ -149,27 +175,35 @@
             <nav class="mobile-nav" id="mobileNav">
                 <div class="mt-4 border-t border-white/10 pt-4 space-y-0">
                     <a asp-controller="Home" asp-action="Index" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5">Home</a>
+                    <a asp-controller="Home" asp-action="Buzz69" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5">Buzz69</a>
                     <a asp-controller="AsianScandal" asp-action="Index" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5 text-orange-accent italic">Asian Scandal ✨</a>
-                    <button id="mobileCatToggle" class="w-full text-left py-3 text-[13px] font-bold uppercase tracking-widest border-b border-white/5 flex items-center justify-between">
-                        Categories <span class="text-[10px]" id="mobileCatArrow">▼</span>
-                    </button>
-
-                    <div class="mobile-dropdown bg-[#121212]" id="mobileCatDropdown">
-                        @await Component.InvokeAsync("CategoryNav")
-                    </div>
-                    <a asp-controller="Subscription" asp-action="Pricing" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5">Pricing</a>
+                    <a asp-controller="JGirl" asp-action="Index" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5">JGirl</a>
+                    <a asp-controller="Subscription" asp-action="Pricing" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5">Upgrade</a>
                     @if (Context.Session.GetString("user_id") != null)
                     {
-                        <a asp-controller="Subscription" asp-action="MySubscription" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5">Account</a>
+                        <div class="flex items-center gap-3 py-3 border-b border-white/5">
+                            <div class="w-8 h-8 rounded-full bg-orange-accent flex items-center justify-center text-white text-[13px] font-black shrink-0">
+                                @(Context.Session.GetString("user_email")?[0].ToString().ToUpper() ?? "U")
+                            </div>
+                            <span class="text-slate-400 text-[11px] truncate">@Context.Session.GetString("user_email")</span>
+                        </div>
+                        <a asp-controller="Subscription" asp-action="MySubscription" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5 pl-4">My Subscription</a>
                         <form method="post" asp-controller="Auth" asp-action="Logout">
-                            <button type="submit" class="block w-full text-left py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5">Logout</button>
+                            <button type="submit" class="block w-full text-left py-3 pl-4 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5">Logout</button>
                         </form>
                     }
                     else
                     {
-                        <a asp-controller="Auth" asp-action="Login" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5">Login</a>
+                        <a asp-controller="Auth" asp-action="Login" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5">Login</a>
                         <a asp-controller="Auth" asp-action="Signup" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors">Sign Up</a>
                     }
+                    <!-- Mobile search -->
+                    <button id="searchOpenMobile" class="flex items-center gap-3 w-full py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-t border-white/5 mt-1 pt-4">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+                        </svg>
+                        Search
+                    </button>
                 </div>
             </nav>
         </div>
@@ -212,6 +246,43 @@
         </div>
     </footer>
 
+    <!-- Search overlay -->
+    <div id="search-overlay"
+         class="fixed inset-0 z-[100] flex flex-col items-start justify-start pt-20 px-4
+                bg-black/80 backdrop-blur-sm
+                opacity-0 pointer-events-none transition-opacity duration-300 ease-in-out">
+        <!-- Backdrop click to close -->
+        <div id="searchBackdrop" class="absolute inset-0"></div>
+
+        <!-- Panel -->
+        <div id="searchPanel"
+             class="relative w-full max-w-2xl mx-auto z-10
+                    translate-y-4 transition-transform duration-300 ease-out">
+
+            <!-- Input bar -->
+            <div class="flex items-center bg-white shadow-2xl px-5 py-4 gap-3 rounded-sm">
+                <svg class="w-5 h-5 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+                </svg>
+                <input id="searchInput" type="text" name="q" placeholder="Search posts…" autocomplete="off"
+                       class="flex-1 text-lg font-semibold outline-none placeholder-slate-300 bg-transparent"
+                       hx-get="/search/results"
+                       hx-trigger="input delay:300ms, keyup[key=='Enter']"
+                       hx-target="#search-results"
+                       hx-swap="innerHTML" />
+                <button id="searchClose" class="text-slate-300 hover:text-black transition-colors duration-150 shrink-0 p-1 -m-1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Results -->
+            <div id="search-results" class="mt-2 max-h-[60vh] overflow-y-auto rounded-sm"></div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

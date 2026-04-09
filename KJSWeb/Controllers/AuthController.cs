@@ -16,19 +16,21 @@ public class AuthController : Controller
     }
 
     [HttpGet]
-    public IActionResult Login()
+    public IActionResult Login(string? returnUrl = null)
     {
         if (HttpContext.Session.GetString("user_id") != null)
-            return RedirectToAction("Index", "Home");
+            return Redirect(returnUrl ?? "/");
+        ViewBag.ReturnUrl = returnUrl;
         return View();
     }
 
     [HttpPost]
-    public async Task<IActionResult> Login(string email, string password)
+    public async Task<IActionResult> Login(string email, string password, string? returnUrl = null)
     {
         if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
         {
             ViewBag.Error = "Email and password are required.";
+            ViewBag.ReturnUrl = returnUrl;
             return View();
         }
 
@@ -45,6 +47,7 @@ public class AuthController : Controller
         if (!response.IsSuccessStatusCode)
         {
             ViewBag.Error = "Invalid email or password.";
+            ViewBag.ReturnUrl = returnUrl;
             return View();
         }
 
@@ -60,7 +63,7 @@ public class AuthController : Controller
         HttpContext.Session.SetString("user_id", userId);
         HttpContext.Session.SetString("user_email", userEmail);
 
-        return RedirectToAction("Index", "Home");
+        return Redirect(!string.IsNullOrEmpty(returnUrl) ? returnUrl : "/");
     }
 
     [HttpGet]

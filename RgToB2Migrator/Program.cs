@@ -7,9 +7,13 @@ using RgToB2Migrator.Services;
 
 // ── Parse CLI args ─────────────────────────────────────────────────────────────
 // Usage:
-//   dotnet run                  → migrate all pending posts
-//   dotnet run -- --limit 10   → migrate at most 10 posts then stop
+//   dotnet run                              → migrate all pending posts
+//   dotnet run -- --limit 10               → migrate at most 10 posts then stop
+//   dotnet run -- --thumbnails-only        → migrate thumbnails to B2 only
+//   dotnet run -- --thumbnails-only --limit 100
 int? limit = null;
+bool thumbnailsOnly = args.Contains("--thumbnails-only");
+
 for (int i = 0; i < args.Length; i++)
 {
     if ((args[i] == "--limit" || args[i] == "-n") && i + 1 < args.Length)
@@ -81,6 +85,8 @@ var keyPreview  = serviceKey.Length > 20
 logger.LogInformation("Supabase URL: {Url}", supabaseUrl);
 logger.LogInformation("Service key loaded: {Preview} (length={Length})", keyPreview, serviceKey.Length);
 
+if (thumbnailsOnly)
+    logger.LogInformation("Mode: thumbnail migration only");
 if (limit.HasValue)
     logger.LogInformation("Run limit: {Limit} post(s)", limit.Value);
 
@@ -94,7 +100,10 @@ Console.CancelKeyPress += (_, e) =>
 
 try
 {
-    await orchestrator.RunAsync(limit, cts.Token);
+    if (thumbnailsOnly)
+        await orchestrator.RunThumbnailsAsync(limit, cts.Token);
+    else
+        await orchestrator.RunAsync(limit, cts.Token);
     logger.LogInformation("Migration completed successfully");
 }
 catch (OperationCanceledException)

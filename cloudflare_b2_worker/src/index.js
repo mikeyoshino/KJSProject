@@ -1,94 +1,98 @@
 import { AwsClient } from 'aws4fetch';
 import { jwtVerify } from 'jose';
 
+// Shared helper: sign + fetch a B2 object, with Cloudflare edge caching.
+// rangeHeader is optional (for resumable downloads).
+async function fetchFromB2(env, ctx, b2Key, rangeHeader = '') {
+  const aws = new AwsClient({
+    accessKeyId: env.B2_APPLICATION_KEY_ID,
+    secretAccessKey: env.B2_APPLICATION_KEY,
+    service: 's3',
+    region: env.B2_REGION,
+  });
+
+  const b2Url = `${env.B2_ENDPOINT}/${env.B2_BUCKET}/${b2Key}`;
+
+  // Cache key excludes auth tokens so multiple requests share one cached entry.
+  const cacheKey = new Request(b2Url, {
+    headers: rangeHeader ? { Range: rangeHeader } : {},
+  });
+
+  const cache = caches.default;
+  let response = await cache.match(cacheKey);
+
+  if (response) {
+    console.log(`Cache Hit: ${b2Key}`);
+    return response;
+  }
+
+  console.log(`Cache Miss: ${b2Key}. Fetching from B2...`);
+  const signedRequest = await aws.sign(new Request(b2Url, { headers: cacheKey.headers }));
+  response = await fetch(signedRequest);
+
+  if (response.status === 200 || response.status === 206) {
+    ctx.waitUntil(cache.put(cacheKey, response.clone()));
+  }
+
+  return response;
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
-    // Only handle /download
-    if (url.pathname !== '/download') {
-      return new Response('Not Found', { status: 404 });
-    }
+    // ── Route 1: /download — JWT-protected file download ──────────────────────
+    if (url.pathname === '/download') {
+      const token = url.searchParams.get('token');
+      const file  = url.searchParams.get('file');
 
-    const token = url.searchParams.get('token');
-    const file = url.searchParams.get('file');
-
-    if (!token || !file) {
-      return new Response('Missing token or file parameter', { status: 400 });
-    }
-
-    try {
-      // 1. Verify JWT
-      const secret = new TextEncoder().encode(env.JWT_SECRET);
-      
-      // jwtVerify will throw on expiration or invalid signature
-      const { payload } = await jwtVerify(token, secret);
-      
-      // Verify token is meant for this file
-      if (payload.file !== file) {
-        return new Response('Token not valid for this file', { status: 403 });
+      if (!token || !file) {
+        return new Response('Missing token or file parameter', { status: 400 });
       }
 
-      // 2. Initialize aws4fetch to sign request for Backblaze B2
-      // B2 S3 API expects region us-west-004 (or the region your bucket is in)
-      const aws = new AwsClient({
-        accessKeyId: env.B2_APPLICATION_KEY_ID,
-        secretAccessKey: env.B2_APPLICATION_KEY,
-        service: 's3',
-        region: env.B2_REGION
-      });
+      try {
+        const secret = new TextEncoder().encode(env.JWT_SECRET);
+        const { payload } = await jwtVerify(token, secret);
 
-      // 3. Initialize Cache
-      // NOTE: caches.default only works on Custom Domains (e.g., dl.kjsproject.com)
-      // It will NOT work on the default *.workers.dev address.
-      const cache = caches.default;
-      const cleanFile = file.startsWith('/') ? file.substring(1) : file;
-      const b2Url = `${env.B2_ENDPOINT}/${env.B2_BUCKET}/${cleanFile}`;
-
-      // We use the b2Url (without the token) as the Cache Key
-      // so multiple users with different tokens can share the same cached file.
-      const cacheKey = new Request(b2Url, {
-        headers: new Headers({
-          'Range': request.headers.get('Range') || ''
-        })
-      });
-
-      let response = await cache.match(cacheKey);
-
-      if (!response) {
-        console.log(`Cache Miss: ${cleanFile}. Fetching from B2 origin...`);
-
-        // 4. Initialize aws4fetch to sign request for Backblaze B2
-        const aws = new AwsClient({
-          accessKeyId: env.B2_APPLICATION_KEY_ID,
-          secretAccessKey: env.B2_APPLICATION_KEY,
-          service: 's3',
-          region: env.B2_REGION
-        });
-
-        const b2Request = new Request(b2Url, {
-          method: request.method,
-          headers: cacheKey.headers
-        });
-
-        const signedRequest = await aws.sign(b2Request);
-        response = await fetch(signedRequest);
-
-        // 5. Store in cache for future users
-        // Only cache successful or partial content responses
-        if (response.status === 200 || response.status === 206) {
-           // We clone the response because the body can only be read once
-           ctx.waitUntil(cache.put(cacheKey, response.clone()));
+        if (payload.file !== file) {
+          return new Response('Token not valid for this file', { status: 403 });
         }
-      } else {
-        console.log(`Cache Hit: ${cleanFile}. Serving from Cloudflare Edge...`);
+
+        const b2Key = file.startsWith('/') ? file.slice(1) : file;
+        const b2Response = await fetchFromB2(env, ctx, b2Key, request.headers.get('Range') || '');
+
+        // Force browser to download the file rather than display it
+        const filename = b2Key.split('/').pop();
+        const headers = new Headers(b2Response.headers);
+        headers.set('Content-Disposition', `attachment; filename="${filename}"`);
+
+        return new Response(b2Response.body, { status: b2Response.status, headers });
+
+      } catch (e) {
+        console.error(e);
+        return new Response('Unauthorized or expired token', { status: 401 });
+      }
+    }
+
+    // ── Route 2: /scandal69/*, /posts/*, /asianscandal_posts/*, /JGirls/* — public image proxy ────────────────────────────
+    // Images uploaded by the scraper or Supabase live under these prefixes.
+    // No auth required — these are public website images.
+    if (url.pathname.startsWith('/scandal69/') || url.pathname.startsWith('/posts/') || url.pathname.startsWith('/asianscandal_posts/') || url.pathname.startsWith('/JGirls/')) {
+      const b2Key = url.pathname.slice(1); // strip leading /
+      const response = await fetchFromB2(env, ctx, b2Key);
+
+      if (!response.ok) {
+        return new Response('Not Found', { status: 404 });
       }
 
-      return response;
+      // Return image with permissive CORS so the browser can load it cross-origin.
+      const headers = new Headers(response.headers);
+      headers.set('Access-Control-Allow-Origin', '*');
+      headers.set('Cache-Control', 'public, max-age=31536000, immutable');
 
-    } catch (e) {
-      console.error(e);
-      return new Response('Unauthorized or expired token', { status: 401 });
+      return new Response(response.body, { status: response.status, headers });
     }
-  }
+
+    return new Response('Not Found', { status: 404 });
+  },
 };

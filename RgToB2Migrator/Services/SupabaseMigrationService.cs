@@ -197,12 +197,63 @@ public class SupabaseMigrationService
         return http;
     }
 
+    // ──────────────────────────────────────────────────────────
+    //  Thumbnail migration
+    // ──────────────────────────────────────────────────────────
+
+    public async Task<List<MigrationPostsRow>> FetchPendingThumbnailPostsAsync(
+        int batchSize = 50, CancellationToken ct = default)
+    {
+        if (batchSize <= 0) return [];
+        return await FetchPendingThumbnailsFromTableAsync<MigrationPostsRow>(
+            "posts", batchSize, MapPostsRow, ct);
+    }
+
+    public async Task<List<MigrationAsianScandalRow>> FetchPendingThumbnailAsianScandalPostsAsync(
+        int batchSize = 50, CancellationToken ct = default)
+    {
+        if (batchSize <= 0) return [];
+        return await FetchPendingThumbnailsFromTableAsync<MigrationAsianScandalRow>(
+            "asianscandal_posts", batchSize, MapAsianScandalRow, ct);
+    }
+
+    private async Task<List<T>> FetchPendingThumbnailsFromTableAsync<T>(
+        string table, int batchSize, Func<JObject, T> mapper, CancellationToken ct)
+    {
+        using var http = CreateHttpClient();
+
+        // thumbnail_url is not null AND does not start with "posts/" (still an external URL)
+        var url = $"{_supabaseUrl}/rest/v1/{table}" +
+                  $"?thumbnail_url=not.is.null" +
+                  $"&thumbnail_url=not.like.posts%2F%25" +
+                  $"&order=created_at.asc" +
+                  $"&limit={batchSize}" +
+                  $"&select=id,thumbnail_url";
+
+        var response = await http.GetAsync(url, ct);
+        var body = await response.Content.ReadAsStringAsync(ct);
+
+        if (!response.IsSuccessStatusCode)
+            throw new HttpRequestException($"GET {table} thumbnail fetch failed {(int)response.StatusCode}: {body}");
+
+        var rows = JArray.Parse(body).Cast<JObject>().Select(mapper).ToList();
+        _logger.LogInformation("Fetched {Count} pending thumbnail posts from {Table}", rows.Count, table);
+        return rows;
+    }
+
+    public Task UpdateThumbnailUrlAsync(Guid id, string tableName, string b2Key, CancellationToken ct = default)
+    {
+        _logger.LogInformation("Updating thumbnail_url for post {Id} in {Table} → {Key}", id, tableName, b2Key);
+        return PatchAsync(tableName, id, new { thumbnail_url = b2Key }, ct);
+    }
+
     private static MigrationPostsRow MapPostsRow(JObject o) => new()
     {
         Id = Guid.Parse(o["id"]!.ToString()),
         OriginalRapidgatorUrls = o["original_rapidgator_url"]?.ToObject<List<string>>() ?? [],
         OurDownloadLink = o["our_download_link"]?.ToObject<List<string>>() ?? [],
-        DownloadStatus = o["download_status"]?.ToString() ?? "pending"
+        DownloadStatus = o["download_status"]?.ToString() ?? "pending",
+        ThumbnailUrl = o["thumbnail_url"]?.ToString()
     };
 
     private static MigrationAsianScandalRow MapAsianScandalRow(JObject o) => new()
@@ -210,6 +261,7 @@ public class SupabaseMigrationService
         Id = Guid.Parse(o["id"]!.ToString()),
         OriginalRapidgatorUrls = o["original_rapidgator_url"]?.ToObject<List<string>>() ?? [],
         OurDownloadLink = o["our_download_link"]?.ToObject<List<string>>() ?? [],
-        DownloadStatus = o["download_status"]?.ToString() ?? "pending"
+        DownloadStatus = o["download_status"]?.ToString() ?? "pending",
+        ThumbnailUrl = o["thumbnail_url"]?.ToString()
     };
 }

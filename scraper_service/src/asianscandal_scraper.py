@@ -250,19 +250,28 @@ def parse_post_page(source_url: str, html: str, fallback_thumb: str = '') -> dic
     tags = [a.get_text(strip=True) for a in soup.select('div.post-tags a')]
 
     # --- Download Links (Rapidgator) ---
-    # Extract only direct file links, filter out referral links
+    # Capture both /file/ and /folder/ links, from <a href> and plain text
+    _RG_URL_RE = re.compile(
+        r'https?://(?:www\.)?rapidgator\.net/(?:file|folder)/[^\s"\'<>]+',
+        re.IGNORECASE,
+    )
+    _RG_EXCLUDE_RE = re.compile(r'/ref/|/article/premium/', re.IGNORECASE)
+
     rg_links = []
     if content_div:
+        # Pass 1: <a href> tags
         for a in content_div.find_all('a', href=True):
             href = a['href']
-            # Direct link pattern: https://rapidgator.net/file/...
-            # Exclusion patterns: /ref/ or /article/premium/
-            if "rapidgator.net/file/" in href:
-                if "/ref/" not in href and "/article/premium/" not in href:
-                    rg_links.append(href)
-    
-    # ensure unique
-    rg_links = list(set(rg_links))
+            if _RG_URL_RE.match(href) and not _RG_EXCLUDE_RE.search(href):
+                rg_links.append(href)
+        # Pass 2: plain-text URLs (e.g. <p>https://rapidgator.net/file/...</p>)
+        for match in _RG_URL_RE.findall(content_div.get_text(" ")):
+            if not _RG_EXCLUDE_RE.search(match):
+                rg_links.append(match)
+
+    # deduplicate, preserving order
+    seen = set()
+    rg_links = [u for u in rg_links if not (u in seen or seen.add(u))]
 
     return {
         "source_url": source_url,
@@ -344,19 +353,22 @@ def mirror_images_in_html(html: str) -> str | None:
     return result_html
 
 
-def collect_all_posts(nonce: str, max_pages: int = 100, start_page: int = 0) -> list:
+def collect_all_posts(nonce: str, max_pages: int = 100, start_page: int = 0, limit: int | None = None) -> list:
     """
     Iterate through AJAX offsets and collect (url, thumb) pairs.
-    Supports start_page and max_pages for segmented backfilling.
+    Stops early if limit posts have been collected.
     """
     all_posts = []
     end_page = start_page + max_pages
     consecutive_errors = 0
-    
+
     for page_idx in range(start_page, end_page):
+        if limit and len(all_posts) >= limit:
+            break
+
         offset = page_idx * POSTS_PER_PAGE
         logging.info(f"  AJAX page {page_idx + 1} (offset={offset})...")
-        
+
         try:
             posts = fetch_ajax_page(offset, nonce)
             if not posts:
@@ -371,8 +383,11 @@ def collect_all_posts(nonce: str, max_pages: int = 100, start_page: int = 0) -> 
             if consecutive_errors >= 3:
                 logging.error("Too many consecutive errors. Stopping collection.")
                 break
-            
+
         time.sleep(1)
+
+    if limit:
+        all_posts = all_posts[:limit]
     return all_posts
 
 

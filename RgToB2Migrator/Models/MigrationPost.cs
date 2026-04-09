@@ -6,6 +6,7 @@ public class MigrationPostsRow
     public List<string> OriginalRapidgatorUrls { get; set; } = new();
     public List<string> OurDownloadLink { get; set; } = new();
     public string DownloadStatus { get; set; } = "pending";
+    public string? ThumbnailUrl { get; set; }
 }
 
 public class MigrationAsianScandalRow
@@ -14,4 +15,5 @@ public class MigrationAsianScandalRow
     public List<string> OriginalRapidgatorUrls { get; set; } = new();
     public List<string> OurDownloadLink { get; set; } = new();
     public string DownloadStatus { get; set; } = "pending";
+    public string? ThumbnailUrl { get; set; }
 }

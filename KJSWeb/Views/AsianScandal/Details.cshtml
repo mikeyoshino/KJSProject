@@ -1,7 +1,7 @@
-@model KJSWeb.Models.AsianScandalPost
+@model KJSWeb.Models.Post
 @{
     ViewData["Title"] = Model.Title;
-    var recentPosts = ViewBag.RecentPosts as List<KJSWeb.Models.Post>;
+    var recentPosts = ViewBag.RecentPosts as List<KJSWeb.Models.Post> ?? new List<KJSWeb.Models.Post>();
     var siteName = "Asian Scandal";
     var siteUrl = Context.Request.Scheme + "://" + Context.Request.Host;
 }
@@ -24,20 +24,37 @@
                 <div class="flex items-center gap-4">
                     <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Added: @Model.CreatedAt.ToString("MMMM dd, yyyy")</p>
                     <span class="text-orange-accent text-[9px] font-black uppercase tracking-widest border border-orange-accent/30 px-2 py-0.5 rounded-sm">Original</span>
+                    <span class="flex items-center gap-1 text-slate-400 text-[10px] font-bold uppercase tracking-widest">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        @Model.ViewCount.ToString("N0")
+                    </span>
                 </div>
             </header>
 
             <div class="prose max-w-none [&_img]:max-w-full [&_img]:h-auto [&_img]:block [&_img]:my-5 [&_img]:rounded-sm">
                 @{
+                    var workerBase = (string)(ViewBag.WorkerBaseUrl ?? "");
+                    var b2DirectBase = (string)(ViewBag.B2DirectBase ?? "");
                     var content = Model.ContentHtml
                         .Replace("{{SiteName}}", siteName)
                         .Replace("{{SiteUrl}}", siteUrl);
+
+                    // Rewrite hardcoded B2 direct URLs to go through the Cloudflare Worker (legacy full URLs)
+                    if (!string.IsNullOrEmpty(workerBase) && !string.IsNullOrEmpty(b2DirectBase))
+                        content = content.Replace(b2DirectBase, workerBase);
+
+                    // Rewrite relative B2 paths (e.g. src="posts/{id}/images/1.jpg") to full worker URLs
+                    if (!string.IsNullOrEmpty(workerBase))
+                        content = System.Text.RegularExpressions.Regex.Replace(
+                            content,
+                            @"(src=[""'])(?!https?://)(posts/)",
+                            $"$1{workerBase}/$2");
                 }
                 @Html.Raw(content)
             </div>
 
-            <!-- Download Section -->
-            @if ((Model.OurDownloadLink != null && Model.OurDownloadLink.Any()) || (Model.OriginalRapidgatorUrls != null && Model.OriginalRapidgatorUrls.Any()))
+            <!-- Download Section — only shown when files are available on our servers -->
+            @if (Model.OurDownloadLink != null && Model.OurDownloadLink.Any())
             {
                 <div class="mt-16 p-8 bg-black text-white rounded-sm shadow-2xl relative overflow-hidden">
                     <div class="absolute top-0 right-0 p-4 opacity-10">
@@ -46,41 +63,22 @@
 
                     @if (ViewBag.HasActiveSubscription == true)
                     {
+                        var downloadUrls = ViewBag.DownloadUrls as List<string>;
                         <div class="relative z-10">
                             <h3 class="text-2xl font-black mb-6 uppercase italic tracking-tighter">Download Access Ready</h3>
-                            
-                            <!-- Fast Mirror Primary Button -->
-                            @if (Model.OurDownloadLink != null && Model.OurDownloadLink.Any())
-                            {
-                                <div class="mb-8 p-6 bg-white/5 border border-white/10 rounded-sm">
-                                    <h4 class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Premium Fast Mirror (Recommended)</h4>
-                                    @foreach (var link in Model.OurDownloadLink)
+                            <div class="p-6 bg-white/5 border border-white/10 rounded-sm">
+                                <h4 class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Direct Download</h4>
+                                @if (downloadUrls != null && downloadUrls.Any())
+                                {
+                                    @for (int i = 0; i < downloadUrls.Count; i++)
                                     {
-                                        <a href="@Url.Action("Download", "AsianScandal", new { b2Path = link })" target="_blank" rel="noopener"
+                                        <a href="@downloadUrls[i]"
                                            class="inline-block w-full sm:w-auto bg-orange-accent text-white px-10 py-4 text-sm font-black uppercase tracking-widest hover:brightness-110 transition-all text-center mb-2">
-                                            ⚡ Full Speed Download @(Model.OurDownloadLink.Count > 1 ? "(Mirror " + (Model.OurDownloadLink.IndexOf(link) + 1) + ")" : "")
+                                            ⚡ Download @(downloadUrls.Count > 1 ? "Part " + (i + 1) : "")
                                         </a>
                                     }
-                                </div>
-                            }
-
-
-                            <!-- Standard Mirrors -->
-                            @if (Model.OriginalRapidgatorUrls != null && Model.OriginalRapidgatorUrls.Any())
-                            {
-                                <div>
-                                    <h4 class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Rapidgator Mirrors</h4>
-                                    <div class="flex flex-wrap gap-2">
-                                        @foreach (var url in Model.OriginalRapidgatorUrls)
-                                        {
-                                            <a href="@url" target="_blank" rel="noopener"
-                                               class="bg-white/10 hover:bg-white/20 text-white px-5 py-2.5 text-[11px] font-bold uppercase tracking-wider transition-colors border border-white/5">
-                                                Part @(Model.OriginalRapidgatorUrls.IndexOf(url) + 1)
-                                            </a>
-                                        }
-                                    </div>
-                                </div>
-                            }
+                                }
+                            </div>
                         </div>
                     }
                     else
@@ -124,11 +122,12 @@
                     @foreach (var post in recentPosts)
                     {
                         <div class="flex gap-4">
-                            <a asp-controller="Home" asp-action="Details" asp-route-id="@post.Id" class="shrink-0">
+                            @{ var sideCtrl = post.SourceNameRaw == "AsianScandal" ? "AsianScandal" : "Home"; }
+                            <a asp-controller="@sideCtrl" asp-action="Details" asp-route-id="@post.Id" class="shrink-0">
                                 <img src="@post.ThumbnailUrl" alt="@post.Title" class="w-20 h-14 object-cover rounded-sm" loading="lazy" />
                             </a>
                             <div class="min-w-0">
-                                <a asp-controller="Home" asp-action="Details" asp-route-id="@post.Id" class="text-sm font-semibold leading-tight line-clamp-2 hover:text-orange-accent transition-colors block">@post.Title</a>
+                                <a asp-controller="@sideCtrl" asp-action="Details" asp-route-id="@post.Id" class="text-sm font-semibold leading-tight line-clamp-2 hover:text-orange-accent transition-colors block">@post.Title</a>
                                 <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1 block">@post.CreatedAt.ToString("MMM dd, yyyy")</span>
                             </div>
                         </div>
@@ -138,3 +137,4 @@
         }
     </aside>
 </div>
+

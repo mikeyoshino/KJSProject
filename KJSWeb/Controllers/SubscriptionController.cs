@@ -109,7 +109,7 @@ public class SubscriptionController : Controller
         var sub = await _supabase.GetSubscriptionByAddressAsync(address);
         if (sub == null) return NotFound();
 
-        return Json(new { sub.Status, sub.Plan, sub.ExpiresAt });
+        return Json(new { status = sub.Status, plan = sub.Plan, expiresAt = sub.ExpiresAt });
     }
 }
 
@@ -162,6 +162,12 @@ public class BlockonomicsCallbackController : Controller
                 break;
 
             case 2: // Confirmed
+                // Guard against replay attacks — only activate if still pending/confirming
+                if (sub.Status != "pending" && sub.Status != "confirming")
+                {
+                    _logger.LogWarning("Callback replay blocked: subscription {Addr} already has status={Status}", addr, sub.Status);
+                    return Ok();
+                }
                 if (SubscriptionPlans.All.TryGetValue(sub.Plan, out var planInfo))
                 {
                     await _supabase.ActivateSubscriptionAsync(addr, txid ?? "", planInfo.DurationDays);

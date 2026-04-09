@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using RgToB2Migrator.Configuration;
 using RgToB2Migrator.Models;
 using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
 
 namespace RgToB2Migrator.Services;
 
@@ -105,26 +106,21 @@ public class MigrationOrchestrator
             // (B2 uses flat object keys, so no folder creation is necessary)
             string b2ObjectKey = string.Empty;
 
-            // ── Counter shared across all archives in this post ────────────────
-            var fileCounter = new FileProcessingService.FileCounter();
-
             // Expand folder URLs → individual file URLs, drop non-Rapidgator junk
             var fileUrls = await ExpandUrlsAsync(urls, postId, ct);
 
-            // ── Process each URL in parallel (2 at a time) ──────────────────────
-            var allProcessedFiles = new ConcurrentBag<FileProcessingService.ProcessedFile>();
+            // ── Phase 1: Download all files in parallel (2 at a time) ─────────
+            var downloadedPaths = new ConcurrentBag<string>();
             using var semaphore = new SemaphoreSlim(2);
-            
-            var tasks = fileUrls.Select(async (url, i) =>
+
+            var downloadTasks = fileUrls.Select(async (url, i) =>
             {
                 await semaphore.WaitAsync(ct);
                 try
                 {
-                    // Small staggered start to avoid simultaneous Rapidgator API hits
-                    if (i > 0) await Task.Delay(1000, ct); 
-                    
-                    var files = await ProcessOneUrlWithRetryAsync(url, postTempFolder, fileCounter, i + 1, fileUrls.Count, ct);
-                    foreach (var file in files) allProcessedFiles.Add(file);
+                    if (i > 0) await Task.Delay(1000, ct);
+                    var localPath = await DownloadOneUrlWithRetryAsync(url, postTempFolder, i + 1, fileUrls.Count, ct);
+                    if (localPath != null) downloadedPaths.Add(localPath);
                 }
                 finally
                 {
@@ -132,7 +128,46 @@ public class MigrationOrchestrator
                 }
             });
 
-            await Task.WhenAll(tasks);
+            await Task.WhenAll(downloadTasks);
+
+            // ── Phase 2: Extract — skip non-first RAR volumes ─────────────────
+            // For multi-part RARs (part1/part2/…), SharpCompress reads subsequent
+            // volumes automatically when opening part1. Opening part2+ alone always
+            // fails with "Need to start from first volume", so we skip them here.
+            var fileCounter = new FileProcessingService.FileCounter();
+            var allProcessedFiles = new List<FileProcessingService.ProcessedFile>();
+
+            foreach (var filePath in downloadedPaths.OrderBy(f => f))
+            {
+                if (_fileProcessingService.IsArchive(filePath))
+                {
+                    if (IsNonFirstRarVolume(filePath))
+                    {
+                        _logger.LogInformation("Skipping non-first RAR volume (will be read via part1): {File}", Path.GetFileName(filePath));
+                        continue;
+                    }
+
+                    try
+                    {
+                        var extractionFolder = await _fileProcessingService.ExtractArchiveAsync(filePath, postTempFolder, ct);
+                        var extracted = _fileProcessingService.ProcessExtractedFiles(extractionFolder, fileCounter);
+                        allProcessedFiles.AddRange(extracted);
+                        if (extracted.Count == 0)
+                            _logger.LogWarning("Archive extraction yielded 0 files: {File}", Path.GetFileName(filePath));
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Extraction failed (non-retryable): {File}", Path.GetFileName(filePath));
+                    }
+
+                    TryDelete(filePath);
+                }
+                else
+                {
+                    var processed = _fileProcessingService.ProcessSingleFile(filePath, postTempFolder, fileCounter);
+                    allProcessedFiles.Add(processed);
+                }
+            }
 
             // ── Zip all renamed files and upload as one archive ────────────────
             if (allProcessedFiles.Count > 0)
@@ -218,105 +253,191 @@ public class MigrationOrchestrator
     }
 
     /// <summary>
-    /// Wrapper around ProcessOneUrlAsync that adds retry logic.
+    /// Downloads one Rapidgator URL to disk with retry logic (network errors only).
+    /// Returns the local file path, or null if all attempts fail.
     /// </summary>
-    private async Task<List<FileProcessingService.ProcessedFile>> ProcessOneUrlWithRetryAsync(
+    private async Task<string?> DownloadOneUrlWithRetryAsync(
         string rapidgatorUrl,
         string postTempFolder,
-        FileProcessingService.FileCounter fileCounter,
         int index,
         int total,
         CancellationToken ct)
     {
         int maxRetries = 3;
-        int delayMs = 5000;
 
         for (int attempt = 1; attempt <= maxRetries; attempt++)
         {
             try
             {
-                _logger.LogInformation("[{Index}/{Total}] Processing URL (Attempt {Attempt}/{Max})", 
-                    index, total, attempt, maxRetries);
-                
-                return await ProcessOneUrlAsync(rapidgatorUrl, postTempFolder, fileCounter, ct);
+                _logger.LogInformation("[dl] [{Index}/{Total}] attempt {Attempt}: {Url}",
+                    index, total, attempt, rapidgatorUrl);
+
+                var (downloadUrl, fileName, fileSize) = await _rapidgatorService.GetDownloadLinkAsync(rapidgatorUrl, ct);
+                var archivePath = Path.Combine(postTempFolder, fileName);
+
+                await _rapidgatorService.DownloadFileAsync(downloadUrl, archivePath, ct);
+
+                // Fix missing extension by sniffing magic bytes
+                if (string.IsNullOrEmpty(Path.GetExtension(archivePath)))
+                {
+                    var detectedExt = FileProcessingService.DetectExtension(archivePath);
+                    if (!string.IsNullOrEmpty(detectedExt))
+                    {
+                        var fixedPath = archivePath + detectedExt;
+                        File.Move(archivePath, fixedPath);
+                        archivePath = fixedPath;
+                        _logger.LogInformation("Detected file type: {Ext} for {File}", detectedExt, fileName);
+                    }
+                }
+
+                return archivePath;
             }
             catch (RapidgatorTrafficExceededException)
             {
-                throw; // Don't retry traffic exceeded
+                throw;
             }
             catch (Exception ex)
             {
-                _logger.LogWarning("Attempt {Attempt} failed for URL {Url}: {Message}", 
-                    attempt, rapidgatorUrl, ex.Message);
-                
+                _logger.LogWarning("[dl] [{Index}/{Total}] attempt {Attempt} failed: {Message}",
+                    index, total, attempt, ex.Message);
+
                 if (attempt == maxRetries)
                 {
-                    _logger.LogError(ex, "URL failed after {Max} attempts: {Url}", maxRetries, rapidgatorUrl);
-                    return new List<FileProcessingService.ProcessedFile>();
+                    _logger.LogError("[dl] [{Index}/{Total}] giving up: {Url}", index, total, rapidgatorUrl);
+                    return null;
                 }
-                
-                // Exponential backoff
-                await Task.Delay(delayMs * attempt, ct);
+
+                await Task.Delay(5000 * attempt, ct);
             }
         }
 
-        return new List<FileProcessingService.ProcessedFile>();
+        return null;
     }
 
     /// <summary>
-    /// Downloads one Rapidgator URL, extracts if archive, renames all files,
-    /// and returns the processed file list (caller zips and uploads).
+    /// Returns true for non-first volumes of a multi-part RAR set:
+    /// new format (part2.rar, part3.rar, …) and old format (.r00, .r01, …).
+    /// These must be skipped during extraction — SharpCompress reads them
+    /// automatically when opening the first volume.
     /// </summary>
-    private async Task<List<FileProcessingService.ProcessedFile>> ProcessOneUrlAsync(
-        string rapidgatorUrl,
-        string postTempFolder,
-        FileProcessingService.FileCounter fileCounter,
-        CancellationToken ct)
+    private static bool IsNonFirstRarVolume(string filePath)
     {
-        // ── 1. Get download link ───────────────────────────────────────────────
-        var (downloadUrl, fileName, fileSize) = await _rapidgatorService.GetDownloadLinkAsync(rapidgatorUrl, ct);
-        _logger.LogInformation("Downloading {FileName} ({Size:N0} bytes)", fileName, fileSize);
+        var name = Path.GetFileName(filePath);
+        // New format: filename.part2.rar, filename.part3.rar, etc.
+        var m = Regex.Match(name, @"\.part(\d+)\.rar$", RegexOptions.IgnoreCase);
+        if (m.Success && int.Parse(m.Groups[1].Value) > 1)
+            return true;
+        // Old format: filename.r00, filename.r01, etc.
+        if (Regex.IsMatch(name, @"\.r\d+$", RegexOptions.IgnoreCase))
+            return true;
+        return false;
+    }
 
-        var archivePath = Path.Combine(postTempFolder, fileName);
+    public async Task RunThumbnailsAsync(int? limit = null, CancellationToken ct = default)
+    {
+        _logger.LogInformation("Starting thumbnail migration → B2");
 
-        // ── 2. Download to disk ────────────────────────────────────────────────
-        await _rapidgatorService.DownloadFileAsync(downloadUrl, archivePath, ct);
+        int batchSize = limit ?? 50;
 
-        // ── 2b. Fix missing extension by sniffing magic bytes ─────────────────
-        if (string.IsNullOrEmpty(Path.GetExtension(archivePath)))
+        var posts = await _supabaseService.FetchPendingThumbnailPostsAsync(batchSize, ct);
+        var asianScandal = await _supabaseService.FetchPendingThumbnailAsianScandalPostsAsync(
+            Math.Max(0, batchSize - posts.Count), ct);
+
+        var total = posts.Count + asianScandal.Count;
+        _logger.LogInformation("Found {Total} post(s) with external thumbnails ({Posts} posts, {AS} asianscandal)",
+            total, posts.Count, asianScandal.Count);
+
+        if (total == 0)
         {
-            var detectedExt = FileProcessingService.DetectExtension(archivePath);
-            if (!string.IsNullOrEmpty(detectedExt))
+            _logger.LogInformation("No thumbnails to migrate.");
+            return;
+        }
+
+        using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+        int processed = 0;
+
+        async Task MigrateThumbnailAsync(Guid postId, string tableName, string thumbnailUrl)
+        {
+            var postTempFolder = Path.Combine(_settings.TempFolder, postId.ToString());
+            Directory.CreateDirectory(postTempFolder);
+
+            try
             {
-                var fixedPath = archivePath + detectedExt;
-                File.Move(archivePath, fixedPath);
-                archivePath = fixedPath;
-                _logger.LogInformation("Detected file type: {Ext} for {File}", detectedExt, fileName);
+                _logger.LogInformation("[{Done}/{Total}] Migrating thumbnail for post {Id} from {Url}",
+                    processed + 1, total, postId, thumbnailUrl);
+
+                // Download thumbnail
+                using var response = await http.GetAsync(thumbnailUrl, HttpCompletionOption.ResponseHeadersRead, ct);
+                response.EnsureSuccessStatusCode();
+
+                // Detect extension
+                var ext = DetectImageExtension(response.Content.Headers.ContentType?.MediaType, thumbnailUrl);
+                var localPath = Path.Combine(postTempFolder, $"thumbnail{ext}");
+
+                await using (var fs = File.Create(localPath))
+                    await response.Content.CopyToAsync(fs, ct);
+
+                // Upload to B2
+                var b2Key = $"posts/{postId}/thumbnail{ext}";
+                await _b2Service.UploadFileAsync(localPath, b2Key, ct);
+
+                // Update Supabase
+                await _supabaseService.UpdateThumbnailUrlAsync(postId, tableName, b2Key, ct);
+
+                _logger.LogInformation("Thumbnail migrated → {Key}", b2Key);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to migrate thumbnail for post {Id} in {Table}", postId, tableName);
+            }
+            finally
+            {
+                CleanupFolder(postTempFolder);
+                processed++;
             }
         }
 
-        // ── 3. Extract (if archive) or treat as single file ───────────────────
-        List<FileProcessingService.ProcessedFile> processedFiles;
-
-        if (_fileProcessingService.IsArchive(archivePath))
+        foreach (var post in posts)
         {
-            var extractionFolder = await _fileProcessingService.ExtractArchiveAsync(
-                archivePath, postTempFolder, ct);
-            processedFiles = _fileProcessingService.ProcessExtractedFiles(extractionFolder, fileCounter);
-            
-            if (processedFiles.Count == 0)
-                _logger.LogWarning("Archive extraction yielded 0 files: {FileName}", fileName);
-                
-            TryDelete(archivePath);
-        }
-        else
-        {
-            var processed = _fileProcessingService.ProcessSingleFile(archivePath, postTempFolder, fileCounter);
-            processedFiles = [processed];
+            if (ct.IsCancellationRequested) break;
+            if (string.IsNullOrWhiteSpace(post.ThumbnailUrl)) continue;
+            await MigrateThumbnailAsync(post.Id, "posts", post.ThumbnailUrl);
         }
 
-        _logger.LogInformation("{Count} file(s) collected from {Url}", processedFiles.Count, fileName);
-        return processedFiles;
+        foreach (var post in asianScandal)
+        {
+            if (ct.IsCancellationRequested) break;
+            if (string.IsNullOrWhiteSpace(post.ThumbnailUrl)) continue;
+            await MigrateThumbnailAsync(post.Id, "asianscandal_posts", post.ThumbnailUrl);
+        }
+
+        _logger.LogInformation("Thumbnail migration complete. Processed {Count} post(s)", processed);
+    }
+
+    private static string DetectImageExtension(string? contentType, string url)
+    {
+        var ext = contentType switch
+        {
+            "image/jpeg" => ".jpg",
+            "image/png"  => ".png",
+            "image/gif"  => ".gif",
+            "image/webp" => ".webp",
+            _ => null
+        };
+
+        if (ext != null) return ext;
+
+        // Fallback: extract from URL path
+        try
+        {
+            var path = new Uri(url).AbsolutePath;
+            var urlExt = Path.GetExtension(path).ToLowerInvariant();
+            if (urlExt is ".jpg" or ".jpeg" or ".png" or ".gif" or ".webp")
+                return urlExt == ".jpeg" ? ".jpg" : urlExt;
+        }
+        catch { /* ignore malformed URLs */ }
+
+        return ".jpg";
     }
 
     private void CleanupFolder(string folder)

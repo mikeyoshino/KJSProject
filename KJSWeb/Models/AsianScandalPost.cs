@@ -36,4 +36,14 @@ public class AsianScandalPost : BaseModel
 
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    [Column("view_count")]
+    public long ViewCount { get; set; } = 0;
+
+    [Column("status")]
+    public string StatusRaw { get; set; } = "published";
+
+    [System.Text.Json.Serialization.JsonIgnore]
+    public PostStatus Status =>
+        Enum.TryParse<PostStatus>(StatusRaw, ignoreCase: true, out var v) ? v : PostStatus.Published;
 }
