@@ -183,17 +183,35 @@ def _expand_rg_urls(client: RapidgatorClient, urls: list[str], post_id: str) -> 
     return result
 
 
+def _is_non_first_rar_volume(path: str) -> bool:
+    """
+    Returns True for non-first volumes of a multi-part RAR:
+    - New format: file.part2.rar, file.part3.rar, …
+    - Old format: file.r00, file.r01, …
+    These must be skipped during extraction — rarfile reads them automatically
+    when opening the first volume (part1.rar / .rar).
+    """
+    name = os.path.basename(path).lower()
+    m = re.search(r"\.part(\d+)\.rar$", name)
+    if m and int(m.group(1)) > 1:
+        return True
+    if re.search(r"\.r\d+$", name):
+        return True
+    return False
+
+
 def _download_one_rg_url(
     client: RapidgatorClient,
     url: str,
     post_temp: str,
-    counter: FileCounter,
-    text_counter: dict,
     idx: int,
     total: int,
     max_retries: int = 3,
-) -> list:
-    """Download + extract + rename one RG URL. Returns list of ProcessedFile."""
+) -> str | None:
+    """
+    Download one RG URL to disk. Returns local file path, or None on failure.
+    Extraction is NOT done here — caller handles it after all downloads complete.
+    """
     delay = 5
     for attempt in range(1, max_retries + 1):
         try:
@@ -204,8 +222,7 @@ def _download_one_rg_url(
             archive_path = os.path.join(post_temp, fname)
             client.download_file(dl_url, archive_path)
 
-            # Reject tiny HTML error pages returned by Rapidgator (session expired,
-            # captcha wall, etc.).  Real archives are at least several KB.
+            # Reject tiny HTML error pages (session expired, captcha, etc.)
             file_size = os.path.getsize(archive_path)
             if file_size < 10_240:
                 with open(archive_path, "rb") as _f:
@@ -231,17 +248,7 @@ def _download_one_rg_url(
                     os.rename(archive_path, new_path)
                     archive_path = new_path
 
-            if is_archive(archive_path):
-                extract_dir = extract_archive(archive_path, post_temp)
-                files = process_extracted_files(extract_dir, counter, text_counter)
-                try:
-                    os.remove(archive_path)
-                except OSError:
-                    pass
-            else:
-                files = [process_single_file(archive_path, post_temp, counter)]
-
-            return files
+            return archive_path
 
         except RapidgatorTrafficExceededException:
             raise
@@ -249,10 +256,10 @@ def _download_one_rg_url(
             logging.warning(f"[dl] [{idx}/{total}] attempt {attempt} failed: {e}")
             if attempt == max_retries:
                 logging.error(f"[dl] [{idx}/{total}] giving up: {url}")
-                return []
+                return None
             time.sleep(delay * attempt)
 
-    return []
+    return None
 
 
 def _download_rg_files(
@@ -264,6 +271,10 @@ def _download_rg_files(
     """
     Full download pipeline for one post (posts table).
     Returns 'done' | 'failed' | 'traffic_exceeded' | 'stopped'.
+
+    Two-phase approach:
+    Phase 1 — download all files (with retry on network errors only)
+    Phase 2 — extract: skip non-first RAR volumes; rarfile spans them automatically
     """
     post_temp = os.path.join(_TEMP_FOLDER, post_id)
     os.makedirs(post_temp, exist_ok=True)
@@ -277,17 +288,43 @@ def _download_rg_files(
             update_post_download_status(post_id, "failed")
             return "failed"
 
-        counter = FileCounter()
-        text_counter: dict = {}
-        all_files = []
-
+        # ── Phase 1: download all files ───────────────────────────────────────
+        downloaded_paths = []
         for i, url in enumerate(file_urls, 1):
             if stop_event.is_set():
                 update_post_download_status(post_id, "pending")
                 return "stopped"
-            files = _download_one_rg_url(client, url, post_temp, counter, text_counter, i, len(file_urls))
-            all_files.extend(files)
-            del files
+            path = _download_one_rg_url(client, url, post_temp, i, len(file_urls))
+            if path:
+                downloaded_paths.append(path)
+
+        # ── Phase 2: extract (skip non-first RAR volumes) ─────────────────────
+        counter = FileCounter()
+        text_counter: dict = {}
+        all_files = []
+
+        for path in sorted(downloaded_paths):
+            if _is_non_first_rar_volume(path):
+                logging.info(f"[dl] Skipping non-first RAR volume (read via part1): {os.path.basename(path)}")
+                continue
+
+            if is_archive(path):
+                try:
+                    extract_dir = extract_archive(path, post_temp)
+                    files = process_extracted_files(extract_dir, counter, text_counter)
+                    all_files.extend(files)
+                    if not files:
+                        logging.warning(f"[dl] Archive yielded 0 files: {os.path.basename(path)}")
+                except Exception as e:
+                    logging.error(f"[dl] Extraction failed (non-retryable): {os.path.basename(path)}: {e}")
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
+            else:
+                all_files.append(process_single_file(path, post_temp, counter))
+
+        del downloaded_paths
 
         if not all_files:
             logging.warning(f"[dl] Post {post_id}: no files collected — marking failed")
