@@ -209,6 +209,18 @@ python asianscandal_rewrite.py \
 
 ---
 
+### `jgirl_auth.py` — Authenticate to bypass Cloudflare
+
+JGirl requires a valid session cookie to access pages. Run this **once before first use** and whenever you get 403 errors:
+
+```bash
+python jgirl_auth.py
+```
+
+This saves a `jgirl_state.json` session file in `src/`. Without it, `jgirl_backfill.py` will fail with 403 errors.
+
+---
+
 ### `jgirl_backfill.py` — Scrape + download JGirl posts
 
 Scrapes posts from JGirl sources (upskirt, ksiroto, fc2, bathroom), uploads images + thumbnails to B2, and downloads files via Real-Debrid.
