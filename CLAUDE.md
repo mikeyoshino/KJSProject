@@ -13,9 +13,6 @@ dotnet build KJSProject.sln
 # Run the web frontend
 dotnet run --project KJSWeb
 
-# Run the proxy API
-dotnet run --project RapidgatorProxy/src/RapidgatorProxy.Api
-
 # Run the migrator (all pending posts)
 dotnet run --project RgToB2Migrator
 
@@ -27,7 +24,7 @@ There are no automated tests in this solution.
 
 ## Architecture Overview
 
-This is a three-project solution centered around serving content scraped/migrated from Rapidgator.
+This is a two-project solution centered around serving content scraped/migrated from Rapidgator.
 
 ### KJSWeb — ASP.NET Core MVC Frontend
 The user-facing website. Uses **Supabase** as the backend database (via the `Supabase` C# SDK and raw HTTP calls to the Supabase REST API). Key concerns:
@@ -50,24 +47,6 @@ Batch migrates files from Rapidgator → Backblaze B2 (S3-compatible). Pipeline 
 On startup, the orchestrator resets any rows stuck in `processing` state back to `pending` before fetching a new batch.
 
 Config sections: `Supabase` (Url, ServiceKey), `Rapidgator` (Username, Password, ApiBaseUrl, RequestDelayMs), `B2` (ApplicationKeyId, ApplicationKey, BucketName, Region, ServiceUrl), `Migrator` (TempFolder, RateLimitDelayMs).
-
-### RapidgatorProxy — ASP.NET Core Web API
-An on-demand caching proxy for Rapidgator files. Used by the frontend to let subscribers download files without exposing Rapidgator credentials. Key design:
-
-- **DownloadCoordinator** — entry point for download requests. Per-URL locking (`ConcurrentDictionary<string, SemaphoreSlim>`) prevents duplicate downloads. Global concurrency cap via `SemaphoreSlim` (configured by `Rapidgator:MaxConcurrentDownloads`).
-- **CacheManagerService** — manages a local disk cache directory, evicts oldest files when `Cache:MaxSizeGB` is exceeded.
-- **FileDownloadService** — streams files from Rapidgator to disk, updating `DownloadedBytes` on the `DownloadEntry` for progress reporting.
-- **AuthService** — validates Supabase JWTs from the `Authorization: Bearer` header.
-- **AppDbContext** — SQLite (EF Core), single `DownloadEntries` table tracking each download's status and cached filename.
-- File serving: uses `X-Accel-Redirect` for NGINX to serve cached files directly; falls back to Kestrel in development.
-- **CacheCleanupService** — background hosted service that periodically evicts expired entries.
-
-API endpoints (all require `Authorization: Bearer <supabase-jwt>`):
-- `POST /api/download/request` — enqueue or return cached download
-- `GET /api/download/status/{downloadId}` — poll progress
-- `GET /api/download/file/{downloadId}` — retrieve file
-
-Config sections: `Rapidgator`, `Proxy` (optional HTTP proxy address/credentials), `Cache`, `Supabase`, `Cors`.
 
 ## Testing Locally
 

@@ -28,6 +28,7 @@ CATEGORY_URLS = {
     "upskirt": f"{BASE_URL}/upskirt",
     "fc2":     f"{BASE_URL}/fc2",
     "ksiroto": f"{BASE_URL}/ksiroto",
+    "bathroom": f"{BASE_URL}/upskirt/vendor/Sifangclub",
 }
 
 _session: requests.Session | None = None

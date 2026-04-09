@@ -12,7 +12,7 @@
     <PackageReference Include="AWSSDK.S3" Version="4.0.20.3" />
     <PackageReference Include="SharpCompress" Version="0.37.2" />
 
-    <!-- JSON parsing (same as RapidgatorProxy) -->
+
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
 
     <!-- Config + logging infrastructure -->

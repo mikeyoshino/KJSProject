@@ -14,7 +14,8 @@ Pipeline per post:
 Usage:
     cd scraper_service/src
     python asianscandal_rewrite.py                  # process posts with missing content_html
-    python asianscandal_rewrite.py --all            # rewrite ALL posts (overwrite existing)
+    python asianscandal_rewrite.py --all            # rewrite all posts, skip already-rewritten
+    python asianscandal_rewrite.py --all --force    # rewrite everything, no skipping
     python asianscandal_rewrite.py --limit 50       # first 50
     python asianscandal_rewrite.py --dry-run        # scrape + clean, no DB write
     python asianscandal_rewrite.py --no-ai          # skip Ollama step
@@ -158,6 +159,19 @@ def upload_images_to_b2(html: str) -> str:
     return result
 
 
+def is_already_rewritten(post: dict) -> bool:
+    """
+    A post is considered already rewritten if its content_html contains a B2 image URL
+    (i.e. the scandal69/ path prefix we use for uploaded images).
+    """
+    content = post.get("content_html") or ""
+    b2_base = os.getenv("B2_PUBLIC_BASE_URL", "")
+    if b2_base and f"{b2_base}/scandal69/" in content:
+        return True
+    # Fallback: check for the path pattern even without the full base URL
+    return "scandal69/" in content and "backblazeb2.com" in content
+
+
 def process_post(post: dict, dry_run: bool = False, use_ai: bool = True) -> bool:
     """
     Full pipeline for a single post dict (must have 'id' and 'source_url').
@@ -210,12 +224,13 @@ def process_post(post: dict, dry_run: bool = False, use_ai: bool = True) -> bool
         return False
 
 
-def run(limit: int = None, delay: float = 1.5, dry_run: bool = False, use_ai: bool = True, all_posts: bool = False):
+def run(limit: int = None, delay: float = 1.5, dry_run: bool = False, use_ai: bool = True, all_posts: bool = False, force: bool = False):
     fetch_fn = fetch_all_asianscandal_posts if all_posts else fetch_asianscandal_posts_missing_content
 
     logging.info("=" * 60)
     logging.info("AsianScandal Content Rewrite")
     logging.info(f"  Mode: {'ALL posts' if all_posts else 'Missing content_html only'}")
+    logging.info(f"  Skip already-rewritten: {'NO (--force)' if force else 'YES'}")
     if dry_run:
         logging.info("  DB writes: DRY RUN (disabled)")
     if not use_ai:
@@ -246,6 +261,11 @@ def run(limit: int = None, delay: float = 1.5, dry_run: bool = False, use_ai: bo
         for post in posts:
             if limit and total_processed >= limit:
                 break
+
+            # Skip already-rewritten posts unless --force
+            if not force and is_already_rewritten(post):
+                logging.info(f"  SKIP (already rewritten): {post['source_url']}")
+                continue
 
             total_processed += 1
             logging.info(f"[{total_processed}] {post['source_url']}")
@@ -280,6 +300,7 @@ if __name__ == "__main__":
     parser.add_argument("--dry-run", action="store_true", help="Scrape and clean but do not write to DB")
     parser.add_argument("--no-ai", action="store_true", help="Skip Ollama AI rewrite step")
     parser.add_argument("--all", dest="all_posts", action="store_true", help="Rewrite ALL posts, not just missing content")
+    parser.add_argument("--force", action="store_true", help="Re-process even already-rewritten posts (skips the B2 URL check)")
     args = parser.parse_args()
 
     run(
@@ -288,4 +309,5 @@ if __name__ == "__main__":
         dry_run=args.dry_run,
         use_ai=not args.no_ai,
         all_posts=args.all_posts,
+        force=args.force,
     )

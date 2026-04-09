@@ -480,7 +480,7 @@ def backfill_all(sources: list[str], **kwargs) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="JGirl Scraper + Downloader")
     parser.add_argument("--source", default="all",
-                        choices=["upskirt", "ksiroto", "fc2", "all"])
+                        choices=["upskirt", "ksiroto", "fc2", "bathroom", "all"])
     parser.add_argument("--mode", default="incremental",
                         choices=["incremental", "backfill"])
     parser.add_argument("--limit", type=int, default=None)
@@ -494,7 +494,7 @@ if __name__ == "__main__":
                         help="Skip Real-Debrid download step")
     args = parser.parse_args()
 
-    sources = ["upskirt", "ksiroto", "fc2"] if args.source == "all" else [args.source]
+    sources = ["upskirt", "ksiroto", "fc2", "bathroom"] if args.source == "all" else [args.source]
     try:
         backfill_all(
             sources=sources,
