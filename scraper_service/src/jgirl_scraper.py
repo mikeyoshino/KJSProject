@@ -16,9 +16,11 @@ import json
 import time
 import random
 import logging
+import threading
 from datetime import datetime
 
 import requests
+from curl_cffi import requests as curl_requests
 from bs4 import BeautifulSoup
 
 BASE_URL = "https://jgirl.co"
@@ -31,39 +33,46 @@ CATEGORY_URLS = {
     "bathroom": f"{BASE_URL}/upskirt/vendor/Sifangclub",
 }
 
-_session: requests.Session | None = None
+# Thread-local storage so each worker thread gets its own curl_cffi session.
+# A single shared session serialises requests across threads.
+_thread_local = threading.local()
 
 
-def _get_session() -> requests.Session:
-    """Build a requests.Session loaded with saved Cloudflare cookies."""
-    global _session
-    if _session is not None:
-        return _session
+def _get_session() -> curl_requests.Session:
+    """Return a per-thread curl_cffi session loaded with saved Cloudflare cookies.
+    curl_cffi impersonates Chrome's exact TLS fingerprint (JA3/JA4 + HTTP/2),
+    which is required for cf_clearance cookies to be accepted by Cloudflare.
+    """
+    if getattr(_thread_local, "session", None) is not None:
+        return _thread_local.session
 
-    _session = requests.Session()
+    # chrome120 matches Chrome 120+ TLS + HTTP/2 fingerprint
+    session = curl_requests.Session(impersonate="chrome120")
 
     if not os.path.exists(_STATE_FILE):
         logging.warning("jgirl_state.json not found — run jgirl_auth.py first")
-        return _session
+        _thread_local.session = session
+        return session
 
     with open(_STATE_FILE) as f:
         state = json.load(f)
 
     ua = state.get("user_agent", (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     ))
-    _session.headers.update({
+    session.headers.update({
         "User-Agent": ua,
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "ja,en-US;q=0.9,en;q=0.8",
         "Referer": BASE_URL,
     })
     for name, value in state.get("cookies", {}).items():
-        _session.cookies.set(name, value, domain="jgirl.co")
+        session.cookies.set(name, value, domain="jgirl.co")
+    _thread_local.session = session
 
     logging.info(f"Loaded cookies: {list(state.get('cookies', {}).keys())}")
-    return _session
+    return session
 
 
 def close_browser():
@@ -272,11 +281,24 @@ def parse_post_page(source_url: str, html: str, source: str) -> dict:
         if src and src not in preview_images and not src.startswith("/img/"):
             preview_images.append(src)
 
-    # Download links — <a rel="nofollow" href="...external...">
+    # Download links — exclude links inside div.post-item (sidebar/related-post
+    # widgets that repeat the same shared links on every page) and bare domain URLs.
+    from urllib.parse import urlparse
     download_links = []
     for a in soup.find_all("a", rel="nofollow"):
         href = a.get("href", "")
-        if href and not href.startswith("/") and href not in download_links:
+        if not href or href.startswith("/"):
+            continue
+        try:
+            path = urlparse(href).path
+            if not path or path == "/":
+                continue  # bare domain, no file
+        except Exception:
+            pass
+        # Skip sidebar/related-post widget links (they live inside div.post-item)
+        if a.find_parent("div", class_=lambda c: c and "post-item" in c):
+            continue
+        if href not in download_links:
             download_links.append(href)
 
     soup.decompose()

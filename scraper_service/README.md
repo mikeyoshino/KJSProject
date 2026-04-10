@@ -250,6 +250,9 @@ python jgirl_backfill.py --source bathroom --no-download
 # Dry run (scrape but do not write to DB or B2)
 python jgirl_backfill.py --source bathroom --dry-run
 
+# Run 2 posts in parallel (faster — keep at 2-3 max to avoid RD rate limits)
+python jgirl_backfill.py --source bathroom --limit 200 --workers 2
+
 # Full options
 python jgirl_backfill.py \
   --source bathroom \       # upskirt | ksiroto | fc2 | bathroom | all
@@ -258,6 +261,7 @@ python jgirl_backfill.py \
   --pages 10 \              # max pages to scrape (0 = unlimited)
   --spread-days 365 \       # spread created_at timestamps across N days
   --delay 1.5 \             # delay between requests (seconds)
+  --workers 2 \             # parallel workers per category (default 1, max 3)
   --no-images \             # skip B2 image upload
   --no-download \           # skip Real-Debrid download
   --dry-run                 # scrape only, no DB/B2 writes

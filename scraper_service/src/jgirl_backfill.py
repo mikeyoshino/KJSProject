@@ -29,6 +29,7 @@ import logging
 import argparse
 import mimetypes
 import socket
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta, timezone
 
 sys.path.insert(0, os.path.dirname(__file__))
@@ -58,7 +59,7 @@ from jgirl_scraper import (
     close_browser,
 )
 from db import (
-    check_jgirl_post_exists, insert_jgirl_post, update_jgirl_post,
+    check_jgirl_post_exists, insert_jgirl_post, upsert_jgirl_post, update_jgirl_post,
     fetch_jgirl_posts_for_download,
 )
 from storage_b2 import stream_upload_to_b2, delete_b2_folder, _B2_PUBLIC_BASE, _B2_BUCKET
@@ -173,13 +174,25 @@ def download_and_upload_to_b2(post_id: str, rd_result: dict) -> str | None:
     """
     Stream file from Real-Debrid direct URL straight into B2.
     No temp file, no full-file buffer — safe for 1GB+ files.
+    Idempotent: skips Real-Debrid download entirely if file already exists in B2.
     Returns B2 public URL or None on failure.
     """
-    download_url = rd_result["download"]
+    from storage_b2 import _get_client, _B2_BUCKET, _B2_PUBLIC_BASE
     filename = rd_result.get("filename", "file")
     content_type = rd_result.get("mimeType") or _guess_content_type(filename)
     b2_key = f"JGirls/{post_id}/{filename}"
 
+    # Check B2 before hitting Real-Debrid
+    try:
+        client = _get_client()
+        client.head_object(Bucket=_B2_BUCKET, Key=b2_key)
+        logging.info(f"  B2 already exists, skipping download: {b2_key}")
+        return f"{_B2_PUBLIC_BASE}/{b2_key}" if _B2_PUBLIC_BASE else b2_key
+    except Exception as e:
+        if "404" not in str(e) and "NoSuchKey" not in str(e):
+            pass  # unexpected error — proceed with download attempt
+
+    download_url = rd_result["download"]
     logging.info(f"  Streaming {filename} → B2 ({rd_result.get('filesize', '?')} bytes)")
     try:
         resp = requests.get(download_url, stream=True, timeout=(30, None), proxies=_RD_PROXIES)
@@ -285,7 +298,7 @@ def process_post(
                 logging.error(f"  All download links failed for post {post_id}")
                 raise RuntimeError("All download links failed")
 
-        # Save final state to DB
+        # Save final state to DB — mark published only after full pipeline succeeds
         now_iso = datetime.now(timezone.utc).isoformat()
         update_jgirl_post(post_id, {
             "thumbnail_url":   new_thumb,
@@ -294,6 +307,7 @@ def process_post(
             "download_links":  [b2_download_url] if b2_download_url else [],
             "scraped_at":      now_iso,
             "download_status": "done",
+            "status":          "published",
         })
         logging.info(f"  Done: {parsed['title']!r}")
         success = True
@@ -313,6 +327,57 @@ def process_post(
 #  CATEGORY BACKFILL
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _process_one(
+    idx: int,
+    total: int,
+    post_info: dict,
+    category: str,
+    mode: str,
+    spread_days: int,
+    delay: float,
+    dry_run: bool,
+    upload_images: bool,
+    do_download: bool,
+    force: bool = False,
+) -> bool:
+    """Process a single post. Returns True on success. Thread-safe."""
+    source_url = post_info["url"]
+
+    if not dry_run and not force and check_jgirl_post_exists(source_url):
+        logging.info(f"  [{idx+1}/{total}] SKIP (exists): {source_url}")
+        return False  # not "inserted", just skipped
+
+    logging.info(f"  [{idx+1}/{total}] Processing: {source_url}")
+
+    if mode == "incremental":
+        html_for_date = fetch_html(source_url)
+        if not html_for_date:
+            logging.warning(f"  Could not fetch: {source_url}")
+            return False
+        temp_parsed = parse_post_page(source_url, html_for_date, category)
+        if not temp_parsed.get("title") or temp_parsed["title"] == "Unknown":
+            temp_parsed["title"] = post_info.get("title", "Unknown")
+        created_at = _make_incremental_date(temp_parsed.get("_post_date"))
+        temp_parsed.pop("_post_date", None)
+
+        if dry_run:
+            links = _sort_links_by_priority(temp_parsed["original_download_links"])
+            rd = unrestrict_link(links[0]) if links and do_download else None
+            logging.info(
+                f"  [DRY RUN] title={temp_parsed['title']!r} "
+                f"tags={temp_parsed['tags']} "
+                f"previews={len(temp_parsed['images'])} "
+                f"dl={len(temp_parsed['original_download_links'])} "
+                f"rd={'OK: ' + rd['filename'] if rd else 'skipped'}"
+            )
+            return False
+
+        return _process_parsed(temp_parsed, category, created_at, upload_images, do_download, force)
+    else:
+        created_at = _make_backfill_date(idx, total, spread_days)
+        return process_post(post_info, category, created_at, upload_images, do_download, dry_run)
+
+
 def backfill_category(
     category: str,
     mode: str = "incremental",
@@ -323,9 +388,11 @@ def backfill_category(
     dry_run: bool = False,
     upload_images: bool = True,
     do_download: bool = True,
+    workers: int = 1,
+    force: bool = False,
 ) -> int:
     logging.info(f"{'='*60}")
-    logging.info(f"Category: {category} | mode={mode} | dry_run={dry_run} | download={do_download}")
+    logging.info(f"Category: {category} | mode={mode} | dry_run={dry_run} | download={do_download} | workers={workers} | force={force}")
     logging.info(f"{'='*60}")
 
     posts = collect_category_posts(category, max_pages=max_pages, limit=limit)
@@ -335,56 +402,25 @@ def backfill_category(
 
     logging.info(f"  Collected {len(posts)} post URLs for [{category}].")
     inserted = 0
+    total = len(posts)
 
-    for idx, post_info in enumerate(posts):
-        source_url = post_info["url"]
-
-        if not dry_run and check_jgirl_post_exists(source_url):
-            logging.info(f"  [{idx+1}/{len(posts)}] SKIP (exists): {source_url}")
-            continue
-
-        logging.info(f"  [{idx+1}/{len(posts)}] Processing: {source_url}")
-
-        # Compute created_at
-        if mode == "incremental":
-            # Parse date from post page later — use placeholder for now
-            # We'll fetch and parse in process_post, but need date here
-            # So fetch HTML first to get the date
-            html_for_date = fetch_html(source_url)
-            if not html_for_date:
-                logging.warning(f"  Could not fetch for date: {source_url}")
-                time.sleep(delay)
-                continue
-            temp_parsed = parse_post_page(source_url, html_for_date, category)
-            # Fallback: use listing title if post page h1 was empty
-            if not temp_parsed.get("title") or temp_parsed["title"] == "Unknown":
-                temp_parsed["title"] = post_info.get("title", "Unknown")
-            created_at = _make_incremental_date(temp_parsed.get("_post_date"))
-            # Re-use this HTML — pass it directly to avoid double fetch
-            # Inline process here since we already have HTML:
-            temp_parsed.pop("_post_date", None)
-
-            if dry_run:
-                links = _sort_links_by_priority(temp_parsed["original_download_links"])
-                rd = unrestrict_link(links[0]) if links and do_download else None
-                logging.info(
-                    f"  [DRY RUN] title={temp_parsed['title']!r} "
-                    f"tags={temp_parsed['tags']} "
-                    f"previews={len(temp_parsed['images'])} "
-                    f"dl={len(temp_parsed['original_download_links'])} "
-                    f"rd={'OK: ' + rd['filename'] if rd else 'skipped'}"
-                )
-                time.sleep(delay)
-                continue
-
-            ok = _process_parsed(temp_parsed, category, created_at, upload_images, do_download)
-        else:
-            created_at = _make_backfill_date(idx, len(posts), spread_days)
-            ok = process_post(post_info, category, created_at, upload_images, do_download, dry_run)
-
-        if ok:
-            inserted += 1
-        time.sleep(delay)
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = {
+            executor.submit(
+                _process_one,
+                idx, total, post_info, category, mode,
+                spread_days, delay, dry_run, upload_images, do_download, force,
+            ): post_info
+            for idx, post_info in enumerate(posts)
+        }
+        for future in as_completed(futures):
+            post_info = futures[future]
+            try:
+                ok = future.result()
+                if ok:
+                    inserted += 1
+            except Exception as e:
+                logging.error(f"  Unexpected error for {post_info['url']}: {e}")
 
     logging.info(f"  [{category}] finished: {inserted} new posts inserted.")
     return inserted
@@ -396,6 +432,7 @@ def _process_parsed(
     created_at: str,
     upload_images: bool,
     do_download: bool,
+    force: bool = False,
 ) -> bool:
     """Process an already-parsed post dict (avoids double-fetching in incremental mode)."""
     source_url = parsed["source_url"]
@@ -412,7 +449,7 @@ def _process_parsed(
         "download_status":         "pending",
         "created_at":              created_at,
     }
-    row = insert_jgirl_post(stub)
+    row = upsert_jgirl_post(stub) if force else insert_jgirl_post(stub)
     if not row or not row.get("id"):
         logging.error(f"  DB insert failed for {source_url}")
         return False
@@ -456,6 +493,7 @@ def _process_parsed(
             "download_links":  [b2_download_url] if b2_download_url else [],
             "scraped_at":      now_iso,
             "download_status": "done",
+            "status":          "published",
         })
         logging.info(f"  Done: {parsed['title']!r}")
         return True
@@ -492,6 +530,10 @@ if __name__ == "__main__":
                         help="Skip B2 image upload (thumbnail + previews)")
     parser.add_argument("--no-download", action="store_true",
                         help="Skip Real-Debrid download step")
+    parser.add_argument("--workers", type=int, default=1,
+                        help="Parallel workers per category (default 1)")
+    parser.add_argument("--force", action="store_true",
+                        help="Re-process posts that already exist (upsert instead of skip)")
     args = parser.parse_args()
 
     sources = ["upskirt", "ksiroto", "fc2", "bathroom"] if args.source == "all" else [args.source]
@@ -506,6 +548,8 @@ if __name__ == "__main__":
             dry_run=args.dry_run,
             upload_images=not args.no_images,
             do_download=not args.no_download,
+            workers=args.workers,
+            force=args.force,
         )
     finally:
         close_browser()

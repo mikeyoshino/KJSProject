@@ -11,7 +11,9 @@ async function fetchFromB2(env, ctx, b2Key, rangeHeader = '') {
     region: env.B2_REGION,
   });
 
-  const b2Url = `${env.B2_ENDPOINT}/${env.B2_BUCKET}/${b2Key}`;
+  // Encode each path segment — special chars like [ ] must be percent-encoded for B2/S3
+  const encodedKey = b2Key.split('/').map(seg => encodeURIComponent(seg)).join('/');
+  const b2Url = `${env.B2_ENDPOINT}/${env.B2_BUCKET}/${encodedKey}`;
 
   // Cache key excludes auth tokens so multiple requests share one cached entry.
   const cacheKey = new Request(b2Url, {

@@ -251,11 +251,15 @@ def update_post_download_status(
     status: str,
     our_download_link: list[str] | None = None,
 ) -> bool:
-    """Update download_status (and optionally our_download_link) for a post."""
+    """Update download_status (and optionally our_download_link) for a post.
+    Sets status='published' when download_status='done' so the post becomes visible.
+    """
     if not supabase: return False
     payload: dict = {"download_status": status}
     if our_download_link is not None:
         payload["our_download_link"] = our_download_link
+    if status == "done":
+        payload["status"] = "published"
     response = supabase.table("posts").update(payload).eq("id", post_id).execute()
     return bool(response.data)
 
@@ -283,6 +287,12 @@ def insert_jgirl_post(post_data: dict) -> dict:
     """Insert stub row; returns dict with auto-generated 'id' UUID."""
     if not supabase: return {}
     response = supabase.table("jgirl_posts").insert(post_data).execute()
+    return response.data[0] if response.data else {}
+
+def upsert_jgirl_post(post_data: dict) -> dict:
+    """Upsert by source_url; returns the row dict (existing or new)."""
+    if not supabase: return {}
+    response = supabase.table("jgirl_posts").upsert(post_data, on_conflict="source_url").execute()
     return response.data[0] if response.data else {}
 
 def update_jgirl_post(post_id: str, updates: dict) -> bool:

@@ -235,6 +235,14 @@ def download_post(
             update_download_status_asianscandal(post_id, "failed")
             return "failed"
 
+        # Reject if no real media files — only text/nfo junk (dead or fake archive)
+        _text_only_exts = {".txt", ".nfo", ".url", ".html", ".htm", ".rtf", ".log", ".diz"}
+        media_files = [f for f in all_files if os.path.splitext(f.rel)[1].lower() not in _text_only_exts]
+        if not media_files:
+            logging.warning(f"[dl] Post {post_id}: archive contains no media files (only text/nfo) — marking failed")
+            update_download_status_asianscandal(post_id, "failed")
+            return "failed"
+
         # Create ZIP, upload, clean up processed file list
         zip_name = f"{post_id}.zip"
         zip_path = os.path.join(post_temp, zip_name)

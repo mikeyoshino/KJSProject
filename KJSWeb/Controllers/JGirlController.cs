@@ -51,14 +51,15 @@ public class JGirlController : Controller
 
     private void RewritePost(JGirlPost post)
     {
-        var workerBase = _config["CloudflareWorker:WorkerBaseUrl"]?.TrimEnd('/') ?? "";
-        var b2Base     = _config["B2:PublicBaseUrl"]?.TrimEnd('/')
-                         ?? "https://f005.backblazeb2.com/file/KJSProject";
+        var workerBase     = _config["CloudflareWorker:WorkerBaseUrl"]?.TrimEnd('/') ?? "";
+        var downloadWorker = _config["CloudflareWorker:DownloadWorkerUrl"]?.TrimEnd('/') ?? workerBase;
+        var b2Base         = _config["B2:PublicBaseUrl"]?.TrimEnd('/')
+                             ?? "https://f005.backblazeb2.com/file/KJSProject";
 
-        post.ThumbnailUrl   = Rewrite(post.ThumbnailUrl, workerBase, b2Base);
-        post.Images         = post.Images.Select(u => Rewrite(u, workerBase, b2Base)).ToList();
-        post.PostImages     = post.PostImages.Select(u => Rewrite(u, workerBase, b2Base)).ToList();
-        post.DownloadLinks  = post.DownloadLinks.Select(u => Rewrite(u, workerBase, b2Base)).ToList();
+        post.ThumbnailUrl  = Rewrite(post.ThumbnailUrl, workerBase, b2Base);
+        post.Images        = post.Images.Select(u => Rewrite(u, workerBase, b2Base)).ToList();
+        post.PostImages    = post.PostImages.Select(u => Rewrite(u, workerBase, b2Base)).ToList();
+        post.DownloadLinks = post.DownloadLinks.Select(u => Rewrite(u, downloadWorker, b2Base)).ToList();
     }
 
     private static string Rewrite(string url, string workerBase, string b2Base)

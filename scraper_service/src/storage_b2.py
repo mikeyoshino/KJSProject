@@ -24,6 +24,7 @@ import os
 import io
 import logging
 import hashlib
+import threading
 from PIL import Image
 from dotenv import load_dotenv
 
@@ -35,23 +36,23 @@ _B2_BUCKET      = os.getenv("B2_BUCKET_NAME", "KJSProject")
 _B2_SERVICE_URL = os.getenv("B2_SERVICE_URL", "https://s3.us-east-005.backblazeb2.com")
 _B2_PUBLIC_BASE = os.getenv("B2_PUBLIC_BASE_URL", "").rstrip("/")
 
-_s3 = None
+# Thread-local boto3 client — boto3 clients are not thread-safe when shared.
+_thread_local = threading.local()
 
 
 def _get_client():
-    global _s3
-    if _s3 is not None:
-        return _s3
+    if getattr(_thread_local, "s3", None) is not None:
+        return _thread_local.s3
     if not _B2_KEY_ID or not _B2_KEY:
         raise RuntimeError("B2_APPLICATION_KEY_ID / B2_APPLICATION_KEY not set in .env")
     import boto3
-    _s3 = boto3.client(
+    _thread_local.s3 = boto3.client(
         "s3",
         endpoint_url=_B2_SERVICE_URL,
         aws_access_key_id=_B2_KEY_ID,
         aws_secret_access_key=_B2_KEY,
     )
-    return _s3
+    return _thread_local.s3
 
 
 def _optimize(content: bytes, max_width: int = 1400) -> bytes:
@@ -172,15 +173,20 @@ def upload_disk_file_to_b2(file_path: str, b2_key: str) -> str | None:
         client = _get_client()
 
         try:
-            client.head_object(Bucket=_B2_BUCKET, Key=b2_key)
-            logging.info(f"  B2 already exists, skipping: {b2_key}")
-            return b2_key
+            head = client.head_object(Bucket=_B2_BUCKET, Key=b2_key)
+            existing_size = head.get("ContentLength", 0)
+            local_size = os.path.getsize(file_path)
+            # Re-upload if existing B2 file is suspiciously small (bad/corrupt upload)
+            if existing_size >= local_size * 0.9:
+                logging.info(f"  B2 already exists, skipping: {b2_key}")
+                return b2_key
+            logging.warning(f"  B2 file too small ({existing_size} vs {local_size} bytes) — re-uploading: {b2_key}")
         except client.exceptions.ClientError as e:
             if e.response["Error"]["Code"] != "404":
                 raise
 
         file_size = os.path.getsize(file_path)
-        part_size = 10 * 1024 * 1024  # 10 MB parts for multipart
+        part_size = 100 * 1024 * 1024  # 100 MB parts — fewer API calls, faster for large ZIPs
 
         if file_size > part_size:
             _multipart_upload(client, file_path, b2_key, part_size)
@@ -248,10 +254,24 @@ def stream_upload_to_b2(
     """
     Stream a file directly from an open HTTP response into B2 multipart upload.
     No full-file buffering — safe for 1GB+ files.
+    Idempotent: skips upload if the object already exists in B2.
     """
     try:
         from boto3.s3.transfer import TransferConfig
         client = _get_client()
+
+        # Skip if already uploaded with a reasonable size (> 1 MB means real content)
+        try:
+            head = client.head_object(Bucket=_B2_BUCKET, Key=b2_key)
+            existing_size = head.get("ContentLength", 0)
+            if existing_size > 1024 * 1024:
+                logging.info(f"  B2 already exists, skipping: {b2_key}")
+                return f"{_B2_PUBLIC_BASE}/{b2_key}" if _B2_PUBLIC_BASE else None
+            logging.warning(f"  B2 file too small ({existing_size} bytes) — re-uploading: {b2_key}")
+        except client.exceptions.ClientError as e:
+            if e.response["Error"]["Code"] != "404":
+                raise
+
         config = TransferConfig(
             multipart_threshold=100 * 1024 * 1024,
             multipart_chunksize=100 * 1024 * 1024,
