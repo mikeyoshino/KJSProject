@@ -56,44 +56,12 @@
             <!-- Download Section — only shown when files are available on our servers -->
             @if (Model.OurDownloadLink != null && Model.OurDownloadLink.Any())
             {
-                <div class="mt-16 p-8 bg-black text-white rounded-sm shadow-2xl relative overflow-hidden">
-                    <div class="absolute top-0 right-0 p-4 opacity-10">
-                        <svg class="w-24 h-24" fill="currentColor" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path></svg>
-                    </div>
-
-                    @if (ViewBag.HasActiveSubscription == true)
-                    {
-                        var downloadUrls = ViewBag.DownloadUrls as List<string>;
-                        <div class="relative z-10">
-                            <h3 class="text-2xl font-black mb-6 uppercase italic tracking-tighter">Download Access Ready</h3>
-                            <div class="p-6 bg-white/5 border border-white/10 rounded-sm">
-                                <h4 class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Direct Download</h4>
-                                @if (downloadUrls != null && downloadUrls.Any())
-                                {
-                                    @for (int i = 0; i < downloadUrls.Count; i++)
-                                    {
-                                        <a href="@downloadUrls[i]"
-                                           class="inline-block w-full sm:w-auto bg-orange-accent text-white px-10 py-4 text-sm font-black uppercase tracking-widest hover:brightness-110 transition-all text-center mb-2">
-                                            ⚡ Download @(downloadUrls.Count > 1 ? "Part " + (i + 1) : "")
-                                        </a>
-                                    }
-                                }
-                            </div>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="relative z-10 text-center py-6">
-                            <p class="text-5xl mb-4">💎</p>
-                            <h3 class="text-2xl font-black mb-2 uppercase italic tracking-tighter">Premium Connection Required</h3>
-                            <p class="text-slate-400 text-sm mb-8 max-w-sm mx-auto uppercase tracking-wide font-bold">Unlock exclusive access and high speed mirrors for all Asian Scandal releases.</p>
-                            <a asp-controller="Subscription" asp-action="Pricing"
-                               class="inline-block bg-orange-accent text-white py-4 px-10 text-sm font-black uppercase tracking-widest hover:scale-105 transition-transform">
-                                Upgrade to Premium
-                            </a>
-                        </div>
-                    }
-                </div>
+                @await Html.PartialAsync("_PremiumDownload", new KJSWeb.Models.DownloadComponentModel
+                {
+                    DownloadCount = Model.OurDownloadLink.Count,
+                    DownloadUrls = ViewBag.DownloadUrls as List<string> ?? new List<string>(),
+                    IsSubscribed = ViewBag.HasActiveSubscription == true
+                })
             }
 
             <!-- Tags Cloud -->

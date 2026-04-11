@@ -84,37 +84,12 @@
     <!-- Download links -->
     @if (Model.DownloadLinks.Any())
     {
-        @if (ViewBag.HasActiveSubscription == true)
+        @await Html.PartialAsync("_PremiumDownload", new KJSWeb.Models.DownloadComponentModel
         {
-            var downloadUrls = ViewBag.DownloadUrls as List<string>;
-            <div class="mt-12 p-8 bg-slate-50 border-l-4 border-orange-accent">
-                <h3 class="text-lg font-bold mb-4">Download Links</h3>
-                <div class="flex flex-wrap gap-3">
-                    @if (downloadUrls != null && downloadUrls.Any())
-                    {
-                        @for (int i = 0; i < downloadUrls.Count; i++)
-                        {
-                            <a href="@downloadUrls[i]"
-                               class="bg-black text-white px-6 py-3 text-[13px] font-bold uppercase tracking-wider hover:bg-orange-accent transition-colors">
-                                Download @(downloadUrls.Count > 1 ? "Part " + (i + 1) : "")
-                            </a>
-                        }
-                    }
-                </div>
-            </div>
-        }
-        else
-        {
-            <div class="mt-12 p-8 bg-black text-white text-center">
-                <p class="text-3xl mb-2">🔒</p>
-                <h3 class="text-lg font-bold mb-2">Premium Content</h3>
-                <p class="text-slate-400 text-sm mb-6">Subscribe to unlock @Model.DownloadLinks.Count download link(s) for this post.</p>
-                <a asp-controller="Subscription" asp-action="Pricing"
-                   class="inline-block bg-orange-accent text-white py-3 px-8 text-[13px] font-bold uppercase tracking-widest hover:opacity-90 transition-opacity">
-                    ₿ Subscribe to Download
-                </a>
-            </div>
-        }
+            DownloadCount = Model.DownloadLinks.Count,
+            DownloadUrls = ViewBag.DownloadUrls as List<string> ?? new List<string>(),
+            IsSubscribed = ViewBag.HasActiveSubscription == true
+        })
     }
 
     <!-- Tags -->
