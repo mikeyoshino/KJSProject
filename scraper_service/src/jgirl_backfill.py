@@ -61,7 +61,7 @@ from jgirl_scraper import (
 )
 from db import (
     check_jgirl_post_exists, insert_jgirl_post, upsert_jgirl_post, update_jgirl_post,
-    fetch_jgirl_posts_for_download, fetch_all_jgirl_source_urls,
+    fetch_jgirl_posts_for_download, fetch_all_jgirl_source_urls, get_db,
 )
 from storage_b2 import stream_upload_to_b2, delete_b2_folder, _B2_PUBLIC_BASE, _B2_BUCKET
 
@@ -219,9 +219,11 @@ def process_post(
     upload_images: bool,
     do_download: bool,
     dry_run: bool,
+    retry_incomplete: bool = False,
 ) -> bool:
     """
     Full pipeline for one post. Returns True on success.
+    If retry_incomplete=True, will upsert incomplete posts instead of inserting new ones.
     """
     source_url = post_info["url"]
 
@@ -245,7 +247,7 @@ def process_post(
         )
         return True
 
-    # Insert stub row first to get UUID
+    # Insert stub row first to get UUID (or upsert if retrying incomplete)
     stub = {
         "source":                  parsed["source"],
         "source_url":              parsed["source_url"],
@@ -259,13 +261,15 @@ def process_post(
         "download_status":         "pending",
         "created_at":              created_at,
     }
-    row = insert_jgirl_post(stub)
+    # Use upsert for incomplete posts, insert for new ones
+    row = upsert_jgirl_post(stub) if retry_incomplete else insert_jgirl_post(stub)
     if not row or not row.get("id"):
         logging.error(f"  DB insert failed for {source_url}")
         return False
 
     post_id = row["id"]
-    logging.info(f"  Inserted id={post_id}")
+    action = "Updating (incomplete)" if retry_incomplete else "Inserted"
+    logging.info(f"  {action} id={post_id}")
 
     success = False
     try:
@@ -327,6 +331,37 @@ def process_post(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+#  INCOMPLETE POST DETECTION
+# ─────────────────────────────────────────────────────────────────────────────
+
+def fetch_incomplete_jgirl_posts(source: str | None = None) -> set[str]:
+    """
+    Return source_urls of posts that have images but are missing download_links.
+    These posts were scraped but the download step failed or was skipped.
+    """
+    try:
+        table = get_db().table("jgirl_posts")
+
+        # Build query
+        if source and source != "all":
+            rows = table.select("source_url, images, download_links").eq("source", source).execute().data
+        else:
+            rows = table.select("source_url, images, download_links").execute().data
+
+        # Filter to posts with images but no/empty download_links
+        incomplete = {
+            row["source_url"]
+            for row in rows
+            if (row.get("images") and len(row.get("images", [])) > 0)
+            and (not row.get("download_links") or len(row.get("download_links", [])) == 0)
+        }
+        return incomplete
+    except Exception as e:
+        logging.warning(f"Could not fetch incomplete posts: {e}")
+        return set()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 #  CATEGORY BACKFILL
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -349,9 +384,24 @@ def _process_one(
 
     source_url = post_info["url"]
 
+    # Check if post exists and is complete (has download_links)
     if not dry_run and not force and check_jgirl_post_exists(source_url):
-        logging.info(f"  [{idx+1}/{total}] SKIP (exists): {source_url}")
-        return False  # not "inserted", just skipped
+        # Check if it's incomplete (has images but no downloads)
+        try:
+            table = get_db().table("jgirl_posts")
+            row = table.select("images, download_links").eq("source_url", source_url).single().execute().data
+            has_images = row.get("images") and len(row.get("images", [])) > 0
+            has_downloads = row.get("download_links") and len(row.get("download_links", [])) > 0
+
+            if has_images and not has_downloads:
+                logging.info(f"  [{idx+1}/{total}] RETRY (incomplete): {source_url} - will fill downloads")
+                # Continue processing to fill in downloads
+            else:
+                logging.info(f"  [{idx+1}/{total}] SKIP (complete): {source_url}")
+                return False  # Complete post, skip it
+        except Exception as e:
+            logging.warning(f"  Could not check post completeness: {e}, skipping")
+            return False
 
     logging.info(f"  [{idx+1}/{total}] Processing: {source_url}")
 
@@ -381,7 +431,9 @@ def _process_one(
         return _process_parsed(temp_parsed, category, created_at, upload_images, do_download, force)
     else:
         created_at = _make_backfill_date(idx, total, spread_days)
-        return process_post(post_info, category, created_at, upload_images, do_download, dry_run)
+        # Check if this is an incomplete post that needs downloads
+        is_incomplete = not force and check_jgirl_post_exists(source_url) and source_url in fetch_incomplete_jgirl_posts(category)
+        return process_post(post_info, category, created_at, upload_images, do_download, dry_run, retry_incomplete=is_incomplete)
 
 
 def backfill_category(
@@ -410,8 +462,16 @@ def backfill_category(
 
     if not force and not dry_run:
         existing_urls = fetch_all_jgirl_source_urls(source=category if category != "all" else None)
-        logging.info(f"  {len(existing_urls)} posts already done in DB — skipping.")
-        posts = [p for p in posts if p["url"] not in existing_urls]
+        incomplete_urls = fetch_incomplete_jgirl_posts(source=category if category != "all" else None)
+
+        # Only skip posts that are complete (exist AND have download_links)
+        complete_urls = existing_urls - incomplete_urls
+
+        logging.info(f"  {len(existing_urls)} posts in DB: {len(complete_urls)} complete, {len(incomplete_urls)} incomplete (missing downloads)")
+        posts = [p for p in posts if p["url"] not in complete_urls]
+
+        if incomplete_urls:
+            logging.info(f"  Will retry {len(incomplete_urls)} incomplete posts to fill in missing downloads.")
         logging.info(f"  {len(posts)} new/incomplete posts to process.")
 
     inserted = 0
