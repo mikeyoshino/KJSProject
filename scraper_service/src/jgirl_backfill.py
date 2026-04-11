@@ -386,6 +386,7 @@ def _process_one(
     source_url = post_info["url"]
 
     # Check if post exists and is complete (has download_links)
+    is_incomplete = False
     if not dry_run and not force and check_jgirl_post_exists(source_url):
         # Check if it's incomplete (has images but no downloads)
         try:
@@ -398,7 +399,7 @@ def _process_one(
 
             if has_images and not has_downloads:
                 logging.info(f"  [{idx+1}/{total}] RETRY (incomplete): {source_url} - will fill downloads")
-                # Continue processing to fill in downloads
+                is_incomplete = True
             else:
                 logging.info(f"  [{idx+1}/{total}] SKIP (complete): {source_url}")
                 return False  # Complete post, skip it
@@ -431,11 +432,10 @@ def _process_one(
             )
             return False
 
-        return _process_parsed(temp_parsed, category, created_at, upload_images, do_download, force)
+        # Use force=True for incomplete posts so _process_parsed uses upsert
+        return _process_parsed(temp_parsed, category, created_at, upload_images, do_download, force or is_incomplete)
     else:
         created_at = _make_backfill_date(idx, total, spread_days)
-        # Check if this is an incomplete post that needs downloads
-        is_incomplete = not force and check_jgirl_post_exists(source_url) and source_url in fetch_incomplete_jgirl_posts(category)
         return process_post(post_info, category, created_at, upload_images, do_download, dry_run, retry_incomplete=is_incomplete)
 
 
