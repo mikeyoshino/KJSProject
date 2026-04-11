@@ -77,6 +77,11 @@ RD_API_KEY = os.getenv("RD_API_KEY", "")
 # Set when Real-Debrid returns any non-200 — signals all workers to stop.
 _rd_stop = threading.Event()
 
+
+class HosterUnavailableError(Exception):
+    """Raised when all download links fail due to hoster being unavailable on Real-Debrid (error_code=19).
+    Unlike a permanent failure, the post should stay 'pending' so it is retried on the next run."""
+
 # Optional SOCKS5 proxy for Real-Debrid calls (bypasses VPS IP block).
 # Set RD_PROXY=socks5://127.0.0.1:1080 in .env when using SSH tunnel.
 _RD_PROXY = os.getenv("RD_PROXY", "")
@@ -145,6 +150,9 @@ def unrestrict_link(url: str) -> dict | None:
             if error_code == 23:  # traffic exhausted — daily limit hit
                 logging.error(f"Real-Debrid traffic exhausted — stopping all workers. Detail: {err}")
                 _rd_stop.set()
+            elif error_code == 19:  # hoster temporarily unavailable
+                logging.warning(f"Real-Debrid hoster unavailable (error_code=19) — will retry later. Detail: {err}")
+                return "hoster_unavailable"
             else:
                 logging.warning(f"Real-Debrid returned {resp.status_code} (error_code={error_code}) — skipping link. Detail: {err}")
             return None
@@ -290,11 +298,16 @@ def process_post(
         b2_download_url = None
         if do_download and parsed["original_download_links"]:
             sorted_links = _sort_links_by_priority(parsed["original_download_links"])
+            all_hoster_unavailable = True
             for link in sorted_links:
                 logging.info(f"  Trying Real-Debrid: {link}")
                 rd_result = unrestrict_link(link)
+                if rd_result == "hoster_unavailable":
+                    continue  # temporary — keep flag True
                 if not rd_result:
+                    all_hoster_unavailable = False  # permanent failure
                     continue
+                all_hoster_unavailable = False
                 b2_download_url = download_and_upload_to_b2(post_id, rd_result)
                 if b2_download_url:
                     logging.info(f"  Download uploaded: {b2_download_url}")
@@ -303,6 +316,8 @@ def process_post(
 
             if not b2_download_url:
                 logging.error(f"  All download links failed for post {post_id}")
+                if all_hoster_unavailable:
+                    raise HosterUnavailableError("All hosters temporarily unavailable — will retry later")
                 raise RuntimeError("All download links failed")
 
         # Save final state to DB — mark published only after full pipeline succeeds
@@ -319,6 +334,15 @@ def process_post(
         logging.info(f"  Done: {parsed['title']!r}")
         success = True
 
+    except HosterUnavailableError as e:
+        # Temporary failure — save images to DB and leave as pending for next run
+        logging.warning(f"  Hoster unavailable for {post_id} — saving images, leaving as pending")
+        update_jgirl_post(post_id, {
+            "thumbnail_url":   new_thumb,
+            "post_images":     new_post_images,
+            "images":          new_images,
+            "download_status": "pending",
+        })
     except Exception as e:
         logging.error(f"  Pipeline failed for {post_id}: {e}")
         # Rollback: delete entire B2 folder for this post
@@ -551,17 +575,24 @@ def _process_parsed(
 
         b2_download_url = None
         if do_download and parsed["original_download_links"]:
+            all_hoster_unavailable = True
             for link in _sort_links_by_priority(parsed["original_download_links"]):
                 logging.info(f"  Trying Real-Debrid: {link}")
                 rd_result = unrestrict_link(link)
+                if rd_result == "hoster_unavailable":
+                    continue  # temporary — keep flag True
                 if not rd_result:
+                    all_hoster_unavailable = False  # permanent failure
                     continue
+                all_hoster_unavailable = False
                 b2_download_url = download_and_upload_to_b2(post_id, rd_result)
                 if b2_download_url:
                     break
                 logging.warning(f"  Upload failed for link: {link}")
 
             if not b2_download_url:
+                if all_hoster_unavailable:
+                    raise HosterUnavailableError("All hosters temporarily unavailable — will retry later")
                 raise RuntimeError("All download links failed")
 
         now_iso = datetime.now(timezone.utc).isoformat()
@@ -577,6 +608,16 @@ def _process_parsed(
         logging.info(f"  Done: {parsed['title']!r}")
         return True
 
+    except HosterUnavailableError:
+        # Temporary failure — save images to DB and leave as pending for next run
+        logging.warning(f"  Hoster unavailable for {post_id} — saving images, leaving as pending")
+        update_jgirl_post(post_id, {
+            "thumbnail_url":   new_thumb,
+            "post_images":     new_post_images,
+            "images":          new_images,
+            "download_status": "pending",
+        })
+        return False
     except Exception as e:
         logging.error(f"  Pipeline failed for {post_id}: {e}")
         deleted = delete_b2_folder(f"JGirls/{post_id}/")
