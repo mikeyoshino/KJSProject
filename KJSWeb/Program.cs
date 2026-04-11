@@ -6,6 +6,9 @@ builder.Services.AddHttpClient();
 builder.Services.AddSingleton<KJSWeb.Services.SupabaseService>();
 builder.Services.AddSingleton<KJSWeb.Services.BlockonomicsService>();
 builder.Services.AddSingleton<KJSWeb.Services.TokenGenService>();
+builder.Services.AddScoped<KJSWeb.Services.AdminService>();
+builder.Services.AddScoped<KJSWeb.Filters.AdminAuthFilter>();
+builder.Services.AddSingleton<KJSWeb.Services.EmailService>();
 
 // Add session support for auth
 builder.Services.AddDistributedMemoryCache();
@@ -29,6 +32,8 @@ if (!app.Environment.IsDevelopment())
 app.UseRouting();
 
 app.UseSession(); // Must be before Authorization
+
+app.UseMiddleware<KJSWeb.Middleware.BanCheckMiddleware>();
 
 app.UseAuthorization();
 

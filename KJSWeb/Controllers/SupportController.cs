@@ -8,12 +8,14 @@ namespace KJSWeb.Controllers;
 public class SupportController : Controller
 {
     private readonly SupabaseService _supabase;
+    private readonly EmailService    _email;
     private readonly ILogger<SupportController> _logger;
     private const int PageSize = 20;
 
-    public SupportController(SupabaseService supabase, ILogger<SupportController> logger)
+    public SupportController(SupabaseService supabase, EmailService email, ILogger<SupportController> logger)
     {
         _supabase = supabase;
+        _email    = email;
         _logger   = logger;
     }
 
@@ -157,9 +159,6 @@ public class SupportController : Controller
                 TempData["Error"] = "Failed to send reply. Please try again.";
                 return RedirectToAction(nameof(TicketDetail), new { id });
             }
-
-            // TODO: trigger email notification to support team
-            // await _emailService.NotifyNewTicketReplyAsync(ticket, userId);
 
             _logger.LogInformation("User {UserId} replied to ticket {TicketId}", userId, id);
             TempData["Success"] = "Your reply has been sent.";

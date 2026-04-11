@@ -10,12 +10,14 @@ public class CrmController : Controller
 {
     private readonly SupabaseService _supabase;
     private readonly AdminService    _admin;
+    private readonly EmailService    _email;
     private const int PageSize = 25;
 
-    public CrmController(SupabaseService supabase, AdminService admin)
+    public CrmController(SupabaseService supabase, AdminService admin, EmailService email)
     {
         _supabase = supabase;
         _admin    = admin;
+        _email    = email;
     }
 
     // ── Dashboard ─────────────────────────────────────────────────
@@ -279,8 +281,12 @@ public class CrmController : Controller
             return RedirectToAction(nameof(TicketDetail), new { id });
         }
 
-        var adminId = HttpContext.Session.GetString("user_id") ?? "admin";
+        var adminId    = HttpContext.Session.GetString("user_id")    ?? "admin";
+        var adminEmail = HttpContext.Session.GetString("user_email") ?? "Support Team";
         var ok = await _supabase.AddTicketMessageAsync(id, adminId, message, isAdmin: true);
+
+        if (ok && !string.IsNullOrEmpty(ticket.UserEmail))
+            await _email.SendTicketReplyEmailAsync(ticket.UserEmail, id, message, adminEmail);
 
         TempData[ok ? "Success" : "Error"] = ok
             ? "Reply sent."
@@ -309,7 +315,23 @@ public class CrmController : Controller
 
         if (ok)
         {
-            // TODO (Task 8): send status-change email to ticket.UserEmail
+            if (!string.IsNullOrEmpty(ticket.UserEmail) &&
+                (parsedStatus == KJSWeb.Models.TicketStatus.InProgress ||
+                 parsedStatus == KJSWeb.Models.TicketStatus.Resolved))
+            {
+                string? lastAdminMessage = null;
+                if (parsedStatus == KJSWeb.Models.TicketStatus.Resolved)
+                {
+                    var messages = await _supabase.GetTicketMessagesAsync(id);
+                    lastAdminMessage = messages
+                        .Where(m => m.IsAdmin)
+                        .OrderByDescending(m => m.CreatedAt)
+                        .Select(m => m.Message)
+                        .FirstOrDefault();
+                }
+                await _email.SendTicketStatusChangeEmailAsync(
+                    ticket.UserEmail, id, parsedStatus, lastAdminMessage);
+            }
             TempData["Success"] = $"Ticket status updated to {newStatus}.";
         }
         else
