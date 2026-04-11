@@ -7,7 +7,7 @@ namespace KJSWeb.Models;
 public class SupportTicket : BaseModel
 {
     [PrimaryKey("id", false)]
-    public Guid Id { get; set; }
+    public string Id { get; set; } = string.Empty;
 
     [Column("user_id")]
     public string UserId { get; set; } = string.Empty;

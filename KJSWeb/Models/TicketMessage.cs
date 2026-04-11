@@ -7,10 +7,10 @@ namespace KJSWeb.Models;
 public class TicketMessage : BaseModel
 {
     [PrimaryKey("id", false)]
-    public Guid Id { get; set; }
+    public string Id { get; set; } = string.Empty;
 
     [Column("ticket_id")]
-    public Guid TicketId { get; set; }
+    public string TicketId { get; set; } = string.Empty;
 
     [Column("sender_id")]
     public string SenderId { get; set; } = string.Empty;
