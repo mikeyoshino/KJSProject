@@ -21,14 +21,35 @@ jobs:
           script: |
             cd /root/KJSProject
             git pull origin master
+
+            # Build app image
             docker build -t kjsweb:latest -f KJSWeb/Dockerfile KJSWeb/
+
+            # Build nginx image
+            docker build -t kjsweb-nginx:latest -f KJSWeb/nginx/Dockerfile KJSWeb/nginx/
+
+            # Ensure shared network exists
+            docker network create infra_default || true
+
+            # Redeploy kjsweb (no public port — internal only)
             docker stop kjsweb || true
             docker rm kjsweb || true
             docker run -d \
               --name kjsweb \
               --env-file /opt/kjsweb/.env \
-              -p 5100:5100 \
+              --network infra_default \
               --restart unless-stopped \
               kjsweb:latest
+
+            # Redeploy kjsweb-nginx (port 80 exposed to infra-nginx-1 via network)
+            docker stop kjsweb-nginx || true
+            docker rm kjsweb-nginx || true
+            docker run -d \
+              --name kjsweb-nginx \
+              --network infra_default \
+              --restart unless-stopped \
+              kjsweb-nginx:latest
+
+            # Health check via internal network
             sleep 3
-            curl -sf http://localhost:5100 > /dev/null && echo "Health check passed" || echo "Health check FAILED"
+            docker exec kjsweb-nginx curl -sf http://kjsweb:5100 > /dev/null && echo "Health check passed" || echo "Health check FAILED"
