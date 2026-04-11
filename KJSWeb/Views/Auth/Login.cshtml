@@ -5,9 +5,15 @@
 <div class="min-h-[60vh] flex items-center justify-center">
     <div class="w-full max-w-md">
         <div class="bg-black text-white p-10 shadow-2xl">
-            <h1 class="text-3xl font-black tracking-tighter text-center mb-2">BUZZ69</h1>
+            <h1 class="text-3xl font-black tracking-tighter text-center mb-2">SCANDAL69</h1>
             <p class="text-slate-400 text-[11px] uppercase tracking-widest text-center mb-8">Member Login</p>
 
+            @if (Context.Request.Query["banned"] == "1")
+            {
+                <div class="bg-red-500/20 border border-red-500/30 text-red-400 px-4 py-3 text-sm mb-6">
+                    Your account has been suspended. Contact support if you believe this is an error.
+                </div>
+            }
             @if (ViewBag.Error != null)
             {
                 <div class="bg-red-500/20 border border-red-500/30 text-red-400 px-4 py-3 text-sm mb-6">

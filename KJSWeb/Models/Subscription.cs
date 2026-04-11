@@ -28,6 +28,9 @@ public class Subscription : BaseModel
     [Column("txid")]
     public string? Txid { get; set; }
 
+    [Column("email")]
+    public string Email { get; set; } = "";
+
     [Column("status")]
     public string Status { get; set; } = "pending"; // "pending", "confirming", "active", "expired"
 

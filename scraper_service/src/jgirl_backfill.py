@@ -141,8 +141,12 @@ def unrestrict_link(url: str) -> dict | None:
                 err = resp.json()
             except Exception:
                 err = resp.text
-            logging.error(f"Real-Debrid returned {resp.status_code} — stopping all workers. Detail: {err}")
-            _rd_stop.set()
+            error_code = err.get("error_code") if isinstance(err, dict) else None
+            if error_code == 23:  # traffic exhausted — daily limit hit
+                logging.error(f"Real-Debrid traffic exhausted — stopping all workers. Detail: {err}")
+                _rd_stop.set()
+            else:
+                logging.warning(f"Real-Debrid returned {resp.status_code} (error_code={error_code}) — skipping link. Detail: {err}")
             return None
         data = resp.json()
         if "download" not in data:
@@ -432,7 +436,7 @@ def backfill_category(
                 logging.error(f"  Unexpected error for {post_info['url']}: {e}")
 
     if _rd_stop.is_set():
-        logging.error(f"  [{category}] ABORTED: Real-Debrid returned non-200. {inserted} posts inserted before stop.")
+        logging.error(f"  [{category}] ABORTED: Real-Debrid daily traffic limit reached. {inserted} posts inserted before stop.")
     else:
         logging.info(f"  [{category}] finished: {inserted} new posts inserted.")
     return inserted

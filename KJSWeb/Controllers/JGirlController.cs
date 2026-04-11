@@ -8,12 +8,14 @@ namespace KJSWeb.Controllers;
 public class JGirlController : Controller
 {
     private readonly SupabaseService _supabase;
+    private readonly TokenGenService _tokenGen;
     private readonly IConfiguration _config;
     private const int PageSize = 24;
 
-    public JGirlController(SupabaseService supabase, IConfiguration config)
+    public JGirlController(SupabaseService supabase, TokenGenService tokenGen, IConfiguration config)
     {
         _supabase = supabase;
+        _tokenGen = tokenGen;
         _config   = config;
     }
 
@@ -45,7 +47,37 @@ public class JGirlController : Controller
         var post = await _supabase.GetJGirlPostByIdAsync(id);
         if (post == null) return NotFound();
 
+        var workerBase = _config["CloudflareWorker:DownloadWorkerUrl"]?.TrimEnd('/') ?? "";
+        var b2Base     = _config["B2:PublicBaseUrl"]?.TrimEnd('/') ?? "https://f005.backblazeb2.com/file/KJSProject";
+
+        // Capture original download links before URL rewriting (needed for token generation)
+        var originalDownloadLinks = post.DownloadLinks.ToList();
+
         RewritePost(post);
+
+        var userId = HttpContext.Session.GetString("user_id");
+        if (!string.IsNullOrEmpty(userId))
+        {
+            var activeSub = await _supabase.GetActiveSubscriptionAsync(userId);
+            ViewBag.HasActiveSubscription = activeSub != null;
+
+            if (activeSub != null && originalDownloadLinks.Any())
+            {
+                ViewBag.DownloadUrls = originalDownloadLinks.Select(url =>
+                {
+                    var clean = url.StartsWith(b2Base)
+                        ? url[b2Base.Length..].TrimStart('/')
+                        : url.TrimStart('/');
+                    var token = _tokenGen.GenerateDownloadToken(userId, clean);
+                    return $"{workerBase}/download?file={Uri.EscapeDataString(clean)}&token={Uri.EscapeDataString(token)}";
+                }).ToList();
+            }
+        }
+        else
+        {
+            ViewBag.HasActiveSubscription = false;
+        }
+
         return View(post);
     }
 

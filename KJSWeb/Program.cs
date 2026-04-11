@@ -17,7 +17,7 @@ builder.Services.AddSession(options =>
     options.IdleTimeout = TimeSpan.FromHours(24);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
-    options.Cookie.Name = "BUZZ69_Session";
+    options.Cookie.Name = "SCANDAL69_Session";
 });
 
 var app = builder.Build();
