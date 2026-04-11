@@ -23,8 +23,8 @@ CREATE TABLE IF NOT EXISTS public.support_tickets (
   user_id TEXT NOT NULL,
   user_email TEXT NOT NULL,
   title TEXT NOT NULL,
-  category TEXT NOT NULL DEFAULT 'Other' CHECK (category IN ('Payment', 'Download', 'Account', 'Other')),
-  status TEXT NOT NULL DEFAULT 'Open' CHECK (status IN ('Open', 'InProgress', 'Resolved')),
+  category TEXT NOT NULL DEFAULT 'other' CHECK (category IN ('payment', 'download', 'account', 'other')),
+  status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'in_progress', 'resolved')),
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   last_reply_at TIMESTAMP WITH TIME ZONE
@@ -49,22 +49,3 @@ CREATE TABLE IF NOT EXISTS public.ticket_messages (
 -- Create indexes on ticket_messages for common query patterns
 CREATE INDEX IF NOT EXISTS idx_ticket_messages_ticket_id ON public.ticket_messages(ticket_id);
 CREATE INDEX IF NOT EXISTS idx_ticket_messages_created_at ON public.ticket_messages(created_at DESC);
-
--- Enable RLS (Row Level Security) for security
--- Tickets are readable by the owner or admin users
-ALTER TABLE public.support_tickets ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.ticket_messages ENABLE ROW LEVEL SECURITY;
-
--- RLS Policy: Users can read their own tickets
-CREATE POLICY support_tickets_select_own ON public.support_tickets
-  FOR SELECT
-  USING (auth.uid()::text = user_id OR (SELECT role FROM auth.users WHERE id = auth.uid()) = 'admin');
-
--- RLS Policy: Users can read messages from their own tickets
-CREATE POLICY ticket_messages_select_own ON public.ticket_messages
-  FOR SELECT
-  USING (
-    ticket_id IN (
-      SELECT id FROM public.support_tickets WHERE auth.uid()::text = user_id
-    ) OR (SELECT role FROM auth.users WHERE id = auth.uid()) = 'admin'
-  );
