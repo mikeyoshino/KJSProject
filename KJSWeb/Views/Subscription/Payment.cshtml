@@ -2,6 +2,8 @@
 @{
     ViewData["Title"] = "Payment";
     var btcPrice = (decimal)(ViewBag.BtcPrice ?? 0m);
+    var userId = Context.Session.GetString("user_id");
+    var isAuthenticated = !string.IsNullOrEmpty(userId);
 }
 
 <div class="max-w-lg mx-auto">
@@ -71,6 +73,66 @@
     </div>
 </div>
 
+@if (isAuthenticated)
+{
+    <!-- Floating Support Button -->
+    <button onclick="document.getElementById('support-modal').classList.remove('hidden')"
+            class="fixed bottom-5 right-5 w-14 h-14 bg-orange-accent text-white rounded-full shadow-2xl flex items-center justify-center hover:opacity-90 transition-opacity z-30"
+            title="Contact support">
+        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+    </button>
+
+    <!-- Support Modal -->
+    <div id="support-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+            <h3 class="text-lg font-black text-slate-900 mb-1">Contact Support</h3>
+            <p class="text-slate-400 text-sm mb-5">Tell us how we can help with your payment.</p>
+            <form id="support-form" class="space-y-4">
+                @Html.AntiForgeryToken()
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Subject</label>
+                    <input type="text" name="title" placeholder="e.g. Payment issue, missing download"
+                           required
+                           class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-accent" />
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Category</label>
+                    <select name="category"
+                            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-accent">
+                        <option value="payment">Payment Issue</option>
+                        <option value="download">Download Issue</option>
+                        <option value="account">Account Issue</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Description</label>
+                    <textarea name="description" rows="4" placeholder="Please describe your issue in detail..."
+                              required
+                              class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-accent resize-none"></textarea>
+                </div>
+
+                <div id="support-message" class="hidden p-3 rounded-lg text-sm"></div>
+
+                <div class="flex gap-3">
+                    <button type="submit" class="flex-1 bg-orange-accent text-white py-2.5 text-sm font-bold rounded-lg hover:opacity-90 transition-opacity">
+                        Send Ticket
+                    </button>
+                    <button type="button" onclick="document.getElementById('support-modal').classList.add('hidden')"
+                            class="flex-1 bg-slate-100 text-slate-700 py-2.5 text-sm font-bold rounded-lg hover:bg-slate-200 transition-colors">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
 @section Scripts {
 <script>
     function copyAddress() {
@@ -80,6 +142,48 @@
             btn.textContent = 'Copied!';
             setTimeout(function() { btn.textContent = 'Copy'; }, 2000);
         });
+    }
+
+    // Handle support form submission
+    @if (isAuthenticated)
+    {
+    <text>
+    document.getElementById('support-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        var form = this;
+        var formData = new FormData(form);
+
+        fetch('/support/tickets/create', {
+            method: 'POST',
+            body: formData
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var messageEl = document.getElementById('support-message');
+            if (data.success) {
+                messageEl.classList.remove('hidden', 'bg-red-50', 'text-red-600');
+                messageEl.classList.add('bg-green-50', 'text-green-700');
+                messageEl.textContent = 'Ticket created successfully! We\'ll be in touch soon.';
+                form.reset();
+                setTimeout(function() {
+                    document.getElementById('support-modal').classList.add('hidden');
+                    messageEl.classList.add('hidden');
+                }, 2000);
+            } else {
+                messageEl.classList.remove('hidden', 'bg-green-50', 'text-green-700');
+                messageEl.classList.add('bg-red-50', 'text-red-600');
+                messageEl.textContent = data.error || 'Failed to create ticket. Please try again.';
+            }
+        })
+        .catch(function(err) {
+            var messageEl = document.getElementById('support-message');
+            messageEl.classList.remove('hidden', 'bg-green-50', 'text-green-700');
+            messageEl.classList.add('bg-red-50', 'text-red-600');
+            messageEl.textContent = 'An error occurred. Please try again.';
+        });
+    });
+    </text>
     }
 
     // Poll for payment status every 10 seconds
