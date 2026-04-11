@@ -60,7 +60,7 @@ from jgirl_scraper import (
 )
 from db import (
     check_jgirl_post_exists, insert_jgirl_post, upsert_jgirl_post, update_jgirl_post,
-    fetch_jgirl_posts_for_download,
+    fetch_jgirl_posts_for_download, fetch_all_jgirl_source_urls,
 )
 from storage_b2 import stream_upload_to_b2, delete_b2_folder, _B2_PUBLIC_BASE, _B2_BUCKET
 
@@ -401,6 +401,13 @@ def backfill_category(
         return 0
 
     logging.info(f"  Collected {len(posts)} post URLs for [{category}].")
+
+    if not force and not dry_run:
+        existing_urls = fetch_all_jgirl_source_urls(source=category if category != "all" else None)
+        logging.info(f"  {len(existing_urls)} posts already done in DB — skipping.")
+        posts = [p for p in posts if p["url"] not in existing_urls]
+        logging.info(f"  {len(posts)} new/incomplete posts to process.")
+
     inserted = 0
     total = len(posts)
 

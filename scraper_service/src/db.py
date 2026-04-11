@@ -283,6 +283,30 @@ def check_jgirl_post_exists(source_url: str) -> bool:
     response = supabase.table("jgirl_posts").select("id").eq("source_url", source_url).execute()
     return len(response.data) > 0
 
+def fetch_all_jgirl_source_urls(source: str | None = None) -> set[str]:
+    """One bulk query — returns set of source_urls where download_status='done'.
+    Only fully-completed posts are skipped; pending/failed posts will be retried."""
+    if not supabase: return set()
+    all_urls: set[str] = set()
+    batch = 1000
+    offset = 0
+    while True:
+        query = (
+            supabase.table("jgirl_posts")
+            .select("source_url")
+            .eq("download_status", "done")
+        )
+        if source:
+            query = query.eq("source", source)
+        response = query.range(offset, offset + batch - 1).execute()
+        rows = response.data or []
+        for row in rows:
+            all_urls.add(row["source_url"])
+        if len(rows) < batch:
+            break
+        offset += batch
+    return all_urls
+
 def insert_jgirl_post(post_data: dict) -> dict:
     """Insert stub row; returns dict with auto-generated 'id' UUID."""
     if not supabase: return {}
