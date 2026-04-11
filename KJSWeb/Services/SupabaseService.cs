@@ -28,7 +28,7 @@ public class SupabaseService
         
         var options = new SupabaseOptions
         {
-            AutoConnectRealtime = true
+            AutoConnectRealtime = false
         };
 
         _client = new Supabase.Client(_supabaseUrl, _supabaseKey, options);
