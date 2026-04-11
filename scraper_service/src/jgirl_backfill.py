@@ -61,7 +61,7 @@ from jgirl_scraper import (
 )
 from db import (
     check_jgirl_post_exists, insert_jgirl_post, upsert_jgirl_post, update_jgirl_post,
-    fetch_jgirl_posts_for_download, fetch_all_jgirl_source_urls, get_db,
+    fetch_jgirl_posts_for_download, fetch_all_jgirl_source_urls, supabase,
 )
 from storage_b2 import stream_upload_to_b2, delete_b2_folder, _B2_PUBLIC_BASE, _B2_BUCKET
 
@@ -339,14 +339,15 @@ def fetch_incomplete_jgirl_posts(source: str | None = None) -> set[str]:
     Return source_urls of posts that have images but are missing download_links.
     These posts were scraped but the download step failed or was skipped.
     """
-    try:
-        table = get_db().table("jgirl_posts")
+    if not supabase:
+        return set()
 
+    try:
         # Build query
         if source and source != "all":
-            rows = table.select("source_url, images, download_links").eq("source", source).execute().data
+            rows = supabase.table("jgirl_posts").select("source_url, images, download_links").eq("source", source).execute().data
         else:
-            rows = table.select("source_url, images, download_links").execute().data
+            rows = supabase.table("jgirl_posts").select("source_url, images, download_links").execute().data
 
         # Filter to posts with images but no/empty download_links
         incomplete = {
@@ -388,8 +389,10 @@ def _process_one(
     if not dry_run and not force and check_jgirl_post_exists(source_url):
         # Check if it's incomplete (has images but no downloads)
         try:
-            table = get_db().table("jgirl_posts")
-            row = table.select("images, download_links").eq("source_url", source_url).single().execute().data
+            if not supabase:
+                logging.warning(f"  Could not check post completeness: supabase not initialized, skipping")
+                return False
+            row = supabase.table("jgirl_posts").select("images, download_links").eq("source_url", source_url).single().execute().data
             has_images = row.get("images") and len(row.get("images", [])) > 0
             has_downloads = row.get("download_links") and len(row.get("download_links", [])) > 0
 
