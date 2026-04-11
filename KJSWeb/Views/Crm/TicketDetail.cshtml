@@ -1,0 +1,157 @@
+@using KJSWeb.Models
+@{
+    ViewData["Title"] = "Ticket Detail";
+    Layout = "~/Views/Crm/_Layout.cshtml";
+    var ticket   = ViewBag.Ticket   as SupportTicket ?? new SupportTicket();
+    var messages = ViewBag.Messages as List<TicketMessage> ?? new();
+}
+
+<!-- Breadcrumb -->
+<div class="mb-6 text-sm text-slate-400">
+    <a href="/crm/tickets" class="hover:text-orange-accent transition-colors">Tickets</a>
+    <span class="mx-2">/</span>
+    <span class="text-slate-700 font-medium truncate">@ticket.Title</span>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+    <!-- Left: ticket meta -->
+    <div class="flex flex-col gap-6">
+
+        <!-- Info card -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+            <h2 class="text-sm font-black uppercase tracking-wider text-slate-700 mb-4">Ticket Info</h2>
+            <dl class="space-y-2 text-sm">
+                <div class="flex justify-between gap-2">
+                    <dt class="text-slate-400 shrink-0">ID</dt>
+                    <dd class="font-mono text-slate-500 text-xs truncate" title="@ticket.Id">@ticket.Id[..Math.Min(8, ticket.Id.Length)]…</dd>
+                </div>
+                <div class="flex justify-between gap-2">
+                    <dt class="text-slate-400 shrink-0">User</dt>
+                    <dd class="text-slate-700 truncate">
+                        <a href="/crm/users/@ticket.UserId" class="hover:text-orange-accent transition-colors">
+                            @(string.IsNullOrEmpty(ticket.UserEmail) ? ticket.UserId[..Math.Min(8, ticket.UserId.Length)] + "…" : ticket.UserEmail)
+                        </a>
+                    </dd>
+                </div>
+                <div class="flex justify-between gap-2">
+                    <dt class="text-slate-400 shrink-0">Category</dt>
+                    <dd class="text-slate-700 capitalize">@ticket.CategoryRaw</dd>
+                </div>
+                <div class="flex justify-between gap-2">
+                    <dt class="text-slate-400 shrink-0">Status</dt>
+                    <dd>@TicketStatusBadge(ticket.StatusRaw)</dd>
+                </div>
+                <div class="flex justify-between gap-2">
+                    <dt class="text-slate-400 shrink-0">Created</dt>
+                    <dd class="text-slate-700 text-xs">@ticket.CreatedAt.ToString("MMM dd, yyyy HH:mm")</dd>
+                </div>
+                <div class="flex justify-between gap-2">
+                    <dt class="text-slate-400 shrink-0">Last Reply</dt>
+                    <dd class="text-slate-700 text-xs">@(ticket.LastReplyAt?.ToString("MMM dd, yyyy HH:mm") ?? "—")</dd>
+                </div>
+            </dl>
+        </div>
+
+        <!-- Change status card -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+            <h3 class="text-sm font-black uppercase tracking-wider text-slate-700 mb-4">Change Status</h3>
+            <form method="post" action="/crm/tickets/@ticket.Id/status">
+                @Html.AntiForgeryToken()
+                <div class="mb-3">
+                    @{
+                        var statusOptions = new[]
+                        {
+                            ("open",        "Open"),
+                            ("in_progress", "In Progress"),
+                            ("resolved",    "Resolved")
+                        };
+                    }
+                    <select name="newStatus"
+                            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-accent">
+                        @foreach (var (val, label) in statusOptions)
+                        {
+                            if (ticket.StatusRaw == val)
+                            {
+                                <option value="@val" selected>@label</option>
+                            }
+                            else
+                            {
+                                <option value="@val">@label</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <button type="submit"
+                        class="w-full bg-slate-900 text-white py-2.5 text-sm font-bold rounded-lg hover:bg-orange-accent transition-colors">
+                    Update Status
+                </button>
+            </form>
+        </div>
+
+    </div>
+
+    <!-- Right: conversation + reply -->
+    <div class="lg:col-span-2 flex flex-col gap-6">
+
+        <!-- Ticket title -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-100 px-6 py-4">
+            <h1 class="text-lg font-black text-slate-900">@ticket.Title</h1>
+        </div>
+
+        <!-- Messages -->
+        <div class="flex flex-col gap-3">
+            @foreach (var msg in messages)
+            {
+                var isAdmin = msg.IsAdmin;
+                <div class="flex @(isAdmin ? "justify-end" : "justify-start")">
+                    <div class="max-w-[80%] rounded-xl px-5 py-3 shadow-sm
+                                @(isAdmin ? "bg-slate-900 text-white" : "bg-white border border-slate-100 text-slate-700")">
+                        <div class="text-[10px] font-black uppercase tracking-wider mb-1
+                                    @(isAdmin ? "text-slate-400" : "text-slate-400")">
+                            @(isAdmin ? "Admin" : ticket.UserEmail) &mdash; @msg.CreatedAt.ToString("MMM dd, yyyy HH:mm")
+                        </div>
+                        <p class="text-sm whitespace-pre-wrap">@msg.Message</p>
+                    </div>
+                </div>
+            }
+            @if (!messages.Any())
+            {
+                <div class="text-center text-slate-400 py-10">No messages yet.</div>
+            }
+        </div>
+
+        <!-- Reply form -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+            <h3 class="text-sm font-black uppercase tracking-wider text-slate-700 mb-4">Admin Reply</h3>
+            <form method="post" action="/crm/tickets/@ticket.Id/reply">
+                @Html.AntiForgeryToken()
+                <div class="mb-3">
+                    <textarea name="message" rows="4" placeholder="Type your reply…" required
+                              class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-accent resize-none"></textarea>
+                </div>
+                <button type="submit"
+                        class="bg-slate-900 text-white px-5 py-2.5 text-sm font-bold rounded-lg hover:bg-orange-accent transition-colors">
+                    Send Reply
+                </button>
+            </form>
+        </div>
+
+    </div>
+
+</div>
+
+@functions {
+    static Microsoft.AspNetCore.Html.IHtmlContent TicketStatusBadge(string status)
+    {
+        var (bg, text) = status?.ToLower() switch
+        {
+            "open"        => ("bg-yellow-100 text-yellow-700", "Open"),
+            "in_progress" => ("bg-blue-100 text-blue-700",     "In Progress"),
+            "resolved"    => ("bg-green-100 text-green-700",   "Resolved"),
+            _             => ("bg-slate-100 text-slate-500",   status ?? "Unknown")
+        };
+        return new Microsoft.AspNetCore.Html.HtmlString(
+            $"<span class=\"inline-block px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider {bg}\">{text}</span>");
+    }
+}

@@ -1,0 +1,118 @@
+@model List<KJSWeb.Models.SupportTicket>
+@{
+    ViewData["Title"] = "Support Tickets";
+    Layout = "~/Views/Crm/_Layout.cshtml";
+    var pagination   = ViewBag.Pagination   as KJSWeb.Models.PaginationInfo;
+    var activeStatus = ViewBag.ActiveStatus as string ?? "";
+    var statuses     = new[] { ("", "All"), ("open", "Open"), ("in_progress", "In Progress"), ("resolved", "Resolved") };
+}
+
+<div class="mb-8 flex items-center justify-between">
+    <div>
+        <h1 class="text-2xl font-black text-slate-900">Support Tickets</h1>
+        <p class="text-slate-500 text-sm mt-1">User-submitted support requests</p>
+    </div>
+</div>
+
+<!-- Status filter tabs -->
+<div class="flex gap-1 mb-6 bg-white rounded-xl border border-slate-100 shadow-sm p-1.5 w-fit">
+    @foreach (var (val, label) in statuses)
+    {
+        var isActive = activeStatus == val;
+        var href = string.IsNullOrEmpty(val) ? "/crm/tickets" : $"/crm/tickets?status={val}";
+        <a href="@href"
+           class="px-4 py-1.5 text-xs font-black uppercase tracking-wider rounded-lg transition-colors @(isActive ? "bg-slate-900 text-white" : "text-slate-500 hover:text-slate-900 hover:bg-slate-50")">
+            @label
+        </a>
+    }
+</div>
+
+<!-- Table -->
+<div class="bg-white rounded-xl shadow-sm border border-slate-100">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-slate-100">
+                    <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">ID</th>
+                    <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">User Email</th>
+                    <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">Title</th>
+                    <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">Status</th>
+                    <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">Created</th>
+                    <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">Last Reply</th>
+                    <th class="px-5 py-3"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+                @foreach (var t in Model)
+                {
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-5 py-3 font-mono text-slate-400 text-xs" title="@t.Id">
+                            @t.Id[..Math.Min(8, t.Id.Length)]…
+                        </td>
+                        <td class="px-5 py-3">
+                            <a href="/crm/users/@t.UserId"
+                               class="text-slate-700 font-medium hover:text-orange-accent transition-colors truncate max-w-[180px] block">
+                                @(string.IsNullOrEmpty(t.UserEmail) ? t.UserId[..Math.Min(8, t.UserId.Length)] + "…" : t.UserEmail)
+                            </a>
+                        </td>
+                        <td class="px-5 py-3 text-slate-700 font-medium max-w-[220px] truncate" title="@t.Title">@t.Title</td>
+                        <td class="px-5 py-3">@TicketStatusBadge(t.StatusRaw)</td>
+                        <td class="px-5 py-3 text-slate-500 text-xs">@t.CreatedAt.ToString("MMM dd, yyyy")</td>
+                        <td class="px-5 py-3 text-slate-500 text-xs">@(t.LastReplyAt?.ToString("MMM dd, yyyy") ?? "—")</td>
+                        <td class="px-5 py-3 text-right">
+                            <a href="/crm/tickets/@t.Id"
+                               class="text-[10px] font-black uppercase tracking-wider text-blue-500 hover:text-blue-700 transition-colors">
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="7" class="px-5 py-12 text-center text-slate-400">No tickets found</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (pagination != null && pagination.TotalPages > 1)
+    {
+        <div class="px-5 py-4 border-t border-slate-100 flex items-center justify-between">
+            <span class="text-xs text-slate-400">
+                Showing @((pagination.CurrentPage - 1) * pagination.PageSize + 1)–@Math.Min(pagination.CurrentPage * pagination.PageSize, pagination.TotalItems) of @pagination.TotalItems
+            </span>
+            <div class="flex gap-2">
+                @if (pagination.CurrentPage > 1)
+                {
+                    var prev = string.IsNullOrEmpty(activeStatus)
+                        ? $"/crm/tickets?page={pagination.CurrentPage - 1}"
+                        : $"/crm/tickets?status={activeStatus}&page={pagination.CurrentPage - 1}";
+                    <a href="@prev" class="px-3 py-1.5 text-xs font-bold border border-slate-200 rounded hover:bg-slate-50 transition-colors">← Prev</a>
+                }
+                @if (pagination.CurrentPage < pagination.TotalPages)
+                {
+                    var next = string.IsNullOrEmpty(activeStatus)
+                        ? $"/crm/tickets?page={pagination.CurrentPage + 1}"
+                        : $"/crm/tickets?status={activeStatus}&page={pagination.CurrentPage + 1}";
+                    <a href="@next" class="px-3 py-1.5 text-xs font-bold border border-slate-200 rounded hover:bg-slate-50 transition-colors">Next →</a>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@functions {
+    static Microsoft.AspNetCore.Html.IHtmlContent TicketStatusBadge(string status)
+    {
+        var (bg, text) = status?.ToLower() switch
+        {
+            "open"        => ("bg-yellow-100 text-yellow-700", "Open"),
+            "in_progress" => ("bg-blue-100 text-blue-700",     "In Progress"),
+            "resolved"    => ("bg-green-100 text-green-700",   "Resolved"),
+            _             => ("bg-slate-100 text-slate-500",   status ?? "Unknown")
+        };
+        return new Microsoft.AspNetCore.Html.HtmlString(
+            $"<span class=\"inline-block px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider {bg}\">{text}</span>");
+    }
+}
