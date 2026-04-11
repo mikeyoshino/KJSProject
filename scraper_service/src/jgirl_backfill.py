@@ -29,6 +29,7 @@ import logging
 import argparse
 import mimetypes
 import socket
+import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta, timezone
 
@@ -72,6 +73,9 @@ logging.basicConfig(
 
 RD_API_BASE = "https://api.real-debrid.com/rest/1.0"
 RD_API_KEY = os.getenv("RD_API_KEY", "")
+
+# Set when Real-Debrid returns any non-200 — signals all workers to stop.
+_rd_stop = threading.Event()
 
 # Optional SOCKS5 proxy for Real-Debrid calls (bypasses VPS IP block).
 # Set RD_PROXY=socks5://127.0.0.1:1080 in .env when using SSH tunnel.
@@ -132,18 +136,13 @@ def unrestrict_link(url: str) -> dict | None:
             timeout=30,
             proxies=_RD_PROXIES,
         )
-        if resp.status_code == 401:
-            logging.error("Real-Debrid: invalid API key (401)")
-            return None
-        if resp.status_code == 503:
-            logging.warning("Real-Debrid: service unavailable (503)")
-            return None
         if not resp.ok:
             try:
                 err = resp.json()
             except Exception:
                 err = resp.text
-            logging.warning(f"Real-Debrid error {resp.status_code} for {url}: {err}")
+            logging.error(f"Real-Debrid returned {resp.status_code} — stopping all workers. Detail: {err}")
+            _rd_stop.set()
             return None
         data = resp.json()
         if "download" not in data:
@@ -341,6 +340,9 @@ def _process_one(
     force: bool = False,
 ) -> bool:
     """Process a single post. Returns True on success. Thread-safe."""
+    if _rd_stop.is_set():
+        return False
+
     source_url = post_info["url"]
 
     if not dry_run and not force and check_jgirl_post_exists(source_url):
@@ -429,7 +431,10 @@ def backfill_category(
             except Exception as e:
                 logging.error(f"  Unexpected error for {post_info['url']}: {e}")
 
-    logging.info(f"  [{category}] finished: {inserted} new posts inserted.")
+    if _rd_stop.is_set():
+        logging.error(f"  [{category}] ABORTED: Real-Debrid returned non-200. {inserted} posts inserted before stop.")
+    else:
+        logging.info(f"  [{category}] finished: {inserted} new posts inserted.")
     return inserted
 
 
