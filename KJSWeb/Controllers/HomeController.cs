@@ -24,7 +24,7 @@ public class HomeController : Controller
 
     public async Task<IActionResult> Index()
     {
-        var workerBase = _config["CloudflareWorker:WorkerBaseUrl"]?.TrimEnd('/') ?? "";
+        var workerBase = _config["CloudflareWorker:DownloadWorkerUrl"]?.TrimEnd('/') ?? "";
         var b2Base     = _config["B2:PublicBaseUrl"]?.TrimEnd('/') ?? "https://f005.backblazeb2.com/file/KJSProject";
 
         var (buzz69Posts, _) = await _supabase.GetLatestPostsAsync(1, 8, PostSource.Buzz69);
@@ -57,7 +57,7 @@ public class HomeController : Controller
     {
         if (page < 1) page = 1;
 
-        var workerBase = _config["CloudflareWorker:WorkerBaseUrl"]?.TrimEnd('/') ?? "";
+        var workerBase = _config["CloudflareWorker:DownloadWorkerUrl"]?.TrimEnd('/') ?? "";
 
         var (posts, totalCount) = await _supabase.GetLatestPostsAsync(page, PageSize, PostSource.Buzz69);
         foreach (var p in posts)
@@ -87,7 +87,7 @@ public class HomeController : Controller
     [Route("buzz69/popular")]
     public async Task<IActionResult> Buzz69Popular(string period = "week")
     {
-        var workerBase   = _config["CloudflareWorker:WorkerBaseUrl"]?.TrimEnd('/') ?? "";
+        var workerBase   = _config["CloudflareWorker:DownloadWorkerUrl"]?.TrimEnd('/') ?? "";
         var popularPosts = await _supabase.GetPopularPostsAsync(6, PostSource.Buzz69, period);
         foreach (var p in popularPosts)
             p.ThumbnailUrl = ResolveImageUrl(p.ThumbnailUrl, workerBase);
@@ -105,7 +105,7 @@ public class HomeController : Controller
 
         var (posts, totalCount) = await _supabase.GetPostsByCategoryAsync(name, page, PageSize);
 
-        var workerBase = _config["CloudflareWorker:WorkerBaseUrl"]?.TrimEnd('/') ?? "";
+        var workerBase = _config["CloudflareWorker:DownloadWorkerUrl"]?.TrimEnd('/') ?? "";
         foreach (var p in posts)
             p.ThumbnailUrl = ResolveImageUrl(p.ThumbnailUrl, workerBase);
 
@@ -129,7 +129,7 @@ public class HomeController : Controller
         var (recentPosts, _) = await _supabase.GetLatestPostsAsync(1, 5);
         ViewBag.RecentPosts = recentPosts;
 
-        var workerBaseUrl = _config["CloudflareWorker:WorkerBaseUrl"]?.TrimEnd('/') ?? "";
+        var workerBaseUrl = _config["CloudflareWorker:DownloadWorkerUrl"]?.TrimEnd('/') ?? "";
         ViewBag.WorkerBaseUrl = workerBaseUrl;
         ViewBag.B2DirectBase = _config["B2:PublicBaseUrl"]?.TrimEnd('/') ?? "https://f005.backblazeb2.com/file/KJSProject";
         post.ThumbnailUrl = ResolveImageUrl(post.ThumbnailUrl, workerBaseUrl);

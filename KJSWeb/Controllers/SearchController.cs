@@ -24,7 +24,7 @@ public class SearchController : Controller
         if (string.IsNullOrWhiteSpace(q) || q.Trim().Length < 2)
             return PartialView("_Results", vm);
 
-        var workerBase = _config["CloudflareWorker:WorkerBaseUrl"]?.TrimEnd('/') ?? "";
+        var workerBase = _config["CloudflareWorker:DownloadWorkerUrl"]?.TrimEnd('/') ?? "";
         var posts = await _supabase.SearchPostsAsync(q.Trim(), limit: 12);
         foreach (var p in posts)
             p.ThumbnailUrl = ResolveImageUrl(p.ThumbnailUrl, workerBase);

@@ -23,7 +23,7 @@ public class SupabaseService
         _supabaseUrl = config["Supabase:Url"]!;
         _supabaseKey = config["Supabase:Key"]!;
         _serviceKey = config["Supabase:ServiceKey"] ?? _supabaseKey;
-        _workerBaseUrl = config["CloudflareWorker:WorkerBaseUrl"]?.TrimEnd('/') ?? "";
+        _workerBaseUrl = config["CloudflareWorker:DownloadWorkerUrl"]?.TrimEnd('/') ?? "";
         _b2PublicBaseUrl = config["B2:PublicBaseUrl"]?.TrimEnd('/') ?? "";
         
         var options = new SupabaseOptions

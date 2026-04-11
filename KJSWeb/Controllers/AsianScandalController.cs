@@ -25,7 +25,7 @@ public class AsianScandalController : Controller
     {
         if (page < 1) page = 1;
 
-        var workerBase = _config["CloudflareWorker:WorkerBaseUrl"]?.TrimEnd('/') ?? "";
+        var workerBase = _config["CloudflareWorker:DownloadWorkerUrl"]?.TrimEnd('/') ?? "";
 
         var (posts, totalCount) = await _supabase.GetLatestPostsAsync(page, PageSize, PostSource.AsianScandal);
         foreach (var p in posts)
@@ -55,7 +55,7 @@ public class AsianScandalController : Controller
     [Route("popular")]
     public async Task<IActionResult> Popular(string period = "week")
     {
-        var workerBase   = _config["CloudflareWorker:WorkerBaseUrl"]?.TrimEnd('/') ?? "";
+        var workerBase   = _config["CloudflareWorker:DownloadWorkerUrl"]?.TrimEnd('/') ?? "";
         var popularPosts = await _supabase.GetPopularPostsAsync(6, PostSource.AsianScandal, period);
         foreach (var p in popularPosts)
             p.ThumbnailUrl = ResolveImageUrl(p.ThumbnailUrl, workerBase);
@@ -74,7 +74,7 @@ public class AsianScandalController : Controller
         var (recentPosts, _) = await _supabase.GetLatestPostsAsync(1, 5);
         ViewBag.RecentPosts = recentPosts;
 
-        var workerBaseUrl = _config["CloudflareWorker:WorkerBaseUrl"]?.TrimEnd('/') ?? "";
+        var workerBaseUrl = _config["CloudflareWorker:DownloadWorkerUrl"]?.TrimEnd('/') ?? "";
         ViewBag.WorkerBaseUrl = workerBaseUrl;
         ViewBag.B2DirectBase = _config["B2:PublicBaseUrl"]?.TrimEnd('/') ?? "https://f005.backblazeb2.com/file/KJSProject";
 
