@@ -73,17 +73,18 @@ public class SubscriptionController : Controller
             return RedirectToAction("Pricing");
         }
 
-        return RedirectToAction("Payment", new { address = btcAddress });
+        return RedirectToAction("Payment");
     }
 
     [HttpGet]
-    public async Task<IActionResult> Payment(string address)
+    public async Task<IActionResult> Payment()
     {
-        if (string.IsNullOrEmpty(address))
-            return RedirectToAction("Pricing");
+        var userId = HttpContext.Session.GetString("user_id");
+        if (string.IsNullOrEmpty(userId))
+            return RedirectToAction("Login", "Auth");
 
-        var sub = await _supabase.GetSubscriptionByAddressAsync(address);
-        if (sub == null) return NotFound();
+        var sub = await _supabase.GetPendingSubscriptionByUserIdAsync(userId);
+        if (sub == null) return RedirectToAction("Pricing");
 
         ViewBag.BtcPrice = await _blockonomics.GetBtcPriceAsync();
         return View(sub);

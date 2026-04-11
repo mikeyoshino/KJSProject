@@ -177,6 +177,25 @@ public class SupabaseService
         return MapDtoToSubscription(subs[0]);
     }
 
+    public async Task<Subscription?> GetPendingSubscriptionByUserIdAsync(string userId)
+    {
+        using var http = _httpClientFactory.CreateClient();
+        var encoded = Uri.EscapeDataString(userId);
+        var request = new HttpRequestMessage(HttpMethod.Get,
+            $"{_supabaseUrl}/rest/v1/subscriptions?user_id=eq.{encoded}&status=eq.pending&select=*&order=created_at.desc&limit=1");
+        request.Headers.Add("apikey", _serviceKey);
+        request.Headers.Add("Authorization", $"Bearer {_serviceKey}");
+
+        var response = await http.SendAsync(request);
+        if (!response.IsSuccessStatusCode) return null;
+
+        var json = await response.Content.ReadAsStringAsync();
+        var subs = JsonSerializer.Deserialize<List<SubscriptionDto>>(json);
+        if (subs == null || subs.Count == 0) return null;
+
+        return MapDtoToSubscription(subs[0]);
+    }
+
     // DTO for JSON deserialization from Supabase REST
     private class SubscriptionDto
     {
