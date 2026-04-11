@@ -28,7 +28,7 @@
 }
 
 <!-- Pricing Cards -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 overflow-hidden max-w-5xl mx-auto">
     @if (plans != null)
     {
         var planKeys = new[] { "monthly", "3month", "yearly" };
@@ -44,7 +44,7 @@
             var badge = badges[i];
             var perMonth = Math.Round(plan.PriceUsd / (plan.DurationDays / 30m), 2);
 
-            <div class="relative @(isHighlighted ? "bg-black text-white scale-105 shadow-2xl" : "bg-white border border-slate-200 shadow-sm") p-8 text-center transition-transform hover:scale-[1.02]">
+            <div class="relative @(isHighlighted ? "bg-black text-white scale-105 shadow-2xl" : "bg-white border border-slate-200 shadow-sm") p-5 sm:p-8 text-center transition-transform hover:scale-[1.02]">
                 @if (!string.IsNullOrEmpty(badge))
                 {
                     <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-orange-accent text-white text-[9px] font-black uppercase px-4 py-1 tracking-widest">

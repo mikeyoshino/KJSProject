@@ -101,7 +101,7 @@
             <!-- Tier 1: Logo -->
             <div class="flex justify-center mb-6 relative">
                 <div class="cursor-pointer">
-                    <a asp-controller="Home" asp-action="Index" class="text-5xl font-black tracking-tighter text-white hover:text-white">SCANDAL69</a>
+                    <a asp-controller="Home" asp-action="Index" class="text-3xl sm:text-5xl font-black tracking-tighter text-white hover:text-white">SCANDAL69</a>
                 </div>
                 <!-- Mobile hamburger -->
                 <button id="mobileToggle" class="mobile-toggle absolute right-0 top-1/2 -translate-y-1/2 flex-col gap-[5px] p-2 bg-transparent border-0 cursor-pointer" aria-label="Menu">
@@ -209,14 +209,14 @@
         </div>
     </header>
 
-    <main role="main" class="container mx-auto px-4 py-12">
+    <main role="main" class="container mx-auto px-4 py-6 sm:py-12">
         @RenderBody()
     </main>
 
     <!-- Footer -->
     <footer class="bg-black text-slate-500 py-16 mt-20 border-t border-white/5">
         <div class="container mx-auto px-4">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 text-center md:text-left">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12 text-center md:text-left">
                 <div class="col-span-1 md:col-span-2">
                     <a asp-controller="Home" asp-action="Index" class="text-3xl font-black tracking-tighter text-white mb-6 block hover:text-white">SCANDAL69</a>
                     <p class="text-xs leading-relaxed max-w-sm mx-auto md:mx-0">Premium content delivery network specializing in high-quality updates and community curation. Est 2026.</p>

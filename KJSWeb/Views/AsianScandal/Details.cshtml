@@ -6,7 +6,7 @@
     var siteUrl = Context.Request.Scheme + "://" + Context.Request.Host;
 }
 
-<div class="flex flex-col lg:flex-row gap-10">
+<div class="flex flex-col md:flex-row gap-10">
     <!-- Main Content -->
     <div class="flex-1 min-w-0">
         <article>
@@ -21,7 +21,7 @@
                     </div>
                 }
                 <h1 class="text-4xl font-black leading-tight mb-3 tracking-tighter uppercase italic">@Model.Title</h1>
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-4 flex-wrap">
                     <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Added: @Model.CreatedAt.ToString("MMMM dd, yyyy")</p>
                     <span class="text-orange-accent text-[9px] font-black uppercase tracking-widest border border-orange-accent/30 px-2 py-0.5 rounded-sm">Original</span>
                     <span class="flex items-center gap-1 text-slate-400 text-[10px] font-bold uppercase tracking-widest">
@@ -31,7 +31,7 @@
                 </div>
             </header>
 
-            <div class="prose max-w-none [&_img]:max-w-full [&_img]:h-auto [&_img]:block [&_img]:my-5 [&_img]:rounded-sm">
+            <div class="prose max-w-none overflow-x-hidden [&_img]:max-w-full [&_img]:h-auto [&_img]:block [&_img]:my-5 [&_img]:rounded-sm">
                 @{
                     var workerBase = (string)(ViewBag.WorkerBaseUrl ?? "");
                     var b2DirectBase = (string)(ViewBag.B2DirectBase ?? "");
@@ -81,7 +81,7 @@
     </div>
 
     <!-- Sidebar (Same as home for consistency) -->
-    <aside class="w-full lg:w-80 shrink-0">
+    <aside class="w-full md:w-64 lg:w-80 shrink-0">
         @if (recentPosts != null && recentPosts.Any())
         {
             <div class="mb-10">

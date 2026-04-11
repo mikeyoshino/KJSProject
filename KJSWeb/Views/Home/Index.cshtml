@@ -13,7 +13,7 @@
         <h2 class="text-2xl font-black uppercase tracking-tighter border-l-4 border-orange-accent pl-4">Buzz69</h2>
         <a href="/buzz69" class="text-[11px] font-black uppercase tracking-widest text-orange-accent hover:opacity-70 transition-opacity">View All →</a>
     </div>
-    <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         @foreach (var post in buzz69Posts)
         {
             <article class="content-card group cursor-pointer">
@@ -28,7 +28,7 @@
                         </div>
                         @if (post.Categories != null && post.Categories.Any())
                         {
-                            <span class="absolute top-0 left-0 orange-accent text-white text-[9px] font-black uppercase px-2 py-1 tracking-widest">@post.Categories.First()</span>
+                            <span class="absolute top-0 left-0 bg-orange-accent text-white text-[9px] font-black uppercase px-2 py-1 tracking-widest">@post.Categories.First()</span>
                         }
                         @if ((DateTime.UtcNow - post.CreatedAt).TotalHours < 24)
                         {
@@ -53,7 +53,7 @@
         <h2 class="text-2xl font-black uppercase tracking-tighter border-l-4 border-orange-accent pl-4">Asian Scandal</h2>
         <a href="/asian-scandal" class="text-[11px] font-black uppercase tracking-widest text-orange-accent hover:opacity-70 transition-opacity">View All →</a>
     </div>
-    <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         @foreach (var post in asianPosts)
         {
             <article class="content-card group cursor-pointer">
@@ -68,7 +68,7 @@
                         </div>
                         @if (post.Categories != null && post.Categories.Any())
                         {
-                            <span class="absolute top-0 left-0 orange-accent text-white text-[9px] font-black uppercase px-2 py-1 tracking-widest">@post.Categories.First()</span>
+                            <span class="absolute top-0 left-0 bg-orange-accent text-white text-[9px] font-black uppercase px-2 py-1 tracking-widest">@post.Categories.First()</span>
                         }
                         @if ((DateTime.UtcNow - post.CreatedAt).TotalHours < 24)
                         {
@@ -93,7 +93,7 @@
         <h2 class="text-2xl font-black uppercase tracking-tighter border-l-4 border-orange-accent pl-4">JGirl</h2>
         <a href="/jgirl" class="text-[11px] font-black uppercase tracking-widest text-orange-accent hover:opacity-70 transition-opacity">View All →</a>
     </div>
-    <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         @foreach (var post in jgirlPosts)
         {
             var framesJson = JsonSerializer.Serialize(post.Images);

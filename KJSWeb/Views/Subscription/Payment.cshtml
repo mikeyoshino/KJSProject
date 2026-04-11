@@ -7,7 +7,7 @@
 }
 
 <div class="max-w-lg mx-auto">
-    <div class="bg-black text-white p-10 shadow-2xl text-center">
+    <div class="bg-black text-white p-6 sm:p-10 shadow-2xl text-center">
         <h1 class="text-2xl font-black tracking-tight mb-2">Complete Payment</h1>
         <p class="text-slate-400 text-[11px] uppercase tracking-widest mb-8">
             @(KJSWeb.Models.SubscriptionPlans.All.ContainsKey(Model.Plan)
@@ -59,7 +59,7 @@
             <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2">To This Address</p>
             <div class="flex items-center gap-2">
                 <input type="text" value="@Model.BtcAddress" readonly id="btcAddress"
-                       class="flex-1 bg-transparent text-sm text-white font-mono text-center border-0 outline-none" />
+                       class="flex-1 bg-transparent text-sm text-white font-mono text-center border-0 outline-none min-w-0 truncate" />
                 <button onclick="copyAddress()" id="copyBtn"
                         class="bg-orange-accent text-white text-[10px] font-bold uppercase px-3 py-2 hover:opacity-80 transition-opacity">
                     Copy

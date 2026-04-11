@@ -27,7 +27,7 @@
                     </div>
                     @if (post.Categories != null && post.Categories.Any())
                     {
-                        <span class="absolute top-0 left-0 orange-accent text-white text-[9px] font-black uppercase px-2 py-1 tracking-widest">@post.Categories.First()</span>
+                        <span class="absolute top-0 left-0 bg-orange-accent text-white text-[9px] font-black uppercase px-2 py-1 tracking-widest">@post.Categories.First()</span>
                     }
                     @if ((DateTime.UtcNow - post.CreatedAt).TotalHours < 24)
                     {
