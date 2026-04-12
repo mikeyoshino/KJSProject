@@ -810,6 +810,7 @@ public class SupabaseService
         // Create the ticket
         var ticketPayload = JsonSerializer.Serialize(new
         {
+            id         = Guid.NewGuid().ToString(),
             user_id    = userId,
             user_email = email,
             title      = title,
