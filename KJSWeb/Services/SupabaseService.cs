@@ -841,6 +841,7 @@ public class SupabaseService
         // Add the first message
         var msgPayload = JsonSerializer.Serialize(new
         {
+            id        = Guid.NewGuid().ToString(),
             ticket_id = ticket.Id,
             sender_id = userId,
             is_admin  = false,
@@ -962,6 +963,7 @@ public class SupabaseService
         // Insert message
         var msgPayload = JsonSerializer.Serialize(new
         {
+            id        = Guid.NewGuid().ToString(),
             ticket_id = ticketId,
             sender_id = senderId,
             is_admin  = isAdmin,
@@ -975,7 +977,12 @@ public class SupabaseService
         msgReq.Content = new StringContent(msgPayload, Encoding.UTF8, "application/json");
 
         var msgResp = await http.SendAsync(msgReq);
-        if (!msgResp.IsSuccessStatusCode) return false;
+        if (!msgResp.IsSuccessStatusCode)
+        {
+            var errBody = await msgResp.Content.ReadAsStringAsync();
+            Console.Error.WriteLine($"[AddTicketMessageAsync] {(int)msgResp.StatusCode} — {errBody}");
+            return false;
+        }
 
         // Update last_reply_at on the ticket
         var encoded = Uri.EscapeDataString(ticketId);
