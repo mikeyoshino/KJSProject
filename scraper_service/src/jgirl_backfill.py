@@ -78,10 +78,6 @@ RD_API_KEY = os.getenv("RD_API_KEY", "")
 _rd_stop = threading.Event()
 
 
-class HosterUnavailableError(Exception):
-    """Raised when all download links fail due to hoster being unavailable on Real-Debrid (error_code=19).
-    Unlike a permanent failure, the post should stay 'pending' so it is retried on the next run."""
-
 # Optional SOCKS5 proxy for Real-Debrid calls (bypasses VPS IP block).
 # Set RD_PROXY=socks5://127.0.0.1:1080 in .env when using SSH tunnel.
 _RD_PROXY = os.getenv("RD_PROXY", "")
@@ -297,17 +293,11 @@ def process_post(
         # Download file via Real-Debrid → B2
         b2_download_url = None
         if do_download and parsed["original_download_links"]:
-            sorted_links = _sort_links_by_priority(parsed["original_download_links"])
-            all_hoster_unavailable = True
-            for link in sorted_links:
+            for link in _sort_links_by_priority(parsed["original_download_links"]):
                 logging.info(f"  Trying Real-Debrid: {link}")
                 rd_result = unrestrict_link(link)
-                if rd_result == "hoster_unavailable":
-                    continue  # temporary — keep flag True
-                if not rd_result:
-                    all_hoster_unavailable = False  # permanent failure
+                if not rd_result or rd_result == "hoster_unavailable":
                     continue
-                all_hoster_unavailable = False
                 b2_download_url = download_and_upload_to_b2(post_id, rd_result)
                 if b2_download_url:
                     logging.info(f"  Download uploaded: {b2_download_url}")
@@ -315,9 +305,6 @@ def process_post(
                 logging.warning(f"  Upload failed for link: {link}")
 
             if not b2_download_url:
-                logging.error(f"  All download links failed for post {post_id}")
-                if all_hoster_unavailable:
-                    raise HosterUnavailableError("All hosters temporarily unavailable — will retry later")
                 raise RuntimeError("All download links failed")
 
         # Save final state to DB — mark published only after full pipeline succeeds
@@ -334,22 +321,15 @@ def process_post(
         logging.info(f"  Done: {parsed['title']!r}")
         success = True
 
-    except HosterUnavailableError as e:
-        # Temporary failure — save images to DB and leave as pending for next run
-        logging.warning(f"  Hoster unavailable for {post_id} — saving images, leaving as pending")
+    except Exception as e:
+        # Any download failure — keep images in B2, mark pending for retry next run
+        logging.warning(f"  Download failed for {post_id} ({e}) — keeping images, marking pending")
         update_jgirl_post(post_id, {
             "thumbnail_url":   new_thumb,
             "post_images":     new_post_images,
             "images":          new_images,
             "download_status": "pending",
         })
-    except Exception as e:
-        logging.error(f"  Pipeline failed for {post_id}: {e}")
-        # Rollback: delete entire B2 folder for this post
-        logging.info(f"  Rolling back B2 for JGirls/{post_id}/...")
-        deleted = delete_b2_folder(f"JGirls/{post_id}/")
-        logging.info(f"  Rolled back {deleted} B2 objects")
-        update_jgirl_post(post_id, {"download_status": "failed"})
 
     return success
 
@@ -360,8 +340,10 @@ def process_post(
 
 def fetch_incomplete_jgirl_posts(source: str | None = None) -> set[str]:
     """
-    Return source_urls of posts that have images but are missing download_links.
-    These posts were scraped but the download step failed or was skipped.
+    Return source_urls of posts that are missing download_links.
+    This includes:
+    - Posts with images but no downloads (hoster_unavailable / pending retry)
+    - Posts where a rollback cleared both images and downloads (failed with empty arrays)
     """
     if not supabase:
         return set()
@@ -369,16 +351,15 @@ def fetch_incomplete_jgirl_posts(source: str | None = None) -> set[str]:
     try:
         # Build query
         if source and source != "all":
-            rows = supabase.table("jgirl_posts").select("source_url, images, download_links").eq("source", source).execute().data
+            rows = supabase.table("jgirl_posts").select("source_url, download_links").eq("source", source).execute().data
         else:
-            rows = supabase.table("jgirl_posts").select("source_url, images, download_links").execute().data
+            rows = supabase.table("jgirl_posts").select("source_url, download_links").execute().data
 
-        # Filter to posts with images but no/empty download_links
+        # Flag any post missing download_links — regardless of images state
         incomplete = {
             row["source_url"]
             for row in rows
-            if (row.get("images") and len(row.get("images", [])) > 0)
-            and (not row.get("download_links") or len(row.get("download_links", [])) == 0)
+            if not row.get("download_links") or len(row.get("download_links", [])) == 0
         }
         return incomplete
     except Exception as e:
@@ -417,11 +398,10 @@ def _process_one(
             if not supabase:
                 logging.warning(f"  Could not check post completeness: supabase not initialized, skipping")
                 return False
-            row = supabase.table("jgirl_posts").select("images, download_links").eq("source_url", source_url).single().execute().data
-            has_images = row.get("images") and len(row.get("images", [])) > 0
+            row = supabase.table("jgirl_posts").select("download_links").eq("source_url", source_url).single().execute().data
             has_downloads = row.get("download_links") and len(row.get("download_links", [])) > 0
 
-            if has_images and not has_downloads:
+            if not has_downloads:
                 logging.info(f"  [{idx+1}/{total}] RETRY (incomplete): {source_url} - will fill downloads")
                 is_incomplete = True
             else:
@@ -575,24 +555,17 @@ def _process_parsed(
 
         b2_download_url = None
         if do_download and parsed["original_download_links"]:
-            all_hoster_unavailable = True
             for link in _sort_links_by_priority(parsed["original_download_links"]):
                 logging.info(f"  Trying Real-Debrid: {link}")
                 rd_result = unrestrict_link(link)
-                if rd_result == "hoster_unavailable":
-                    continue  # temporary — keep flag True
-                if not rd_result:
-                    all_hoster_unavailable = False  # permanent failure
+                if not rd_result or rd_result == "hoster_unavailable":
                     continue
-                all_hoster_unavailable = False
                 b2_download_url = download_and_upload_to_b2(post_id, rd_result)
                 if b2_download_url:
                     break
                 logging.warning(f"  Upload failed for link: {link}")
 
             if not b2_download_url:
-                if all_hoster_unavailable:
-                    raise HosterUnavailableError("All hosters temporarily unavailable — will retry later")
                 raise RuntimeError("All download links failed")
 
         now_iso = datetime.now(timezone.utc).isoformat()
@@ -608,21 +581,15 @@ def _process_parsed(
         logging.info(f"  Done: {parsed['title']!r}")
         return True
 
-    except HosterUnavailableError:
-        # Temporary failure — save images to DB and leave as pending for next run
-        logging.warning(f"  Hoster unavailable for {post_id} — saving images, leaving as pending")
+    except Exception as e:
+        # Any download failure — keep images in B2, mark pending for retry next run
+        logging.warning(f"  Download failed for {post_id} ({e}) — keeping images, marking pending")
         update_jgirl_post(post_id, {
             "thumbnail_url":   new_thumb,
             "post_images":     new_post_images,
             "images":          new_images,
             "download_status": "pending",
         })
-        return False
-    except Exception as e:
-        logging.error(f"  Pipeline failed for {post_id}: {e}")
-        deleted = delete_b2_folder(f"JGirls/{post_id}/")
-        logging.info(f"  Rolled back {deleted} B2 objects")
-        update_jgirl_post(post_id, {"download_status": "failed"})
         return False
 
 
