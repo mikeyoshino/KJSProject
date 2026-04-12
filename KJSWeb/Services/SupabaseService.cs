@@ -824,7 +824,12 @@ public class SupabaseService
         ticketReq.Content = new StringContent(ticketPayload, Encoding.UTF8, "application/json");
 
         var ticketResp = await http.SendAsync(ticketReq);
-        if (!ticketResp.IsSuccessStatusCode) return null;
+        if (!ticketResp.IsSuccessStatusCode)
+        {
+            var errBody = await ticketResp.Content.ReadAsStringAsync();
+            Console.Error.WriteLine($"[CreateTicketAsync] {(int)ticketResp.StatusCode} — {errBody}");
+            return null;
+        }
 
         var ticketJson = await ticketResp.Content.ReadAsStringAsync();
         var tickets = JsonSerializer.Deserialize<List<TicketDto>>(ticketJson);
