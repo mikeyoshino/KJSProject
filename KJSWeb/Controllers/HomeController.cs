@@ -32,6 +32,7 @@ public class HomeController : Controller
         var (asianPosts, _)    = await _supabase.GetLatestPostsAsync(1, 8, PostSource.AsianScandal);
         var (upskirtPosts, _)  = await _supabase.GetJGirlPostsAsync(1, 8, "upskirt");
         var (bathroomPosts, _) = await _supabase.GetJGirlPostsAsync(1, 8, "bathroom");
+        var (fc2Posts, _)      = await _supabase.GetJGirlPostsAsync(1, 8, "fc2");
 
         foreach (var p in buzz69Posts) p.ThumbnailUrl = ResolveImageUrl(p.ThumbnailUrl, workerBase);
         foreach (var p in asianPosts)  p.ThumbnailUrl = ResolveImageUrl(p.ThumbnailUrl, workerBase);
@@ -45,11 +46,17 @@ public class HomeController : Controller
             p.ThumbnailUrl = RewriteB2(p.ThumbnailUrl, workerBase, b2Base);
             p.Images       = p.Images.Select(u => RewriteB2(u, workerBase, b2Base)).ToList();
         }
+        foreach (var p in fc2Posts)
+        {
+            p.ThumbnailUrl = RewriteB2(p.ThumbnailUrl, workerBase, b2Base);
+            p.Images       = p.Images.Select(u => RewriteB2(u, workerBase, b2Base)).ToList();
+        }
 
         ViewBag.Buzz69Posts   = buzz69Posts;
         ViewBag.AsianPosts    = asianPosts;
         ViewBag.UpskirtPosts  = upskirtPosts;
         ViewBag.BathroomPosts = bathroomPosts;
+        ViewBag.Fc2Posts      = fc2Posts;
 
         ViewData["OgTitle"]    = "SCANDAL69 — Premium Content";
         ViewData["Description"] = "Premium content delivery network specializing in high-quality updates and community curation.";
