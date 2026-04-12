@@ -38,6 +38,10 @@ public class JGirlController : Controller
         };
         ViewBag.Sources       = sources;
         ViewBag.ActiveSource  = source;
+
+        ViewData["OgTitle"]    = "JGirl — SCANDAL69";
+        ViewData["Description"] = "Browse the latest JGirl content on SCANDAL69.";
+        ViewData["OgType"]     = "website";
         return View(posts);
     }
 
@@ -54,6 +58,11 @@ public class JGirlController : Controller
         var originalDownloadLinks = post.DownloadLinks.ToList();
 
         RewritePost(post);
+
+        ViewData["OgTitle"]    = post.Title;
+        ViewData["OgImage"]    = !string.IsNullOrEmpty(post.ThumbnailUrl) ? post.ThumbnailUrl : post.Images.FirstOrDefault() ?? "";
+        ViewData["Description"] = post.Tags.Any() ? string.Join(", ", post.Tags.Take(10)) : post.Title;
+        ViewData["OgType"]     = "article";
 
         var userId = HttpContext.Session.GetString("user_id");
         if (!string.IsNullOrEmpty(userId))

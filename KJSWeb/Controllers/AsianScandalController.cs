@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using KJSWeb.Models;
 using KJSWeb.Services;
@@ -49,6 +50,10 @@ public class AsianScandalController : Controller
         ViewBag.PopularPosts      = popularPosts;
         ViewBag.PopularPeriod     = period;
         ViewBag.ShowSidebar       = true;
+
+        ViewData["OgTitle"]    = "Asian Scandal — SCANDAL69";
+        ViewData["Description"] = "Browse the latest Asian Scandal content on SCANDAL69.";
+        ViewData["OgType"]     = "website";
         return View("~/Views/Home/Listing.cshtml", posts);
     }
 
@@ -101,10 +106,23 @@ public class AsianScandalController : Controller
             ViewBag.HasActiveSubscription = false;
         }
 
+        ViewData["OgTitle"]    = post.Title;
+        ViewData["Description"] = StripHtml(post.ContentHtml);
+        ViewData["OgImage"]    = post.ThumbnailUrl;
+        ViewData["OgType"]     = "article";
+
         if (ShouldCountView(id))
             _ = _supabase.IncrementViewCountAsync(post.Id, "posts");
 
         return View(post);
+    }
+
+    private static string StripHtml(string? html, int maxLen = 155)
+    {
+        if (string.IsNullOrEmpty(html)) return string.Empty;
+        var text = Regex.Replace(html, "<[^>]+>", " ");
+        text = Regex.Replace(text, @"\s+", " ").Trim();
+        return text.Length <= maxLen ? text : text[..maxLen].TrimEnd() + "…";
     }
 
     private static string ResolveImageUrl(string url, string workerBase)

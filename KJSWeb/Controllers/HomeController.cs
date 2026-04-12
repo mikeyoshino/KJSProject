@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using KJSWeb.Models;
 using KJSWeb.Services;
@@ -42,6 +43,10 @@ public class HomeController : Controller
         ViewBag.Buzz69Posts = buzz69Posts;
         ViewBag.AsianPosts  = asianPosts;
         ViewBag.JGirlPosts  = jgirlPosts;
+
+        ViewData["OgTitle"]    = "SCANDAL69 — Premium Content";
+        ViewData["Description"] = "Premium content delivery network specializing in high-quality updates and community curation.";
+        ViewData["OgType"]     = "website";
         return View();
     }
 
@@ -81,6 +86,10 @@ public class HomeController : Controller
         ViewBag.PopularPosts      = popularPosts;
         ViewBag.PopularPeriod     = period;
         ViewBag.ShowSidebar       = true;
+
+        ViewData["OgTitle"]    = "Buzz69 — SCANDAL69";
+        ViewData["Description"] = "Browse the latest Buzz69 content on SCANDAL69.";
+        ViewData["OgType"]     = "website";
         return View("Listing", posts);
     }
 
@@ -117,6 +126,10 @@ public class HomeController : Controller
             TotalPages = (int)Math.Ceiling(totalCount / (double)PageSize)
         };
         ViewBag.CategoryName = name;
+
+        ViewData["OgTitle"]    = $"{name} — SCANDAL69";
+        ViewData["Description"] = $"Browse {name} posts on SCANDAL69.";
+        ViewData["OgType"]     = "website";
         return View("Listing", posts);
     }
 
@@ -155,10 +168,23 @@ public class HomeController : Controller
             ViewBag.HasActiveSubscription = false;
         }
 
+        ViewData["OgTitle"]    = post.Title;
+        ViewData["Description"] = StripHtml(post.ContentHtml);
+        ViewData["OgImage"]    = post.ThumbnailUrl;
+        ViewData["OgType"]     = "article";
+
         if (ShouldCountView(id))
             _ = _supabase.IncrementViewCountAsync(post.Id, "posts");
 
         return View(post);
+    }
+
+    private static string StripHtml(string? html, int maxLen = 155)
+    {
+        if (string.IsNullOrEmpty(html)) return string.Empty;
+        var text = Regex.Replace(html, "<[^>]+>", " ");
+        text = Regex.Replace(text, @"\s+", " ").Trim();
+        return text.Length <= maxLen ? text : text[..maxLen].TrimEnd() + "…";
     }
 
     private static string ResolveImageUrl(string url, string workerBase)

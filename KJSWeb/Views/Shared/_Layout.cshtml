@@ -4,6 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewData["Title"] - SCANDAL69</title>
+    @{
+        var _canonicalUrl = ViewData["CanonicalUrl"] as string
+            ?? $"{Context.Request.Scheme}://{Context.Request.Host}{Context.Request.Path}";
+        var _ogTitle  = ViewData["OgTitle"] as string ?? "SCANDAL69";
+        var _ogDesc   = ViewData["Description"] as string
+            ?? "Premium content delivery network specializing in high-quality updates and community curation.";
+        var _ogImage  = ViewData["OgImage"] as string ?? "";
+        var _ogType   = ViewData["OgType"] as string ?? "website";
+    }
+    <meta name="description" content="@_ogDesc" />
+    <link rel="canonical" href="@_canonicalUrl" />
+    <meta property="og:site_name" content="SCANDAL69" />
+    <meta property="og:type"        content="@_ogType" />
+    <meta property="og:title"       content="@_ogTitle" />
+    <meta property="og:description" content="@_ogDesc" />
+    @if (!string.IsNullOrEmpty(_ogImage)) { <meta property="og:image" content="@_ogImage" /> }
+    <meta property="og:url"         content="@_canonicalUrl" />
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:title"       content="@_ogTitle" />
+    <meta name="twitter:description" content="@_ogDesc" />
+    @if (!string.IsNullOrEmpty(_ogImage)) { <meta name="twitter:image" content="@_ogImage" /> }
     <script>
       (function(){
         var theme = localStorage.getItem('theme') ||
