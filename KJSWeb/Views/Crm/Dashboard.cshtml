@@ -8,31 +8,31 @@
 }
 
 <div class="mb-8">
-    <h1 class="text-2xl font-black text-slate-900">Dashboard</h1>
-    <p class="text-slate-500 text-sm mt-1">Overview &amp; recent activity</p>
+    <h1 class="text-2xl font-black text-slate-900 dark:text-gray-100">Dashboard</h1>
+    <p class="text-slate-500 dark:text-gray-400 text-sm mt-1">Overview &amp; recent activity</p>
 </div>
 
 <!-- Stat cards -->
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
 
-    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
-        <div class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Active Subscribers</div>
-        <div class="text-3xl font-black text-slate-900">@stats.ActiveSubscribers.ToString("N0")</div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-100 dark:border-gray-700 p-5">
+        <div class="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-gray-500 mb-2">Active Subscribers</div>
+        <div class="text-3xl font-black text-slate-900 dark:text-gray-100">@stats.ActiveSubscribers.ToString("N0")</div>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
-        <div class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">New This Month</div>
-        <div class="text-3xl font-black text-slate-900">@stats.NewThisMonth.ToString("N0")</div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-100 dark:border-gray-700 p-5">
+        <div class="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-gray-500 mb-2">New This Month</div>
+        <div class="text-3xl font-black text-slate-900 dark:text-gray-100">@stats.NewThisMonth.ToString("N0")</div>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
-        <div class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Revenue This Month</div>
-        <div class="text-3xl font-black text-slate-900">$@stats.RevenueThisMonth.ToString("N2")</div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-100 dark:border-gray-700 p-5">
+        <div class="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-gray-500 mb-2">Revenue This Month</div>
+        <div class="text-3xl font-black text-slate-900 dark:text-gray-100">$@stats.RevenueThisMonth.ToString("N2")</div>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
-        <div class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Banned Users</div>
-        <div class="text-3xl font-black @(stats.BannedUsers > 0 ? "text-red-600" : "text-slate-900")">@stats.BannedUsers</div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-100 dark:border-gray-700 p-5">
+        <div class="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-gray-500 mb-2">Banned Users</div>
+        <div class="text-3xl font-black @(stats.BannedUsers > 0 ? "text-red-600" : "text-slate-900 dark:text-gray-100")">@stats.BannedUsers</div>
     </div>
 
 </div>
@@ -40,36 +40,36 @@
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
     <!-- Recent subscriptions -->
-    <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-100">
-        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-            <h2 class="text-sm font-black uppercase tracking-wider text-slate-700">Recent Subscriptions</h2>
+    <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-100 dark:border-gray-700">
+        <div class="px-6 py-4 border-b border-slate-100 dark:border-gray-700 flex items-center justify-between">
+            <h2 class="text-sm font-black uppercase tracking-wider text-slate-700 dark:text-gray-300">Recent Subscriptions</h2>
             <a href="/crm/subscriptions" class="text-[11px] font-bold text-orange-accent hover:underline uppercase tracking-wider">View all</a>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
-                    <tr class="border-b border-slate-100">
-                        <th class="px-6 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">Email</th>
-                        <th class="px-6 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">Plan</th>
-                        <th class="px-6 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">Status</th>
-                        <th class="px-6 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">Expires</th>
-                        <th class="px-6 py-3 text-right text-[10px] font-black uppercase tracking-wider text-slate-400">Amount</th>
+                    <tr class="border-b border-slate-100 dark:border-gray-700">
+                        <th class="px-6 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-gray-500">Email</th>
+                        <th class="px-6 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-gray-500">Plan</th>
+                        <th class="px-6 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-gray-500">Status</th>
+                        <th class="px-6 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-gray-500">Expires</th>
+                        <th class="px-6 py-3 text-right text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-gray-500">Amount</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-50">
+                <tbody class="divide-y divide-slate-50 dark:divide-gray-700">
                     @foreach (var s in recentSubs)
                     {
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="px-6 py-3 text-slate-700 truncate max-w-[160px]">@(string.IsNullOrEmpty(s.Email) ? s.UserId[..8] + "…" : s.Email)</td>
-                            <td class="px-6 py-3 capitalize text-slate-600">@s.Plan</td>
+                        <tr class="hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors">
+                            <td class="px-6 py-3 text-slate-700 dark:text-gray-300 truncate max-w-[160px]">@(string.IsNullOrEmpty(s.Email) ? s.UserId[..8] + "…" : s.Email)</td>
+                            <td class="px-6 py-3 capitalize text-slate-600 dark:text-gray-400">@s.Plan</td>
                             <td class="px-6 py-3">@StatusBadge(s.Status)</td>
-                            <td class="px-6 py-3 text-slate-500 text-xs">@(s.ExpiresAt?.ToString("MMM dd, yyyy") ?? "—")</td>
-                            <td class="px-6 py-3 text-right font-mono text-slate-700">$@s.AmountUsd.ToString("N2")</td>
+                            <td class="px-6 py-3 text-slate-500 dark:text-gray-400 text-xs">@(s.ExpiresAt?.ToString("MMM dd, yyyy") ?? "—")</td>
+                            <td class="px-6 py-3 text-right font-mono text-slate-700 dark:text-gray-300">$@s.AmountUsd.ToString("N2")</td>
                         </tr>
                     }
                     @if (!recentSubs.Any())
                     {
-                        <tr><td colspan="5" class="px-6 py-8 text-center text-slate-400 text-sm">No subscriptions yet</td></tr>
+                        <tr><td colspan="5" class="px-6 py-8 text-center text-slate-400 dark:text-gray-500 text-sm">No subscriptions yet</td></tr>
                     }
                 </tbody>
             </table>
@@ -77,26 +77,26 @@
     </div>
 
     <!-- Recent signups -->
-    <div class="bg-white rounded-xl shadow-sm border border-slate-100">
-        <div class="px-6 py-4 border-b border-slate-100">
-            <h2 class="text-sm font-black uppercase tracking-wider text-slate-700">Recent Signups</h2>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-100 dark:border-gray-700">
+        <div class="px-6 py-4 border-b border-slate-100 dark:border-gray-700">
+            <h2 class="text-sm font-black uppercase tracking-wider text-slate-700 dark:text-gray-300">Recent Signups</h2>
         </div>
-        <div class="divide-y divide-slate-50">
+        <div class="divide-y divide-slate-50 dark:divide-gray-700">
             @foreach (var u in recentUsers)
             {
-                <a href="/crm/users/@u.Id" class="flex items-start gap-3 px-5 py-4 hover:bg-slate-50 transition-colors block">
-                    <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-black text-slate-600 shrink-0 mt-0.5">
+                <a href="/crm/users/@u.Id" class="flex items-start gap-3 px-5 py-4 hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors block">
+                    <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-gray-700 flex items-center justify-center text-xs font-black text-slate-600 dark:text-gray-300 shrink-0 mt-0.5">
                         @(u.Email.Length > 0 ? u.Email[0].ToString().ToUpperInvariant() : "?")
                     </div>
                     <div class="min-w-0">
-                        <div class="text-sm font-semibold text-slate-700 truncate">@u.Email</div>
-                        <div class="text-[10px] text-slate-400 mt-0.5">@u.CreatedAt.ToString("MMM dd, yyyy")</div>
+                        <div class="text-sm font-semibold text-slate-700 dark:text-gray-300 truncate">@u.Email</div>
+                        <div class="text-[10px] text-slate-400 dark:text-gray-500 mt-0.5">@u.CreatedAt.ToString("MMM dd, yyyy")</div>
                     </div>
                 </a>
             }
             @if (!recentUsers.Any())
             {
-                <div class="px-5 py-8 text-center text-slate-400 text-sm">No recent signups</div>
+                <div class="px-5 py-8 text-center text-slate-400 dark:text-gray-500 text-sm">No recent signups</div>
             }
         </div>
     </div>

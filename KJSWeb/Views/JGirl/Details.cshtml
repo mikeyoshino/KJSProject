@@ -48,7 +48,7 @@
             <!-- Scrubber bar -->
             <div class="mt-2 px-0.5">
                 <div id="detail-scrubber-bar"
-                     class="relative h-2 bg-slate-200 rounded-full cursor-pointer group/bar">
+                     class="relative h-2 bg-slate-200 dark:bg-gray-700 rounded-full cursor-pointer group/bar">
                     <div id="detail-scrubber-fill"
                          class="h-full bg-orange-accent rounded-full w-0 pointer-events-none transition-none"></div>
                     <div id="detail-scrubber-knob"
@@ -67,7 +67,7 @@
     @if (Model.PostImages.Any())
     {
         <section class="mb-10">
-            <h3 class="text-[11px] font-black uppercase tracking-[0.3em] border-b-2 border-black pb-2 mb-5">Images</h3>
+            <h3 class="text-[11px] font-black uppercase tracking-[0.3em] border-b-2 border-black dark:border-gray-600 pb-2 mb-5">Images</h3>
             <div class="columns-2 sm:columns-3 gap-3 space-y-3">
                 @foreach (var img in Model.PostImages)
                 {
@@ -95,11 +95,11 @@
     <!-- Tags -->
     @if (Model.Tags.Any())
     {
-        <section class="border-t border-slate-100 pt-6">
+        <section class="border-t border-slate-100 dark:border-gray-700 pt-6">
             <div class="flex flex-wrap gap-2">
                 @foreach (var tag in Model.Tags)
                 {
-                    <span class="bg-slate-50 text-slate-500 hover:bg-orange-accent hover:text-white px-3 py-1.5 rounded-sm text-[10px] font-bold uppercase tracking-wider transition-colors cursor-default">#@tag</span>
+                    <span class="bg-slate-50 dark:bg-gray-700 text-slate-500 dark:text-gray-400 hover:bg-orange-accent hover:text-white px-3 py-1.5 rounded-sm text-[10px] font-bold uppercase tracking-wider transition-colors cursor-default">#@tag</span>
                 }
             </div>
         </section>

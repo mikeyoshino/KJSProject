@@ -1,2 +1,28 @@
 /* All styling is handled via Tailwind CSS classes in the views */
 /* This file is kept for compatibility with asp-append-version */
+
+/* CSS custom properties for non-Tailwind colors */
+:root {
+  --scrollbar-track: #f1f1f1;
+  --scrollbar-thumb: #888;
+  --scrollbar-thumb-hover: #555;
+  --dropdown-bg: #121212;
+}
+.dark {
+  --scrollbar-track: #1a1a1a;
+  --scrollbar-thumb: #555;
+  --scrollbar-thumb-hover: #888;
+  --dropdown-bg: #1e1e1e;
+}
+
+/* Global scrollbar using CSS variables */
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}

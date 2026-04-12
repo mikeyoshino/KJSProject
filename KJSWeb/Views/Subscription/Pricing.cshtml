@@ -8,7 +8,7 @@
 <!-- Pricing Header -->
 <div class="text-center mb-16">
     <h1 class="text-4xl font-black tracking-tight mb-4">Choose Your Plan</h1>
-    <p class="text-slate-500 text-sm max-w-lg mx-auto">Unlock premium downloads with Bitcoin. Direct wallet-to-wallet payments — no middleman, no data shared.</p>
+    <p class="text-slate-500 dark:text-gray-400 text-sm max-w-lg mx-auto">Unlock premium downloads with Bitcoin. Direct wallet-to-wallet payments — no middleman, no data shared.</p>
 </div>
 
 @if (TempData["Error"] != null)
@@ -44,7 +44,7 @@
             var badge = badges[i];
             var perMonth = Math.Round(plan.PriceUsd / (plan.DurationDays / 30m), 2);
 
-            <div class="relative @(isHighlighted ? "bg-black text-white scale-105 shadow-2xl" : "bg-white border border-slate-200 shadow-sm") p-5 sm:p-8 text-center transition-transform hover:scale-[1.02]">
+            <div class="relative @(isHighlighted ? "bg-black text-white scale-105 shadow-2xl" : "bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 shadow-sm") p-5 sm:p-8 text-center transition-transform hover:scale-[1.02]">
                 @if (!string.IsNullOrEmpty(badge))
                 {
                     <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-orange-accent text-white text-[9px] font-black uppercase px-4 py-1 tracking-widest">
@@ -52,7 +52,7 @@
                     </div>
                 }
 
-                <h3 class="text-[11px] font-bold uppercase tracking-widest @(isHighlighted ? "text-slate-400" : "text-slate-500") mb-4">@plan.Label</h3>
+                <h3 class="text-[11px] font-bold uppercase tracking-widest @(isHighlighted ? "text-slate-400" : "text-slate-500 dark:text-gray-400") mb-4">@plan.Label</h3>
 
                 <div class="mb-4">
                     <span class="text-5xl font-black">$@plan.PriceUsd.ToString("0")</span>
@@ -62,11 +62,11 @@
                     }
                 </div>
 
-                <p class="text-sm @(isHighlighted ? "text-slate-400" : "text-slate-500") mb-8">
+                <p class="text-sm @(isHighlighted ? "text-slate-400" : "text-slate-500 dark:text-gray-400") mb-8">
                     $@perMonth.ToString("0.00")/month
                 </p>
 
-                <ul class="text-left text-sm space-y-3 mb-8 @(isHighlighted ? "text-slate-300" : "text-slate-600")">
+                <ul class="text-left text-sm space-y-3 mb-8 @(isHighlighted ? "text-slate-300" : "text-slate-600 dark:text-gray-400")">
                     <li class="flex items-center gap-2">
                         <span class="text-orange-accent font-bold">✓</span> Unlimited Downloads
                     </li>
@@ -84,7 +84,7 @@
                 @if (string.IsNullOrEmpty(userId))
                 {
                     <a asp-action="Login" asp-controller="Auth" asp-route-returnUrl="/subscription/pricing"
-                       class="block w-full @(isHighlighted ? "bg-orange-accent" : "bg-black") text-white py-3 text-[13px] font-bold uppercase tracking-widest hover:opacity-90 transition-opacity text-center">
+                       class="block w-full @(isHighlighted ? "bg-orange-accent" : "bg-black dark:bg-gray-900") text-white py-3 text-[13px] font-bold uppercase tracking-widest hover:opacity-90 transition-opacity text-center">
                         Login to Subscribe
                     </a>
                 }
@@ -93,7 +93,7 @@
                     <form method="post" asp-action="Subscribe" asp-controller="Subscription">
                         <input type="hidden" name="plan" value="@key" />
                         <button type="submit"
-                                class="w-full @(isHighlighted ? "bg-orange-accent" : "bg-black") text-white py-3 text-[13px] font-bold uppercase tracking-widest hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                                class="w-full @(isHighlighted ? "bg-orange-accent" : "bg-black dark:bg-gray-900") text-white py-3 text-[13px] font-bold uppercase tracking-widest hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
                             <span>₿</span> Pay with Bitcoin
                         </button>
                     </form>
@@ -104,7 +104,7 @@
 </div>
 
 <!-- Trust Badges -->
-<div class="flex flex-wrap justify-center gap-8 mt-16 text-slate-400 text-[10px] font-bold uppercase tracking-widest">
+<div class="flex flex-wrap justify-center gap-8 mt-16 text-slate-400 dark:text-gray-500 text-[10px] font-bold uppercase tracking-widest">
     <span>🔒 Secure Payment</span>
     <span>₿ Bitcoin Only</span>
     <span>⚡ Instant Access</span>

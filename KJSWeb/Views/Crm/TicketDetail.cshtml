@@ -10,7 +10,7 @@
 <div class="mb-6 text-sm text-slate-400">
     <a href="/crm/tickets" class="hover:text-orange-accent transition-colors">Tickets</a>
     <span class="mx-2">/</span>
-    <span class="text-slate-700 font-medium truncate">@ticket.Title</span>
+    <span class="text-slate-700 dark:text-gray-300 font-medium truncate">@ticket.Title</span>
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -19,43 +19,43 @@
     <div class="flex flex-col gap-6">
 
         <!-- Info card -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-            <h2 class="text-sm font-black uppercase tracking-wider text-slate-700 mb-4">Ticket Info</h2>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-100 dark:border-gray-700 p-6">
+            <h2 class="text-sm font-black uppercase tracking-wider text-slate-700 dark:text-gray-300 mb-4">Ticket Info</h2>
             <dl class="space-y-2 text-sm">
                 <div class="flex justify-between gap-2">
-                    <dt class="text-slate-400 shrink-0">ID</dt>
-                    <dd class="font-mono text-slate-500 text-xs truncate" title="@ticket.Id">@ticket.Id[..Math.Min(8, ticket.Id.Length)]…</dd>
+                    <dt class="text-slate-400 dark:text-gray-500 shrink-0">ID</dt>
+                    <dd class="font-mono text-slate-500 dark:text-gray-400 text-xs truncate" title="@ticket.Id">@ticket.Id[..Math.Min(8, ticket.Id.Length)]…</dd>
                 </div>
                 <div class="flex justify-between gap-2">
-                    <dt class="text-slate-400 shrink-0">User</dt>
-                    <dd class="text-slate-700 truncate">
+                    <dt class="text-slate-400 dark:text-gray-500 shrink-0">User</dt>
+                    <dd class="text-slate-700 dark:text-gray-300 truncate">
                         <a href="/crm/users/@ticket.UserId" class="hover:text-orange-accent transition-colors">
                             @(string.IsNullOrEmpty(ticket.UserEmail) ? ticket.UserId[..Math.Min(8, ticket.UserId.Length)] + "…" : ticket.UserEmail)
                         </a>
                     </dd>
                 </div>
                 <div class="flex justify-between gap-2">
-                    <dt class="text-slate-400 shrink-0">Category</dt>
-                    <dd class="text-slate-700 capitalize">@ticket.CategoryRaw</dd>
+                    <dt class="text-slate-400 dark:text-gray-500 shrink-0">Category</dt>
+                    <dd class="text-slate-700 dark:text-gray-300 capitalize">@ticket.CategoryRaw</dd>
                 </div>
                 <div class="flex justify-between gap-2">
-                    <dt class="text-slate-400 shrink-0">Status</dt>
+                    <dt class="text-slate-400 dark:text-gray-500 shrink-0">Status</dt>
                     <dd>@TicketStatusBadge(ticket.StatusRaw)</dd>
                 </div>
                 <div class="flex justify-between gap-2">
-                    <dt class="text-slate-400 shrink-0">Created</dt>
-                    <dd class="text-slate-700 text-xs">@ticket.CreatedAt.ToString("MMM dd, yyyy HH:mm")</dd>
+                    <dt class="text-slate-400 dark:text-gray-500 shrink-0">Created</dt>
+                    <dd class="text-slate-700 dark:text-gray-300 text-xs">@ticket.CreatedAt.ToString("MMM dd, yyyy HH:mm")</dd>
                 </div>
                 <div class="flex justify-between gap-2">
-                    <dt class="text-slate-400 shrink-0">Last Reply</dt>
-                    <dd class="text-slate-700 text-xs">@(ticket.LastReplyAt?.ToString("MMM dd, yyyy HH:mm") ?? "—")</dd>
+                    <dt class="text-slate-400 dark:text-gray-500 shrink-0">Last Reply</dt>
+                    <dd class="text-slate-700 dark:text-gray-300 text-xs">@(ticket.LastReplyAt?.ToString("MMM dd, yyyy HH:mm") ?? "—")</dd>
                 </div>
             </dl>
         </div>
 
         <!-- Change status card -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-            <h3 class="text-sm font-black uppercase tracking-wider text-slate-700 mb-4">Change Status</h3>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-100 dark:border-gray-700 p-6">
+            <h3 class="text-sm font-black uppercase tracking-wider text-slate-700 dark:text-gray-300 mb-4">Change Status</h3>
             <form method="post" action="/crm/tickets/@ticket.Id/status">
                 @Html.AntiForgeryToken()
                 <div class="mb-3">
@@ -68,7 +68,7 @@
                         };
                     }
                     <select name="newStatus"
-                            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-accent">
+                            class="w-full border border-slate-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-accent">
                         @foreach (var (val, label) in statusOptions)
                         {
                             if (ticket.StatusRaw == val)
@@ -95,8 +95,8 @@
     <div class="lg:col-span-2 flex flex-col gap-6">
 
         <!-- Ticket title -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-100 px-6 py-4">
-            <h1 class="text-lg font-black text-slate-900">@ticket.Title</h1>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-100 dark:border-gray-700 px-6 py-4">
+            <h1 class="text-lg font-black text-slate-900 dark:text-gray-100">@ticket.Title</h1>
         </div>
 
         <!-- Messages -->
@@ -106,7 +106,7 @@
                 var isAdmin = msg.IsAdmin;
                 <div class="flex @(isAdmin ? "justify-end" : "justify-start")">
                     <div class="max-w-[80%] rounded-xl px-5 py-3 shadow-sm
-                                @(isAdmin ? "bg-slate-900 text-white" : "bg-white border border-slate-100 text-slate-700")">
+                                @(isAdmin ? "bg-slate-900 text-white" : "bg-white dark:bg-gray-700 border border-slate-100 dark:border-gray-600 text-slate-700 dark:text-gray-300")">
                         <div class="text-[10px] font-black uppercase tracking-wider mb-1
                                     @(isAdmin ? "text-slate-400" : "text-slate-400")">
                             @(isAdmin ? "Admin" : ticket.UserEmail) &mdash; @msg.CreatedAt.ToString("MMM dd, yyyy HH:mm")
@@ -117,18 +117,18 @@
             }
             @if (!messages.Any())
             {
-                <div class="text-center text-slate-400 py-10">No messages yet.</div>
+                <div class="text-center text-slate-400 dark:text-gray-500 py-10">No messages yet.</div>
             }
         </div>
 
         <!-- Reply form -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-            <h3 class="text-sm font-black uppercase tracking-wider text-slate-700 mb-4">Admin Reply</h3>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-100 dark:border-gray-700 p-6">
+            <h3 class="text-sm font-black uppercase tracking-wider text-slate-700 dark:text-gray-300 mb-4">Admin Reply</h3>
             <form method="post" action="/crm/tickets/@ticket.Id/reply">
                 @Html.AntiForgeryToken()
                 <div class="mb-3">
                     <textarea name="message" rows="4" placeholder="Type your reply…" required
-                              class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-accent resize-none"></textarea>
+                              class="w-full border border-slate-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-accent resize-none"></textarea>
                 </div>
                 <button type="submit"
                         class="bg-slate-900 text-white px-5 py-2.5 text-sm font-bold rounded-lg hover:bg-orange-accent transition-colors">

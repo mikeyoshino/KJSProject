@@ -7,8 +7,8 @@
 }
 
 <div class="mb-8">
-    <h1 class="text-2xl font-black text-slate-900">Users</h1>
-    <p class="text-slate-500 text-sm mt-1">Search by email address</p>
+    <h1 class="text-2xl font-black text-slate-900 dark:text-gray-100">Users</h1>
+    <p class="text-slate-500 dark:text-gray-400 text-sm mt-1">Search by email address</p>
 </div>
 
 <!-- Search form -->
@@ -16,7 +16,7 @@
     <div class="flex gap-3 max-w-xl">
         <input type="text" name="q" value="@query"
                placeholder="Search by email…"
-               class="flex-1 border border-slate-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-accent focus:border-transparent"
+               class="flex-1 border border-slate-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-accent focus:border-transparent"
                autofocus />
         <button type="submit"
                 class="bg-slate-900 text-white px-6 py-2.5 text-sm font-bold rounded-lg hover:bg-orange-accent transition-colors">
@@ -28,9 +28,9 @@
 <!-- Results -->
 @if (!string.IsNullOrEmpty(query))
 {
-    <div class="bg-white rounded-xl shadow-sm border border-slate-100">
-        <div class="px-6 py-4 border-b border-slate-100">
-            <h2 class="text-sm font-black uppercase tracking-wider text-slate-700">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-100 dark:border-gray-700">
+        <div class="px-6 py-4 border-b border-slate-100 dark:border-gray-700">
+            <h2 class="text-sm font-black uppercase tracking-wider text-slate-700 dark:text-gray-300">
                 Results for "@query" — @results.Count found
             </h2>
         </div>
@@ -39,23 +39,23 @@
         {
             <table class="w-full text-sm">
                 <thead>
-                    <tr class="border-b border-slate-100">
-                        <th class="px-6 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">Email</th>
-                        <th class="px-6 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">Registered</th>
-                        <th class="px-6 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">Last Sign-in</th>
-                        <th class="px-6 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">Subscription</th>
-                        <th class="px-6 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">Status</th>
+                    <tr class="border-b border-slate-100 dark:border-gray-700">
+                        <th class="px-6 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-gray-500">Email</th>
+                        <th class="px-6 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-gray-500">Registered</th>
+                        <th class="px-6 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-gray-500">Last Sign-in</th>
+                        <th class="px-6 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-gray-500">Subscription</th>
+                        <th class="px-6 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-gray-500">Status</th>
                         <th class="px-6 py-3"></th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-50">
+                <tbody class="divide-y divide-slate-50 dark:divide-gray-700">
                     @foreach (var r in results)
                     {
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="px-6 py-3 font-medium text-slate-800">@r.User.Email</td>
-                            <td class="px-6 py-3 text-slate-500 text-xs">@r.User.CreatedAt.ToString("MMM dd, yyyy")</td>
-                            <td class="px-6 py-3 text-slate-500 text-xs">@(r.User.LastSignInAt?.ToString("MMM dd, yyyy") ?? "Never")</td>
-                            <td class="px-6 py-3 text-slate-600 text-xs">@r.SubStatus</td>
+                        <tr class="hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors">
+                            <td class="px-6 py-3 font-medium text-slate-800 dark:text-gray-100">@r.User.Email</td>
+                            <td class="px-6 py-3 text-slate-500 dark:text-gray-400 text-xs">@r.User.CreatedAt.ToString("MMM dd, yyyy")</td>
+                            <td class="px-6 py-3 text-slate-500 dark:text-gray-400 text-xs">@(r.User.LastSignInAt?.ToString("MMM dd, yyyy") ?? "Never")</td>
+                            <td class="px-6 py-3 text-slate-600 dark:text-gray-400 text-xs">@r.SubStatus</td>
                             <td class="px-6 py-3">
                                 @if (r.IsBanned)
                                 {
@@ -79,7 +79,7 @@
         }
         else
         {
-            <div class="px-6 py-12 text-center text-slate-400">No users found matching "@query"</div>
+            <div class="px-6 py-12 text-center text-slate-400 dark:text-gray-500">No users found matching "@query"</div>
         }
     </div>
 }

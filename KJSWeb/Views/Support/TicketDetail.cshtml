@@ -35,12 +35,12 @@
     </a>
 
     <!-- Ticket Header -->
-    <div class="bg-white border border-slate-200 rounded-sm p-6 mb-6">
+    <div class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-sm p-6 mb-6">
         <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
             <div class="flex-1 min-w-0">
-                <h1 class="text-xl font-bold text-slate-800 leading-snug mb-2">@Model.Title</h1>
-                <div class="flex flex-wrap items-center gap-3 text-[11px] text-slate-400 font-bold uppercase tracking-wider">
-                    <span class="font-mono normal-case font-normal text-slate-300">
+                <h1 class="text-xl font-bold text-slate-800 dark:text-gray-100 leading-snug mb-2">@Model.Title</h1>
+                <div class="flex flex-wrap items-center gap-3 text-[11px] text-slate-400 dark:text-gray-500 font-bold uppercase tracking-wider">
+                    <span class="font-mono normal-case font-normal text-slate-300 dark:text-gray-600">
                         #@Model.Id.Substring(0, Math.Min(8, Model.Id.Length))
                     </span>
                     <span>·</span>
@@ -62,13 +62,13 @@
 
     @if (TempData["Error"] != null)
     {
-        <div class="mb-5 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm font-medium">
+        <div class="mb-5 p-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 text-red-700 dark:text-red-400 text-sm font-medium">
             @TempData["Error"]
         </div>
     }
     @if (TempData["Success"] != null)
     {
-        <div class="mb-5 p-4 bg-green-50 border-l-4 border-green-500 text-green-700 text-sm font-medium">
+        <div class="mb-5 p-4 bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 text-green-700 dark:text-green-400 text-sm font-medium">
             @TempData["Success"]
         </div>
     }
@@ -77,11 +77,11 @@
     <div class="space-y-4 mb-6">
         @if (!messages.Any())
         {
-            <div class="text-center py-10 bg-white border border-slate-200 rounded-sm">
-                <p class="text-slate-400 text-sm font-semibold">No messages yet.</p>
+            <div class="text-center py-10 bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-sm">
+                <p class="text-slate-400 dark:text-gray-500 text-sm font-semibold">No messages yet.</p>
                 @if (canReply)
                 {
-                    <p class="text-slate-400 text-xs mt-1">Use the form below to add your first message.</p>
+                    <p class="text-slate-400 dark:text-gray-500 text-xs mt-1">Use the form below to add your first message.</p>
                 }
             </div>
         }
@@ -97,12 +97,12 @@
                             S
                         </div>
                         <div class="flex-1 min-w-0">
-                            <div class="bg-orange-50 border border-orange-200 rounded-sm px-4 py-3">
+                            <div class="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-sm px-4 py-3">
                                 <div class="flex items-center gap-2 mb-2">
                                     <span class="text-[10px] font-black uppercase tracking-widest text-orange-accent">Support Team</span>
-                                    <span class="text-[10px] text-slate-400">@msg.CreatedAt.ToString("MMM dd, yyyy 'at' h:mm tt")</span>
+                                    <span class="text-[10px] text-slate-400 dark:text-gray-500">@msg.CreatedAt.ToString("MMM dd, yyyy 'at' h:mm tt")</span>
                                 </div>
-                                <p class="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words">@msg.Message</p>
+                                <p class="text-sm text-slate-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap break-words">@msg.Message</p>
                             </div>
                         </div>
                     </div>
@@ -112,15 +112,15 @@
                     <!-- User message -->
                     <div class="flex gap-3 justify-end">
                         <div class="flex-1 min-w-0 flex flex-col items-end">
-                            <div class="bg-white border border-slate-200 rounded-sm px-4 py-3 max-w-prose w-full">
+                            <div class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-sm px-4 py-3 max-w-prose w-full">
                                 <div class="flex items-center gap-2 mb-2">
-                                    <span class="text-[10px] font-black uppercase tracking-widest text-slate-600">You</span>
-                                    <span class="text-[10px] text-slate-400">@msg.CreatedAt.ToString("MMM dd, yyyy 'at' h:mm tt")</span>
+                                    <span class="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-gray-400">You</span>
+                                    <span class="text-[10px] text-slate-400 dark:text-gray-500">@msg.CreatedAt.ToString("MMM dd, yyyy 'at' h:mm tt")</span>
                                 </div>
-                                <p class="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words">@msg.Message</p>
+                                <p class="text-sm text-slate-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap break-words">@msg.Message</p>
                             </div>
                         </div>
-                        <div class="shrink-0 w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 text-[11px] font-black mt-1">
+                        <div class="shrink-0 w-8 h-8 rounded-full bg-slate-200 dark:bg-gray-700 flex items-center justify-center text-slate-500 dark:text-gray-400 text-[11px] font-black mt-1">
                             U
                         </div>
                     </div>
@@ -132,13 +132,13 @@
     <!-- Reply Form (only for open/in-progress tickets) -->
     @if (canReply)
     {
-        <div class="bg-white border border-slate-200 rounded-sm p-6">
-            <h3 class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4">Reply</h3>
+        <div class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-sm p-6">
+            <h3 class="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-gray-400 mb-4">Reply</h3>
             <form method="post" action="/support/tickets/@Model.Id/reply">
                 @Html.AntiForgeryToken()
                 <div class="mb-4">
                     <textarea name="message" rows="4" required maxlength="5000"
-                              class="w-full border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:border-orange-accent transition-colors resize-none"
+                              class="w-full border border-slate-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 px-3 py-2.5 text-sm focus:outline-none focus:border-orange-accent transition-colors resize-none"
                               placeholder="Write your reply…"></textarea>
                 </div>
                 <div class="flex justify-end">
@@ -155,8 +155,8 @@
     }
     else
     {
-        <div class="bg-slate-50 border border-slate-200 rounded-sm p-5 text-center">
-            <p class="text-sm text-slate-500 font-medium">
+        <div class="bg-slate-50 dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-sm p-5 text-center">
+            <p class="text-sm text-slate-500 dark:text-gray-400 font-medium">
                 This ticket is resolved and closed for new replies.
             </p>
         </div>

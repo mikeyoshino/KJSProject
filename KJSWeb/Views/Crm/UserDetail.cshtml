@@ -14,7 +14,7 @@
 <div class="mb-6 text-sm text-slate-400">
     <a href="/crm/users" class="hover:text-orange-accent transition-colors">Users</a>
     <span class="mx-2">/</span>
-    <span class="text-slate-700 font-medium">@user.Email</span>
+    <span class="text-slate-700 dark:text-gray-300 font-medium">@user.Email</span>
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -23,13 +23,13 @@
     <div class="flex flex-col gap-6">
 
         <!-- User info card -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-100 dark:border-gray-700 p-6">
             <div class="flex items-center gap-4 mb-5">
-                <div class="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-lg font-black text-slate-600">
+                <div class="w-12 h-12 rounded-full bg-slate-200 dark:bg-gray-700 flex items-center justify-center text-lg font-black text-slate-600 dark:text-gray-300">
                     @(user.Email.Length > 0 ? user.Email[0].ToString().ToUpperInvariant() : "?")
                 </div>
                 <div>
-                    <div class="font-bold text-slate-900">@user.Email</div>
+                    <div class="font-bold text-slate-900 dark:text-gray-100">@user.Email</div>
                     @if (isBanned)
                     {
                         <span class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-red-100 text-red-600">Banned</span>
@@ -42,20 +42,20 @@
             </div>
             <dl class="space-y-2 text-sm">
                 <div class="flex justify-between">
-                    <dt class="text-slate-400">User ID</dt>
-                    <dd class="text-slate-600 font-mono text-xs truncate max-w-[120px]" title="@user.Id">@user.Id[..8]…</dd>
+                    <dt class="text-slate-400 dark:text-gray-500">User ID</dt>
+                    <dd class="text-slate-600 dark:text-gray-400 font-mono text-xs truncate max-w-[120px]" title="@user.Id">@user.Id[..8]…</dd>
                 </div>
                 <div class="flex justify-between">
-                    <dt class="text-slate-400">Registered</dt>
-                    <dd class="text-slate-700">@user.CreatedAt.ToString("MMM dd, yyyy")</dd>
+                    <dt class="text-slate-400 dark:text-gray-500">Registered</dt>
+                    <dd class="text-slate-700 dark:text-gray-300">@user.CreatedAt.ToString("MMM dd, yyyy")</dd>
                 </div>
                 <div class="flex justify-between">
-                    <dt class="text-slate-400">Last sign-in</dt>
-                    <dd class="text-slate-700">@(user.LastSignInAt?.ToString("MMM dd, yyyy") ?? "Never")</dd>
+                    <dt class="text-slate-400 dark:text-gray-500">Last sign-in</dt>
+                    <dd class="text-slate-700 dark:text-gray-300">@(user.LastSignInAt?.ToString("MMM dd, yyyy") ?? "Never")</dd>
                 </div>
                 <div class="flex justify-between">
-                    <dt class="text-slate-400">Subscription</dt>
-                    <dd class="text-slate-700">
+                    <dt class="text-slate-400 dark:text-gray-500">Subscription</dt>
+                    <dd class="text-slate-700 dark:text-gray-300">
                         @if (activeSub != null)
                         {
                             <span class="text-green-600 font-semibold">Active — @activeSub.Plan</span>
@@ -69,16 +69,16 @@
                 @if (activeSub != null)
                 {
                     <div class="flex justify-between">
-                        <dt class="text-slate-400">Expires</dt>
-                        <dd class="text-slate-700">@activeSub.ExpiresAt?.ToString("MMM dd, yyyy")</dd>
+                        <dt class="text-slate-400 dark:text-gray-500">Expires</dt>
+                        <dd class="text-slate-700 dark:text-gray-300">@activeSub.ExpiresAt?.ToString("MMM dd, yyyy")</dd>
                     </div>
                 }
             </dl>
         </div>
 
         <!-- Ban/Unban card -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-            <h3 class="text-sm font-black uppercase tracking-wider text-slate-700 mb-4">Account Control</h3>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-100 dark:border-gray-700 p-6">
+            <h3 class="text-sm font-black uppercase tracking-wider text-slate-700 dark:text-gray-300 mb-4">Account Control</h3>
             @if (isBanned)
             {
                 <form method="post" action="/crm/users/@user.Id/unban">
@@ -99,25 +99,25 @@
         </div>
 
         <!-- Grant subscription card -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-            <h3 class="text-sm font-black uppercase tracking-wider text-slate-700 mb-4">Grant Subscription</h3>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-100 dark:border-gray-700 p-6">
+            <h3 class="text-sm font-black uppercase tracking-wider text-slate-700 dark:text-gray-300 mb-4">Grant Subscription</h3>
             <form method="post" action="/crm/subscriptions/grant" class="space-y-3">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="userId" value="@user.Id" />
                 <input type="hidden" name="email"  value="@user.Email" />
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Plan</label>
+                    <label class="block text-xs font-bold text-slate-500 dark:text-gray-400 mb-1 uppercase tracking-wider">Plan</label>
                     <select name="plan"
-                            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-accent">
+                            class="w-full border border-slate-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-accent">
                         <option value="monthly">Monthly (30 days)</option>
                         <option value="3month">3-Month (90 days)</option>
                         <option value="yearly">Yearly (365 days)</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Custom Days <span class="normal-case font-normal text-slate-400">(optional override)</span></label>
+                    <label class="block text-xs font-bold text-slate-500 dark:text-gray-400 mb-1 uppercase tracking-wider">Custom Days <span class="normal-case font-normal text-slate-400 dark:text-gray-500">(optional override)</span></label>
                     <input type="number" name="customDays" min="1" max="3650" placeholder="e.g. 45"
-                           class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-accent" />
+                           class="w-full border border-slate-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-accent" />
                 </div>
                 <button type="submit"
                         class="w-full bg-slate-900 text-white py-2.5 text-sm font-bold rounded-lg hover:bg-orange-accent transition-colors">
@@ -130,33 +130,33 @@
 
     <!-- Right column — subscription history + tickets -->
     <div class="lg:col-span-2 flex flex-col gap-8">
-        <div class="bg-white rounded-xl shadow-sm border border-slate-100">
-            <div class="px-6 py-4 border-b border-slate-100">
-                <h2 class="text-sm font-black uppercase tracking-wider text-slate-700">Subscription History</h2>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-100 dark:border-gray-700">
+            <div class="px-6 py-4 border-b border-slate-100 dark:border-gray-700">
+                <h2 class="text-sm font-black uppercase tracking-wider text-slate-700 dark:text-gray-300">Subscription History</h2>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead>
-                        <tr class="border-b border-slate-100">
-                            <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">Plan</th>
-                            <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">Status</th>
-                            <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">Paid At</th>
-                            <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">Expires At</th>
-                            <th class="px-5 py-3 text-right text-[10px] font-black uppercase tracking-wider text-slate-400">Amount</th>
-                            <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">TXID</th>
+                        <tr class="border-b border-slate-100 dark:border-gray-700">
+                            <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-gray-500">Plan</th>
+                            <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-gray-500">Status</th>
+                            <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-gray-500">Paid At</th>
+                            <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-gray-500">Expires At</th>
+                            <th class="px-5 py-3 text-right text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-gray-500">Amount</th>
+                            <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-gray-500">TXID</th>
                             <th class="px-5 py-3"></th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-50">
+                    <tbody class="divide-y divide-slate-50 dark:divide-gray-700">
                         @foreach (var s in history)
                         {
-                            <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="px-5 py-3 capitalize text-slate-700 font-medium">@s.Plan</td>
+                            <tr class="hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors">
+                                <td class="px-5 py-3 capitalize text-slate-700 dark:text-gray-300 font-medium">@s.Plan</td>
                                 <td class="px-5 py-3">@StatusBadge(s.Status)</td>
-                                <td class="px-5 py-3 text-slate-500 text-xs">@(s.PaidAt?.ToString("MMM dd, yyyy") ?? "—")</td>
-                                <td class="px-5 py-3 text-slate-500 text-xs">@(s.ExpiresAt?.ToString("MMM dd, yyyy") ?? "—")</td>
-                                <td class="px-5 py-3 text-right font-mono text-slate-600">$@s.AmountUsd.ToString("N2")</td>
-                                <td class="px-5 py-3 font-mono text-slate-400 text-xs">
+                                <td class="px-5 py-3 text-slate-500 dark:text-gray-400 text-xs">@(s.PaidAt?.ToString("MMM dd, yyyy") ?? "—")</td>
+                                <td class="px-5 py-3 text-slate-500 dark:text-gray-400 text-xs">@(s.ExpiresAt?.ToString("MMM dd, yyyy") ?? "—")</td>
+                                <td class="px-5 py-3 text-right font-mono text-slate-600 dark:text-gray-400">$@s.AmountUsd.ToString("N2")</td>
+                                <td class="px-5 py-3 font-mono text-slate-400 dark:text-gray-500 text-xs">
                                     @if (!string.IsNullOrEmpty(s.Txid))
                                     {
                                         <span title="@s.Txid">@s.Txid[..Math.Min(8, s.Txid.Length)]…</span>
@@ -188,7 +188,7 @@
                         }
                         @if (!history.Any())
                         {
-                            <tr><td colspan="7" class="px-5 py-10 text-center text-slate-400">No subscription history</td></tr>
+                            <tr><td colspan="7" class="px-5 py-10 text-center text-slate-400 dark:text-gray-500">No subscription history</td></tr>
                         }
                     </tbody>
                 </table>
@@ -196,30 +196,30 @@
         </div>
 
         <!-- Tickets -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-100">
-            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-                <h2 class="text-sm font-black uppercase tracking-wider text-slate-700">Support Tickets</h2>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-100 dark:border-gray-700">
+            <div class="px-6 py-4 border-b border-slate-100 dark:border-gray-700 flex items-center justify-between">
+                <h2 class="text-sm font-black uppercase tracking-wider text-slate-700 dark:text-gray-300">Support Tickets</h2>
                 <a href="/crm/tickets" class="text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-orange-accent transition-colors">View All</a>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead>
-                        <tr class="border-b border-slate-100">
-                            <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">Title</th>
-                            <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">Status</th>
-                            <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">Created</th>
-                            <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">Last Reply</th>
+                        <tr class="border-b border-slate-100 dark:border-gray-700">
+                            <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-gray-500">Title</th>
+                            <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-gray-500">Status</th>
+                            <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-gray-500">Created</th>
+                            <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-gray-500">Last Reply</th>
                             <th class="px-5 py-3"></th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-50">
+                    <tbody class="divide-y divide-slate-50 dark:divide-gray-700">
                         @foreach (var t in tickets)
                         {
-                            <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="px-5 py-3 text-slate-700 font-medium max-w-[240px] truncate" title="@t.Title">@t.Title</td>
+                            <tr class="hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors">
+                                <td class="px-5 py-3 text-slate-700 dark:text-gray-300 font-medium max-w-[240px] truncate" title="@t.Title">@t.Title</td>
                                 <td class="px-5 py-3">@TicketStatusBadge(t.StatusRaw)</td>
-                                <td class="px-5 py-3 text-slate-500 text-xs">@t.CreatedAt.ToString("MMM dd, yyyy")</td>
-                                <td class="px-5 py-3 text-slate-500 text-xs">@(t.LastReplyAt?.ToString("MMM dd, yyyy") ?? "—")</td>
+                                <td class="px-5 py-3 text-slate-500 dark:text-gray-400 text-xs">@t.CreatedAt.ToString("MMM dd, yyyy")</td>
+                                <td class="px-5 py-3 text-slate-500 dark:text-gray-400 text-xs">@(t.LastReplyAt?.ToString("MMM dd, yyyy") ?? "—")</td>
                                 <td class="px-5 py-3 text-right">
                                     <a href="/crm/tickets/@t.Id"
                                        class="text-[10px] font-black uppercase tracking-wider text-blue-500 hover:text-blue-700 transition-colors">
@@ -230,7 +230,7 @@
                         }
                         @if (!tickets.Any())
                         {
-                            <tr><td colspan="5" class="px-5 py-10 text-center text-slate-400">No tickets from this user</td></tr>
+                            <tr><td colspan="5" class="px-5 py-10 text-center text-slate-400 dark:text-gray-500">No tickets from this user</td></tr>
                         }
                     </tbody>
                 </table>
@@ -243,22 +243,22 @@
 
 <!-- Ban modal -->
 <div id="ban-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
-        <h3 class="text-lg font-black text-slate-900 mb-1">Ban @user.Email?</h3>
-        <p class="text-slate-400 text-sm mb-5">They will be immediately signed out and blocked from logging in.</p>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md p-6">
+        <h3 class="text-lg font-black text-slate-900 dark:text-gray-100 mb-1">Ban @user.Email?</h3>
+        <p class="text-slate-400 dark:text-gray-500 text-sm mb-5">They will be immediately signed out and blocked from logging in.</p>
         <form method="post" action="/crm/users/@user.Id/ban">
             @Html.AntiForgeryToken()
             <div class="mb-4">
-                <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Reason <span class="normal-case font-normal text-slate-400">(optional)</span></label>
+                <label class="block text-xs font-bold text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">Reason <span class="normal-case font-normal text-slate-400 dark:text-gray-500">(optional)</span></label>
                 <textarea name="reason" rows="3" placeholder="e.g. Chargeback fraud"
-                          class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 resize-none"></textarea>
+                          class="w-full border border-slate-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 resize-none"></textarea>
             </div>
             <div class="flex gap-3">
                 <button type="submit" class="flex-1 bg-red-600 text-white py-2.5 text-sm font-bold rounded-lg hover:bg-red-700 transition-colors">
                     Confirm Ban
                 </button>
                 <button type="button" onclick="document.getElementById('ban-modal').classList.add('hidden')"
-                        class="flex-1 bg-slate-100 text-slate-700 py-2.5 text-sm font-bold rounded-lg hover:bg-slate-200 transition-colors">
+                        class="flex-1 bg-slate-100 dark:bg-gray-700 text-slate-700 dark:text-gray-300 py-2.5 text-sm font-bold rounded-lg hover:bg-slate-200 dark:hover:bg-gray-600 transition-colors">
                     Cancel
                 </button>
             </div>
@@ -268,22 +268,22 @@
 
 <!-- Extend modal -->
 <div id="extend-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6">
-        <h3 class="text-lg font-black text-slate-900 mb-4">Extend Subscription</h3>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-sm p-6">
+        <h3 class="text-lg font-black text-slate-900 dark:text-gray-100 mb-4">Extend Subscription</h3>
         <form id="extend-form" method="post">
             @Html.AntiForgeryToken()
             <input id="extend-return-user" type="hidden" name="returnUserId" value="" />
             <div class="mb-4">
-                <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Days to add</label>
+                <label class="block text-xs font-bold text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">Days to add</label>
                 <input type="number" name="days" min="1" max="3650" value="30" required
-                       class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-accent" />
+                       class="w-full border border-slate-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-accent" />
             </div>
             <div class="flex gap-3">
                 <button type="submit" class="flex-1 bg-slate-900 text-white py-2.5 text-sm font-bold rounded-lg hover:bg-orange-accent transition-colors">
                     Extend
                 </button>
                 <button type="button" onclick="document.getElementById('extend-modal').classList.add('hidden')"
-                        class="flex-1 bg-slate-100 text-slate-700 py-2.5 text-sm font-bold rounded-lg hover:bg-slate-200 transition-colors">
+                        class="flex-1 bg-slate-100 dark:bg-gray-700 text-slate-700 dark:text-gray-300 py-2.5 text-sm font-bold rounded-lg hover:bg-slate-200 dark:hover:bg-gray-600 transition-colors">
                     Cancel
                 </button>
             </div>

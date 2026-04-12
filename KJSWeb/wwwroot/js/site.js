@@ -164,3 +164,27 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('searchBackdrop')?.addEventListener('click', closeSearch);
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSearch(); });
 });
+
+// Dark mode toggle
+(function () {
+    const toggle = document.getElementById('theme-toggle');
+    const sunIcon = document.getElementById('icon-sun');
+    const moonIcon = document.getElementById('icon-moon');
+
+    function applyTheme(isDark) {
+        document.documentElement.classList.toggle('dark', isDark);
+        if (sunIcon) sunIcon.classList.toggle('hidden', !isDark);
+        if (moonIcon) moonIcon.classList.toggle('hidden', isDark);
+    }
+
+    // Init icon state on load
+    applyTheme(document.documentElement.classList.contains('dark'));
+
+    if (toggle) {
+        toggle.addEventListener('click', function () {
+            const isDark = !document.documentElement.classList.contains('dark');
+            applyTheme(isDark);
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
+    }
+})();

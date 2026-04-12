@@ -10,53 +10,53 @@
 
 <div class="mb-8 flex items-center justify-between">
     <div>
-        <h1 class="text-2xl font-black text-slate-900">Subscriptions</h1>
-        <p class="text-slate-500 text-sm mt-1">All plans &amp; payments</p>
+        <h1 class="text-2xl font-black text-slate-900 dark:text-gray-100">Subscriptions</h1>
+        <p class="text-slate-500 dark:text-gray-400 text-sm mt-1">All plans &amp; payments</p>
     </div>
 </div>
 
 <!-- Status filter tabs -->
-<div class="flex gap-1 mb-6 bg-white rounded-xl border border-slate-100 shadow-sm p-1.5 w-fit">
+<div class="flex gap-1 mb-6 bg-white dark:bg-gray-800 rounded-xl border border-slate-100 dark:border-gray-700 shadow-sm p-1.5 w-fit">
     @foreach (var (val, label) in statuses)
     {
         var isActive = activeStatus == val;
         var href = string.IsNullOrEmpty(val) ? "/crm/subscriptions" : $"/crm/subscriptions?status={val}";
         <a href="@href"
-           class="px-4 py-1.5 text-xs font-black uppercase tracking-wider rounded-lg transition-colors @(isActive ? "bg-slate-900 text-white" : "text-slate-500 hover:text-slate-900 hover:bg-slate-50")">
+           class="px-4 py-1.5 text-xs font-black uppercase tracking-wider rounded-lg transition-colors @(isActive ? "bg-slate-900 text-white" : "text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-gray-100 hover:bg-slate-50 dark:hover:bg-gray-700")">
             @label
         </a>
     }
 </div>
 
 <!-- Table -->
-<div class="bg-white rounded-xl shadow-sm border border-slate-100">
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-100 dark:border-gray-700">
     <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead>
-                <tr class="border-b border-slate-100">
-                    <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">User</th>
-                    <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">Plan</th>
-                    <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">Status</th>
-                    <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">Paid At</th>
-                    <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">Expires At</th>
-                    <th class="px-5 py-3 text-right text-[10px] font-black uppercase tracking-wider text-slate-400">Amount</th>
-                    <th class="px-5 py-3 text-center text-[10px] font-black uppercase tracking-wider text-slate-400">Actions</th>
+                <tr class="border-b border-slate-100 dark:border-gray-700">
+                    <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-gray-500">User</th>
+                    <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-gray-500">Plan</th>
+                    <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-gray-500">Status</th>
+                    <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-gray-500">Paid At</th>
+                    <th class="px-5 py-3 text-left text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-gray-500">Expires At</th>
+                    <th class="px-5 py-3 text-right text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-gray-500">Amount</th>
+                    <th class="px-5 py-3 text-center text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-gray-500">Actions</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-slate-50">
+            <tbody class="divide-y divide-slate-50 dark:divide-gray-700">
                 @foreach (var s in Model)
                 {
-                    <tr class="hover:bg-slate-50 transition-colors">
+                    <tr class="hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors">
                         <td class="px-5 py-3">
-                            <a href="/crm/users/@s.UserId" class="text-slate-700 font-medium hover:text-orange-accent transition-colors truncate max-w-[180px] block">
+                            <a href="/crm/users/@s.UserId" class="text-slate-700 dark:text-gray-300 font-medium hover:text-orange-accent transition-colors truncate max-w-[180px] block">
                                 @(string.IsNullOrEmpty(s.Email) ? s.UserId[..8] + "…" : s.Email)
                             </a>
                         </td>
-                        <td class="px-5 py-3 capitalize text-slate-600">@s.Plan</td>
+                        <td class="px-5 py-3 capitalize text-slate-600 dark:text-gray-400">@s.Plan</td>
                         <td class="px-5 py-3">@StatusBadge(s.Status)</td>
-                        <td class="px-5 py-3 text-slate-500 text-xs">@(s.PaidAt?.ToString("MMM dd, yyyy") ?? "—")</td>
-                        <td class="px-5 py-3 text-slate-500 text-xs">@(s.ExpiresAt?.ToString("MMM dd, yyyy") ?? "—")</td>
-                        <td class="px-5 py-3 text-right font-mono text-slate-600">$@s.AmountUsd.ToString("N2")</td>
+                        <td class="px-5 py-3 text-slate-500 dark:text-gray-400 text-xs">@(s.PaidAt?.ToString("MMM dd, yyyy") ?? "—")</td>
+                        <td class="px-5 py-3 text-slate-500 dark:text-gray-400 text-xs">@(s.ExpiresAt?.ToString("MMM dd, yyyy") ?? "—")</td>
+                        <td class="px-5 py-3 text-right font-mono text-slate-600 dark:text-gray-400">$@s.AmountUsd.ToString("N2")</td>
                         <td class="px-5 py-3">
                             <div class="flex gap-3 justify-center">
                                 @if (s.Status == "active")
@@ -80,7 +80,7 @@
                 }
                 @if (!Model.Any())
                 {
-                    <tr><td colspan="7" class="px-5 py-12 text-center text-slate-400">No subscriptions found</td></tr>
+                    <tr><td colspan="7" class="px-5 py-12 text-center text-slate-400 dark:text-gray-500">No subscriptions found</td></tr>
                 }
             </tbody>
         </table>
@@ -89,8 +89,8 @@
     <!-- Pagination -->
     @if (pagination != null && pagination.TotalPages > 1)
     {
-        <div class="px-5 py-4 border-t border-slate-100 flex items-center justify-between">
-            <span class="text-xs text-slate-400">
+        <div class="px-5 py-4 border-t border-slate-100 dark:border-gray-700 flex items-center justify-between">
+            <span class="text-xs text-slate-400 dark:text-gray-500">
                 Showing @((pagination.CurrentPage - 1) * pagination.PageSize + 1)–@Math.Min(pagination.CurrentPage * pagination.PageSize, pagination.TotalItems) of @pagination.TotalItems
             </span>
             <div class="flex gap-2">
@@ -99,14 +99,14 @@
                     var prev = string.IsNullOrEmpty(activeStatus)
                         ? $"/crm/subscriptions?page={pagination.CurrentPage - 1}"
                         : $"/crm/subscriptions?status={activeStatus}&page={pagination.CurrentPage - 1}";
-                    <a href="@prev" class="px-3 py-1.5 text-xs font-bold border border-slate-200 rounded hover:bg-slate-50 transition-colors">← Prev</a>
+                    <a href="@prev" class="px-3 py-1.5 text-xs font-bold border border-slate-200 dark:border-gray-600 dark:text-gray-300 rounded hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors">← Prev</a>
                 }
                 @if (pagination.CurrentPage < pagination.TotalPages)
                 {
                     var next = string.IsNullOrEmpty(activeStatus)
                         ? $"/crm/subscriptions?page={pagination.CurrentPage + 1}"
                         : $"/crm/subscriptions?status={activeStatus}&page={pagination.CurrentPage + 1}";
-                    <a href="@next" class="px-3 py-1.5 text-xs font-bold border border-slate-200 rounded hover:bg-slate-50 transition-colors">Next →</a>
+                    <a href="@next" class="px-3 py-1.5 text-xs font-bold border border-slate-200 dark:border-gray-600 dark:text-gray-300 rounded hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors">Next →</a>
                 }
             </div>
         </div>
@@ -115,21 +115,21 @@
 
 <!-- Extend modal -->
 <div id="extend-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6">
-        <h3 class="text-lg font-black text-slate-900 mb-4">Extend Subscription</h3>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-sm p-6">
+        <h3 class="text-lg font-black text-slate-900 dark:text-gray-100 mb-4">Extend Subscription</h3>
         <form id="extend-form" method="post">
             @Html.AntiForgeryToken()
             <div class="mb-4">
-                <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Days to add</label>
+                <label class="block text-xs font-bold text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">Days to add</label>
                 <input type="number" name="days" min="1" max="3650" value="30" required
-                       class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-accent" />
+                       class="w-full border border-slate-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-accent" />
             </div>
             <div class="flex gap-3">
                 <button type="submit" class="flex-1 bg-slate-900 text-white py-2.5 text-sm font-bold rounded-lg hover:bg-orange-accent transition-colors">
                     Extend
                 </button>
                 <button type="button" onclick="document.getElementById('extend-modal').classList.add('hidden')"
-                        class="flex-1 bg-slate-100 text-slate-700 py-2.5 text-sm font-bold rounded-lg hover:bg-slate-200 transition-colors">
+                        class="flex-1 bg-slate-100 dark:bg-gray-700 text-slate-700 dark:text-gray-300 py-2.5 text-sm font-bold rounded-lg hover:bg-slate-200 dark:hover:bg-gray-600 transition-colors">
                     Cancel
                 </button>
             </div>
