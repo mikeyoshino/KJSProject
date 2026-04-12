@@ -56,15 +56,12 @@
 
         <!-- BTC Address -->
         <div class="bg-[#121212] border border-white/10 p-5 mb-6">
-            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2">To This Address</p>
-            <div class="flex items-center gap-2">
-                <input type="text" value="@Model.BtcAddress" readonly id="btcAddress"
-                       class="flex-1 bg-transparent text-sm text-white font-mono text-center border-0 outline-none min-w-0 truncate" />
-                <button onclick="copyAddress()" id="copyBtn"
-                        class="bg-orange-accent text-white text-[10px] font-bold uppercase px-3 py-2 hover:opacity-80 transition-opacity">
-                    Copy
-                </button>
-            </div>
+            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-3">To This Address</p>
+            <p class="text-white font-mono text-sm break-all text-center mb-3" id="btcAddress">@Model.BtcAddress</p>
+            <button onclick="copyAddress()" id="copyBtn"
+                    class="w-full bg-orange-accent text-white text-[10px] font-bold uppercase px-3 py-2 hover:opacity-80 transition-opacity">
+                Copy Address
+            </button>
         </div>
 
         <p class="text-slate-500 text-[10px] uppercase tracking-wider">
@@ -140,11 +137,11 @@
 @section Scripts {
 <script>
     function copyAddress() {
-        var addr = document.getElementById('btcAddress');
-        navigator.clipboard.writeText(addr.value).then(function() {
+        var addr = document.getElementById('btcAddress').textContent.trim();
+        navigator.clipboard.writeText(addr).then(function() {
             var btn = document.getElementById('copyBtn');
             btn.textContent = 'Copied!';
-            setTimeout(function() { btn.textContent = 'Copy'; }, 2000);
+            setTimeout(function() { btn.textContent = 'Copy Address'; }, 2000);
         });
     }
 
