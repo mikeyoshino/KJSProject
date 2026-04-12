@@ -28,21 +28,28 @@ public class HomeController : Controller
         var workerBase = _config["CloudflareWorker:DownloadWorkerUrl"]?.TrimEnd('/') ?? "";
         var b2Base     = _config["B2:PublicBaseUrl"]?.TrimEnd('/') ?? "https://f005.backblazeb2.com/file/KJSProject";
 
-        var (buzz69Posts, _) = await _supabase.GetLatestPostsAsync(1, 8, PostSource.Buzz69);
-        var (asianPosts, _)  = await _supabase.GetLatestPostsAsync(1, 8, PostSource.AsianScandal);
-        var (jgirlPosts, _)  = await _supabase.GetJGirlPostsAsync(1, 8);
+        var (buzz69Posts, _)   = await _supabase.GetLatestPostsAsync(1, 8, PostSource.Buzz69);
+        var (asianPosts, _)    = await _supabase.GetLatestPostsAsync(1, 8, PostSource.AsianScandal);
+        var (upskirtPosts, _)  = await _supabase.GetJGirlPostsAsync(1, 8, "upskirt");
+        var (bathroomPosts, _) = await _supabase.GetJGirlPostsAsync(1, 8, "bathroom");
 
         foreach (var p in buzz69Posts) p.ThumbnailUrl = ResolveImageUrl(p.ThumbnailUrl, workerBase);
         foreach (var p in asianPosts)  p.ThumbnailUrl = ResolveImageUrl(p.ThumbnailUrl, workerBase);
-        foreach (var p in jgirlPosts)
+        foreach (var p in upskirtPosts)
+        {
+            p.ThumbnailUrl = RewriteB2(p.ThumbnailUrl, workerBase, b2Base);
+            p.Images       = p.Images.Select(u => RewriteB2(u, workerBase, b2Base)).ToList();
+        }
+        foreach (var p in bathroomPosts)
         {
             p.ThumbnailUrl = RewriteB2(p.ThumbnailUrl, workerBase, b2Base);
             p.Images       = p.Images.Select(u => RewriteB2(u, workerBase, b2Base)).ToList();
         }
 
-        ViewBag.Buzz69Posts = buzz69Posts;
-        ViewBag.AsianPosts  = asianPosts;
-        ViewBag.JGirlPosts  = jgirlPosts;
+        ViewBag.Buzz69Posts   = buzz69Posts;
+        ViewBag.AsianPosts    = asianPosts;
+        ViewBag.UpskirtPosts  = upskirtPosts;
+        ViewBag.BathroomPosts = bathroomPosts;
 
         ViewData["OgTitle"]    = "SCANDAL69 — Premium Content";
         ViewData["Description"] = "Premium content delivery network specializing in high-quality updates and community curation.";
