@@ -9,6 +9,7 @@
 <div class="text-center mb-16">
     <h1 class="text-4xl font-black tracking-tight mb-4">Choose Your Plan</h1>
     <p class="text-slate-500 dark:text-gray-400 text-sm max-w-lg mx-auto">Unlock premium downloads with Bitcoin. Direct wallet-to-wallet payments — no middleman, no data shared.</p>
+    <a asp-controller="Subscription" asp-action="BitcoinGuide" class="inline-block mt-3 text-orange-accent text-[11px] font-bold uppercase tracking-widest hover:opacity-70 transition-opacity">New to Bitcoin? Read our guide →</a>
 </div>
 
 @if (TempData["Error"] != null)

@@ -102,6 +102,15 @@ public class SubscriptionController : Controller
         return View(activeSub);
     }
 
+    [HttpGet]
+    public IActionResult BitcoinGuide()
+    {
+        ViewData["Title"] = "How to Pay with Bitcoin";
+        ViewData["OgTitle"] = "Bitcoin Payment Guide — SCANDAL69";
+        ViewData["Description"] = "Step-by-step guide to buying and sending Bitcoin from Asia, Europe, and the Americas.";
+        return View();
+    }
+
     // API endpoint for checking payment status (polled by JS)
     [HttpGet]
     [Route("api/subscription/status/{address}")]
