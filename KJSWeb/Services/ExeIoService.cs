@@ -49,6 +49,9 @@ public class ExeIoService
             if (status == "success" &&
                 doc.RootElement.TryGetProperty("shortenedUrl", out var urlProp))
             {
+                // API may return a string or a single-element array
+                if (urlProp.ValueKind == JsonValueKind.Array)
+                    return urlProp.EnumerateArray().FirstOrDefault().GetString();
                 return urlProp.GetString();
             }
 
