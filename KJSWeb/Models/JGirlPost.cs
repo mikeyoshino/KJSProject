@@ -45,6 +45,9 @@ public class JGirlPost : BaseModel
     [Column("post_images")]
     public List<string> PostImages { get; set; } = new();
 
+    [Column("exeio_links")]
+    public List<string>? ExeIoLinks { get; set; }
+
     [Column("status")]
     public string StatusRaw { get; set; } = "published";
 

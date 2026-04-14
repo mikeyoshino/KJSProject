@@ -44,4 +44,30 @@ public class TokenGenService
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+
+    /// <summary>
+    /// Generates a short-lived (30 min) signed JWT for public (non-subscription) file access.
+    /// </summary>
+    public string GeneratePublicDownloadToken(string b2Path)
+    {
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSecret));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var claims = new[]
+        {
+            new Claim("file", b2Path),
+            new Claim("public", "true"),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        };
+
+        var token = new JwtSecurityToken(
+            issuer: "KJSWeb",
+            audience: "B2WorkerGatekeeper",
+            claims: claims,
+            expires: DateTime.UtcNow.AddMinutes(30),
+            signingCredentials: creds
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
 }

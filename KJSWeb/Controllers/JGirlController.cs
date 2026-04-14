@@ -12,11 +12,14 @@ public class JGirlController : Controller
     private readonly IConfiguration _config;
     private const int PageSize = 24;
 
-    public JGirlController(SupabaseService supabase, TokenGenService tokenGen, IConfiguration config)
+    private readonly ExeIoService _exeIo;
+
+    public JGirlController(SupabaseService supabase, TokenGenService tokenGen, IConfiguration config, ExeIoService exeIo)
     {
         _supabase = supabase;
         _tokenGen = tokenGen;
         _config   = config;
+        _exeIo    = exeIo;
     }
 
     public async Task<IActionResult> Index(int page = 1, string? source = null)
@@ -58,6 +61,25 @@ public class JGirlController : Controller
         var originalDownloadLinks = post.DownloadLinks.ToList();
 
         RewritePost(post);
+
+        // Lazy-generate and cache exe.io public download links (use original links before RewritePost rewrites them)
+        if (originalDownloadLinks.Any())
+        {
+            if (post.ExeIoLinks == null || !post.ExeIoLinks.Any())
+            {
+                var siteBase = $"{Request.Scheme}://{Request.Host.Value}";
+                var generated = new List<string>();
+                for (int i = 0; i < originalDownloadLinks.Count; i++)
+                {
+                    var ksjUrl = $"{siteBase}/download/public?postId={post.Id}&table=jgirl_posts&part={i}";
+                    var exeUrl = await _exeIo.GenerateLinkAsync(ksjUrl);
+                    generated.Add(exeUrl ?? ksjUrl);
+                }
+                post.ExeIoLinks = generated;
+                _ = _supabase.UpdateExeIoLinksAsync(post.Id, "jgirl_posts", generated);
+            }
+            ViewBag.PublicDownloadUrls = post.ExeIoLinks;
+        }
 
         ViewData["OgTitle"]    = post.Title;
         ViewData["OgImage"]    = !string.IsNullOrEmpty(post.ThumbnailUrl) ? post.ThumbnailUrl : post.Images.FirstOrDefault() ?? "";

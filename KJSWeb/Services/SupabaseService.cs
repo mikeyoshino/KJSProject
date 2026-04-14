@@ -1071,6 +1071,25 @@ public class SupabaseService
         CreatedAt = DateTime.TryParse(dto.created_at, out var ca) ? ca : DateTime.UtcNow
     };
 
+    // ── EXE.IO LINK METHODS ────────────────────────────────────────────────────
+    //  Persist generated exe.io links back to the appropriate post table.
+    // ──────────────────────────────────────────────────────────────────────────
+
+    public async Task UpdateExeIoLinksAsync(Guid postId, string table, List<string> links)
+    {
+        using var http = _httpClientFactory.CreateClient();
+        var encoded = Uri.EscapeDataString(postId.ToString());
+        var payload = JsonSerializer.Serialize(new { exeio_links = links });
+
+        var request = new HttpRequestMessage(new HttpMethod("PATCH"),
+            $"{_supabaseUrl}/rest/v1/{table}?id=eq.{encoded}");
+        request.Headers.Add("apikey", _serviceKey);
+        request.Headers.Add("Authorization", $"Bearer {_serviceKey}");
+        request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
+
+        await http.SendAsync(request);
+    }
+
     // DB stores status as lowercase, with InProgress as "in_progress"
     private static string TicketStatusToString(TicketStatus s) => s switch
     {

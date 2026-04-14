@@ -34,6 +34,9 @@ public class Post : BaseModel
     [Column("tags")]
     public List<string> Tags { get; set; } = new();
 
+    [Column("exeio_links")]
+    public List<string>? ExeIoLinks { get; set; }
+
     [Column("source_name")]
     public string SourceNameRaw { get; set; } = "Buzz69";
 

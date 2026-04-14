@@ -3,6 +3,8 @@
     var downloadUrls = Model.DownloadUrls ?? new List<string>();
     var dlCount = downloadUrls.Count;
     var isSubscribed = Model.IsSubscribed;
+    var publicUrls = Model.PublicDownloadUrls;
+    var hasPublic = publicUrls != null && publicUrls.Any();
 }
 
 <style>
@@ -261,6 +263,117 @@
         }
     }
 </style>
+
+@if (hasPublic)
+{
+    <!-- PUBLIC DOWNLOAD (free, speed-limited) -->
+    <style>
+        .public-download {
+            background: #f8f8f8;
+            border: 1px solid #e0e0e0;
+            border-left: 3px solid #4CAF50;
+            padding: 1.5rem 2rem;
+            margin-bottom: 1.5rem;
+            font-family: 'Archivo', sans-serif;
+        }
+
+        html.dark .public-download {
+            background: #1a2330;
+            border-color: #2d3f50;
+            border-left-color: #4CAF50;
+        }
+
+        .public-download__header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .public-download__title {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #333;
+            margin: 0;
+        }
+
+        html.dark .public-download__title {
+            color: #d1d5db;
+        }
+
+        .public-download__badge {
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: #4CAF50;
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            padding: 0.15rem 0.5rem;
+            border-radius: 2px;
+        }
+
+        .public-download__links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .public-download__link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.65rem 1.25rem;
+            background: #4CAF50;
+            color: white;
+            font-size: 0.8125rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            text-decoration: none;
+            border-radius: 2px;
+            transition: background 0.2s ease, transform 0.2s ease;
+        }
+
+        .public-download__link:hover {
+            background: #43a047;
+            transform: translateY(-1px);
+        }
+
+        .public-download__note {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 0.75rem;
+            margin-bottom: 0;
+        }
+
+        html.dark .public-download__note {
+            color: #6b7280;
+        }
+    </style>
+
+    <div class="public-download">
+        <div class="public-download__header">
+            <span class="public-download__title">Free Download</span>
+            <span class="public-download__badge">5 MB/s</span>
+        </div>
+        <div class="public-download__links">
+            @for (int i = 0; i < publicUrls!.Count; i++)
+            {
+                <a href="@publicUrls[i]" class="public-download__link" target="_blank" rel="noopener">
+                    <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                    </svg>
+                    @(publicUrls.Count > 1 ? $"Part {i + 1}" : "Download")
+                </a>
+            }
+        </div>
+        <p class="public-download__note">Free download via ad-supported link &mdash; max 5 MB/s. Upgrade for unlimited speed.</p>
+    </div>
+}
 
 @if (isSubscribed)
 {
