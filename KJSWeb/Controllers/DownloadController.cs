@@ -20,79 +20,17 @@ public class DownloadController : Controller
     }
 
     /// <summary>
-    /// Step 1 — called when the user clicks the Free Download button.
-    /// Checks for a cached exe.io link (destination = /download/file).
-    /// If none exists, generates one via the exe.io API and caches it.
-    /// Redirects to the exe.io ad page. Falls back to /download/file directly
-    /// if exe.io is unavailable.
+    /// Free download entry point.
+    /// 1. Gets the b2Path for the requested file.
+    /// 2. Generates a 30-min JWT and builds the CF Worker download URL.
+    /// 3. Registers that URL with exe.io to get an ad-gated short link.
+    /// 4. Redirects the user to https://exe.io/xxxxx — they see the ad page,
+    ///    then exe.io sends them to the CF Worker URL which streams at 5 MB/s.
+    /// Falls back to the CF Worker URL directly if exe.io is unavailable.
     /// </summary>
     [Route("public")]
     [HttpGet]
     public async Task<IActionResult> Public(string postId, string table, int part = 0)
-    {
-        if (string.IsNullOrWhiteSpace(postId) || string.IsNullOrWhiteSpace(table))
-            return BadRequest("Missing postId or table.");
-
-        var siteBase = $"{Request.Scheme}://{Request.Host.Value}";
-
-        // /download/file is what exe.io will redirect to after the ad — never /download/public
-        var fileUrl = $"{siteBase}/download/file?postId={postId}&table={table}&part={part}";
-
-        List<string>? cachedExeIoLinks;
-        List<string> downloadLinks;
-        Guid postGuid;
-
-        if (table == "jgirl_posts")
-        {
-            var post = await _supabase.GetJGirlPostByIdAsync(postId);
-            if (post == null || part >= post.DownloadLinks.Count) return NotFound();
-            postGuid = post.Id;
-            downloadLinks = post.DownloadLinks;
-            cachedExeIoLinks = post.ExeIoLinks;
-        }
-        else
-        {
-            var post = await _supabase.GetPostByIdAsync(postId);
-            if (post == null || post.OurDownloadLink == null || part >= post.OurDownloadLink.Count)
-                return NotFound();
-            postGuid = post.Id;
-            downloadLinks = post.OurDownloadLink;
-            cachedExeIoLinks = post.ExeIoLinks;
-        }
-
-        // Use cached exe.io link if valid
-        var exeIoUrl = (cachedExeIoLinks != null && part < cachedExeIoLinks.Count)
-            ? cachedExeIoLinks[part] : null;
-
-        if (string.IsNullOrEmpty(exeIoUrl) || !exeIoUrl.StartsWith("https://exe.io/"))
-        {
-            // Register /download/file with exe.io — that's the post-ad destination
-            exeIoUrl = await _exeIo.GenerateLinkAsync(fileUrl);
-
-            if (exeIoUrl != null)
-            {
-                var updated = new List<string>(new string[downloadLinks.Count]);
-                if (cachedExeIoLinks != null)
-                    for (int i = 0; i < Math.Min(cachedExeIoLinks.Count, updated.Count); i++)
-                        if (!string.IsNullOrEmpty(cachedExeIoLinks[i]))
-                            updated[i] = cachedExeIoLinks[i];
-                updated[part] = exeIoUrl;
-                _ = _supabase.UpdateExeIoLinksAsync(postGuid, table, updated);
-            }
-        }
-
-        // Redirect through exe.io (or directly to /download/file if exe.io unavailable)
-        return Redirect(exeIoUrl ?? fileUrl);
-    }
-
-    /// <summary>
-    /// Step 2 — exe.io redirects here after the user completes the ad.
-    /// Generates a short-lived JWT and redirects to the Cloudflare Worker
-    /// /public-download endpoint which streams the file at 5 MB/s.
-    /// </summary>
-    [Route("file")]
-    [HttpGet]
-    public async Task<IActionResult> File(string postId, string table, int part = 0)
     {
         if (string.IsNullOrWhiteSpace(postId) || string.IsNullOrWhiteSpace(table))
             return BadRequest("Missing postId or table.");
@@ -118,7 +56,14 @@ public class DownloadController : Controller
 
         if (string.IsNullOrEmpty(b2Path)) return NotFound();
 
-        var token = _tokenGen.GeneratePublicDownloadToken(b2Path);
-        return Redirect($"{workerBase}/public-download?file={Uri.EscapeDataString(b2Path)}&token={Uri.EscapeDataString(token)}");
+        // Build a short-lived CF Worker download URL — this becomes the exe.io destination
+        var token     = _tokenGen.GeneratePublicDownloadToken(b2Path);
+        var workerUrl = $"{workerBase}/public-download?file={Uri.EscapeDataString(b2Path)}&token={Uri.EscapeDataString(token)}";
+
+        // Get an exe.io ad-gated link wrapping the CF Worker URL
+        var exeIoUrl = await _exeIo.GenerateLinkAsync(workerUrl);
+
+        // Redirect to exe.io ad page, or fall back to direct download if exe.io fails
+        return Redirect(exeIoUrl ?? workerUrl);
     }
 }

@@ -39,34 +39,6 @@ async function fetchFromB2(env, ctx, b2Key, rangeHeader = '') {
   return response;
 }
 
-// Throttles a ReadableStream to a maximum bytes-per-second rate.
-function throttleStream(readable, bytesPerSecond) {
-  const { readable: out, writable } = new TransformStream();
-  const writer = writable.getWriter();
-  (async () => {
-    const reader = readable.getReader();
-    const startTime = Date.now();
-    let bytesWritten = 0;
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        await writer.write(value);
-        bytesWritten += value.byteLength;
-        const expectedMs = (bytesWritten / bytesPerSecond) * 1000;
-        const actualMs = Date.now() - startTime;
-        if (expectedMs > actualMs) {
-          await new Promise(resolve => setTimeout(resolve, expectedMs - actualMs));
-        }
-      }
-    } catch (e) {
-      await writer.abort(e);
-      return;
-    }
-    await writer.close();
-  })();
-  return out;
-}
 
 export default {
   async fetch(request, env, ctx) {
@@ -105,7 +77,7 @@ export default {
       }
     }
 
-    // ── Route 2: /public-download — short-lived JWT, throttled to 5 MB/s ─────
+    // ── Route 2: /public-download — short-lived JWT, streams directly from B2 ──
     if (url.pathname === '/public-download') {
       const token = url.searchParams.get('token');
       const file  = url.searchParams.get('file');
@@ -123,37 +95,14 @@ export default {
         }
 
         const b2Key = file.startsWith('/') ? file.slice(1) : file;
-
-        // Fetch directly from B2 — bypass edge cache for throttled public downloads
-        const aws = new AwsClient({
-          accessKeyId: env.B2_APPLICATION_KEY_ID,
-          secretAccessKey: env.B2_APPLICATION_KEY,
-          service: 's3',
-          region: env.B2_REGION,
-        });
-        const encodedKey = b2Key.split('/').map(seg => encodeURIComponent(seg)).join('/');
-        const b2Url = `${env.B2_ENDPOINT}/${env.B2_BUCKET}/${encodedKey}`;
-        const rangeHeader = request.headers.get('Range');
-        const reqHeaders = rangeHeader ? { Range: rangeHeader } : {};
-        const signedReq = await aws.sign(new Request(b2Url, { headers: reqHeaders }));
-        const b2Response = await fetch(signedReq);
-
-        if (!b2Response.ok && b2Response.status !== 206) {
-          return new Response('File not found', { status: 404 });
-        }
+        const b2Response = await fetchFromB2(env, ctx, b2Key, request.headers.get('Range') || '');
 
         const filename = b2Key.split('/').pop();
-        const throttled = throttleStream(b2Response.body, 5 * 1024 * 1024); // 5 MB/s
-
-        const headers = new Headers();
-        headers.set('Content-Type', b2Response.headers.get('Content-Type') || 'application/octet-stream');
+        const headers = new Headers(b2Response.headers);
         headers.set('Content-Disposition', `attachment; filename="${filename}"`);
         headers.set('Cache-Control', 'no-store');
-        if (b2Response.headers.has('Content-Length')) {
-          headers.set('Content-Length', b2Response.headers.get('Content-Length'));
-        }
 
-        return new Response(throttled, { status: b2Response.status, headers });
+        return new Response(b2Response.body, { status: b2Response.status, headers });
 
       } catch (e) {
         console.error(e);
