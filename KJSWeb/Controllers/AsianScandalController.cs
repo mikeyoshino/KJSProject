@@ -119,10 +119,13 @@ public class AsianScandalController : Controller
                 {
                     var ksjUrl = $"{siteBase}/download/public?postId={post.Id}&table=posts&part={i}";
                     var exeUrl = await _exeIo.GenerateLinkAsync(ksjUrl);
-                    generated.Add(exeUrl ?? ksjUrl);
+                    if (exeUrl != null) generated.Add(exeUrl);
                 }
-                post.ExeIoLinks = generated;
-                _ = _supabase.UpdateExeIoLinksAsync(post.Id, "posts", generated);
+                if (generated.Any())
+                {
+                    post.ExeIoLinks = generated;
+                    _ = _supabase.UpdateExeIoLinksAsync(post.Id, "posts", generated);
+                }
             }
             ViewBag.PublicDownloadUrls = post.ExeIoLinks;
         }

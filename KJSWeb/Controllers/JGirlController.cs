@@ -73,10 +73,13 @@ public class JGirlController : Controller
                 {
                     var ksjUrl = $"{siteBase}/download/public?postId={post.Id}&table=jgirl_posts&part={i}";
                     var exeUrl = await _exeIo.GenerateLinkAsync(ksjUrl);
-                    generated.Add(exeUrl ?? ksjUrl);
+                    if (exeUrl != null) generated.Add(exeUrl);
                 }
-                post.ExeIoLinks = generated;
-                _ = _supabase.UpdateExeIoLinksAsync(post.Id, "jgirl_posts", generated);
+                if (generated.Any())
+                {
+                    post.ExeIoLinks = generated;
+                    _ = _supabase.UpdateExeIoLinksAsync(post.Id, "jgirl_posts", generated);
+                }
             }
             ViewBag.PublicDownloadUrls = post.ExeIoLinks;
         }
