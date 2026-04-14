@@ -71,8 +71,13 @@ public class DownloadController : Controller
         // Wrap the landing URL with exe.io ad gate
         var exeIoUrl = await _exeIo.GenerateLinkAsync(startUrl);
 
-        // Redirect to exe.io, or fall back to landing page directly
-        return Redirect(exeIoUrl ?? startUrl);
+        if (string.IsNullOrEmpty(exeIoUrl)) 
+        {
+            return StatusCode(500, "We are currently experiencing issues generating the download link via our partner network. Please try again later.");
+        }
+
+        // Redirect to exe.io
+        return Redirect(exeIoUrl);
     }
 
     /// <summary>
