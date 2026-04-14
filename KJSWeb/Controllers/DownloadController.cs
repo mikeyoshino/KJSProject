@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using KJSWeb.Services;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
 
 namespace KJSWeb.Controllers;
 
@@ -22,10 +25,12 @@ public class DownloadController : Controller
     /// <summary>
     /// Free download entry point.
     /// 1. Gets the b2Path for the requested file.
-    /// 2. Generates a 30-min JWT and builds the CF Worker download URL.
-    /// 3. Registers that URL with exe.io to get an ad-gated short link.
+    /// 2. Generates a 30-min JWT and builds the /download/start landing URL (on this domain).
+    /// 3. Registers *that* landing URL with exe.io to get an ad-gated short link.
     /// 4. Redirects the user to https://exe.io/xxxxx — they see the ad page,
-    ///    then exe.io sends them to the CF Worker URL which streams at 5 MB/s.
+    ///    then exe.io sends them to /download/start on scandal69.com.
+    /// 5. /download/start renders a "Download starting…" page that JS-triggers the
+    ///    CF Worker, so Chrome sees referrer = scandal69.com (not exe.io). ✓
     /// Falls back to the CF Worker URL directly if exe.io is unavailable.
     /// </summary>
     [Route("public")]
@@ -35,8 +40,7 @@ public class DownloadController : Controller
         if (string.IsNullOrWhiteSpace(postId) || string.IsNullOrWhiteSpace(table))
             return BadRequest("Missing postId or table.");
 
-        var b2Base     = _config["B2:PublicBaseUrl"]?.TrimEnd('/') ?? "";
-        var workerBase = _config["CloudflareWorker:DownloadWorkerUrl"]?.TrimEnd('/') ?? "";
+        var b2Base = _config["B2:PublicBaseUrl"]?.TrimEnd('/') ?? "";
         string? b2Path;
 
         if (table == "jgirl_posts")
@@ -56,14 +60,67 @@ public class DownloadController : Controller
 
         if (string.IsNullOrEmpty(b2Path)) return NotFound();
 
-        // Build a short-lived CF Worker download URL — this becomes the exe.io destination
-        var token     = _tokenGen.GeneratePublicDownloadToken(b2Path);
-        var workerUrl = $"{workerBase}/public-download?file={Uri.EscapeDataString(b2Path)}&token={Uri.EscapeDataString(token)}";
+        // Generate a short-lived JWT for the file
+        var token = _tokenGen.GeneratePublicDownloadToken(b2Path);
 
-        // Get an exe.io ad-gated link wrapping the CF Worker URL
-        var exeIoUrl = await _exeIo.GenerateLinkAsync(workerUrl);
+        // Build the intermediate landing page URL on *our* domain.
+        // exe.io will redirect users here — Chrome will then see scandal69.com as the referrer.
+        var siteBase = $"{Request.Scheme}://{Request.Host}";
+        var startUrl = $"{siteBase}/download/start?file={Uri.EscapeDataString(b2Path)}&token={Uri.EscapeDataString(token)}";
 
-        // Redirect to exe.io ad page, or fall back to direct download if exe.io fails
-        return Redirect(exeIoUrl ?? workerUrl);
+        // Wrap the landing URL with exe.io ad gate
+        var exeIoUrl = await _exeIo.GenerateLinkAsync(startUrl);
+
+        // Redirect to exe.io, or fall back to landing page directly
+        return Redirect(exeIoUrl ?? startUrl);
+    }
+
+    /// <summary>
+    /// Intermediate download landing page — exe.io destination.
+    /// Validates the JWT, then renders a "Download starting…" page.
+    /// JavaScript on that page fires the actual CF Worker request so
+    /// Chrome records referrer = scandal69.com, not exe.io.
+    /// </summary>
+    [Route("start")]
+    [HttpGet]
+    public IActionResult Start(string file, string token)
+    {
+        if (string.IsNullOrWhiteSpace(file) || string.IsNullOrWhiteSpace(token))
+            return BadRequest("Invalid download link.");
+
+        // Validate JWT — return 401 if expired / tampered
+        var jwtSecret = _config["Jwt:Secret"] ?? _config["JWT_SECRET"] ?? "";
+        try
+        {
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
+            var handler = new JwtSecurityTokenHandler();
+            handler.ValidateToken(token, new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = key,
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ClockSkew = TimeSpan.FromMinutes(5),
+            }, out var validated);
+
+            var jwt = (JwtSecurityToken)validated;
+            var fileClaim = jwt.Claims.FirstOrDefault(c => c.Type == "file")?.Value;
+            if (fileClaim != file)
+                return Unauthorized("Token does not match the requested file.");
+        }
+        catch
+        {
+            return Unauthorized("Download link has expired or is invalid. Please go back and try again.");
+        }
+
+        var workerBase = _config["CloudflareWorker:DownloadWorkerUrl"]?.TrimEnd('/') ?? "";
+        var workerUrl  = $"{workerBase}/public-download?file={Uri.EscapeDataString(file)}&token={Uri.EscapeDataString(token)}";
+        var filename   = Path.GetFileName(file);
+
+        ViewData["Title"]     = $"Downloading {filename}";
+        ViewData["WorkerUrl"] = workerUrl;
+        ViewData["Filename"]  = filename;
+
+        return View();
     }
 }
