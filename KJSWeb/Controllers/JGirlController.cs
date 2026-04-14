@@ -12,14 +12,11 @@ public class JGirlController : Controller
     private readonly IConfiguration _config;
     private const int PageSize = 24;
 
-    private readonly ExeIoService _exeIo;
-
-    public JGirlController(SupabaseService supabase, TokenGenService tokenGen, IConfiguration config, ExeIoService exeIo)
+    public JGirlController(SupabaseService supabase, TokenGenService tokenGen, IConfiguration config)
     {
         _supabase = supabase;
         _tokenGen = tokenGen;
         _config   = config;
-        _exeIo    = exeIo;
     }
 
     public async Task<IActionResult> Index(int page = 1, string? source = null)
@@ -62,26 +59,13 @@ public class JGirlController : Controller
 
         RewritePost(post);
 
-        // Lazy-generate and cache exe.io public download links (use original links before RewritePost rewrites them)
+        // Always show free download buttons — exe.io link generated on first click
         if (originalDownloadLinks.Any())
         {
-            if (post.ExeIoLinks == null || !post.ExeIoLinks.Any())
-            {
-                var siteBase = $"{Request.Scheme}://{Request.Host.Value}";
-                var generated = new List<string>();
-                for (int i = 0; i < originalDownloadLinks.Count; i++)
-                {
-                    var ksjUrl = $"{siteBase}/download/public?postId={post.Id}&table=jgirl_posts&part={i}";
-                    var exeUrl = await _exeIo.GenerateLinkAsync(ksjUrl);
-                    if (exeUrl != null) generated.Add(exeUrl);
-                }
-                if (generated.Any())
-                {
-                    post.ExeIoLinks = generated;
-                    _ = _supabase.UpdateExeIoLinksAsync(post.Id, "jgirl_posts", generated);
-                }
-            }
-            ViewBag.PublicDownloadUrls = post.ExeIoLinks;
+            var siteBase = $"{Request.Scheme}://{Request.Host.Value}";
+            ViewBag.PublicDownloadUrls = originalDownloadLinks
+                .Select((_, i) => $"{siteBase}/download/public?postId={post.Id}&table=jgirl_posts&part={i}")
+                .ToList();
         }
 
         ViewData["OgTitle"]    = post.Title;

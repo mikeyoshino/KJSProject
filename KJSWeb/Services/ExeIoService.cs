@@ -44,20 +44,17 @@ public class ExeIoService
             var json = await response.Content.ReadAsStringAsync();
             using var doc = JsonDocument.Parse(json);
             var status = doc.RootElement.TryGetProperty("status", out var statusProp)
-                ? statusProp.GetString() : null;
+                ? GetStringValue(statusProp) : null;
 
             if (status == "success" &&
                 doc.RootElement.TryGetProperty("shortenedUrl", out var urlProp))
             {
-                // API may return a string or a single-element array
-                if (urlProp.ValueKind == JsonValueKind.Array)
-                    return urlProp.EnumerateArray().FirstOrDefault().GetString();
-                return urlProp.GetString();
+                return GetStringValue(urlProp);
             }
 
             // API returned {"status":"error","message":"..."}
             var message = doc.RootElement.TryGetProperty("message", out var msgProp)
-                ? msgProp.GetString() : json;
+                ? GetStringValue(msgProp) : json;
             _logger.LogWarning("exe.io API error for {Url}: {Message}", destinationUrl, message);
             return null;
         }
@@ -67,4 +64,12 @@ public class ExeIoService
             return null;
         }
     }
+
+    // exe.io API returns values as either plain strings or single-element arrays
+    private static string? GetStringValue(JsonElement el) => el.ValueKind switch
+    {
+        JsonValueKind.Array  => el.EnumerateArray().FirstOrDefault().GetString(),
+        JsonValueKind.String => el.GetString(),
+        _                    => el.GetRawText()
+    };
 }

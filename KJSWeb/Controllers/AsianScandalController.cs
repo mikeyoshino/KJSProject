@@ -11,17 +11,15 @@ public class AsianScandalController : Controller
     private readonly SupabaseService _supabase;
     private readonly TokenGenService _tokenGen;
     private readonly IConfiguration _config;
-    private readonly ExeIoService _exeIo;
     private readonly ILogger<AsianScandalController> _logger;
     private const int PageSize = 24;
 
-    public AsianScandalController(SupabaseService supabase, TokenGenService tokenGen, IConfiguration config, ILogger<AsianScandalController> logger, ExeIoService exeIo)
+    public AsianScandalController(SupabaseService supabase, TokenGenService tokenGen, IConfiguration config, ILogger<AsianScandalController> logger)
     {
         _supabase = supabase;
         _tokenGen = tokenGen;
         _config = config;
         _logger = logger;
-        _exeIo = exeIo;
     }
 
     public async Task<IActionResult> Index(int page = 1, string period = "week")
@@ -108,26 +106,13 @@ public class AsianScandalController : Controller
             ViewBag.HasActiveSubscription = false;
         }
 
-        // Lazy-generate and cache exe.io public download links
+        // Always show free download buttons — exe.io link generated on first click
         if (post.OurDownloadLink != null && post.OurDownloadLink.Any())
         {
-            if (post.ExeIoLinks == null || !post.ExeIoLinks.Any())
-            {
-                var siteBase = $"{Request.Scheme}://{Request.Host.Value}";
-                var generated = new List<string>();
-                for (int i = 0; i < post.OurDownloadLink.Count; i++)
-                {
-                    var ksjUrl = $"{siteBase}/download/public?postId={post.Id}&table=posts&part={i}";
-                    var exeUrl = await _exeIo.GenerateLinkAsync(ksjUrl);
-                    if (exeUrl != null) generated.Add(exeUrl);
-                }
-                if (generated.Any())
-                {
-                    post.ExeIoLinks = generated;
-                    _ = _supabase.UpdateExeIoLinksAsync(post.Id, "posts", generated);
-                }
-            }
-            ViewBag.PublicDownloadUrls = post.ExeIoLinks;
+            var siteBase = $"{Request.Scheme}://{Request.Host.Value}";
+            ViewBag.PublicDownloadUrls = post.OurDownloadLink
+                .Select((_, i) => $"{siteBase}/download/public?postId={post.Id}&table=posts&part={i}")
+                .ToList();
         }
 
         ViewData["OgTitle"]    = post.Title;
