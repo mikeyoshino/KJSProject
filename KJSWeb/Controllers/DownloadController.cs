@@ -89,7 +89,7 @@ public class DownloadController : Controller
             return BadRequest("Invalid download link.");
 
         // Validate JWT — return 401 if expired / tampered
-        var jwtSecret = _config["Jwt:Secret"] ?? _config["JWT_SECRET"] ?? "";
+        var jwtSecret = _config["CloudflareWorker:JwtSecret"] ?? "";
         try
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
@@ -98,8 +98,10 @@ public class DownloadController : Controller
             {
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = key,
-                ValidateIssuer = false,
-                ValidateAudience = false,
+                ValidateIssuer = true,
+                ValidIssuer = "KJSWeb",
+                ValidateAudience = true,
+                ValidAudience = "B2WorkerGatekeeper",
                 ClockSkew = TimeSpan.FromMinutes(5),
             }, out var validated);
 
