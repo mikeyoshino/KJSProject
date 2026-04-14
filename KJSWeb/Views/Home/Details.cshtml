@@ -81,7 +81,7 @@
                                 <img src="@sideThumb" alt="@post.Title" class="w-20 h-14 object-cover rounded-sm" loading="lazy" />
                             </a>
                             <div class="min-w-0">
-                                <a asp-action="Details" asp-route-id="@post.Id" class="text-sm font-semibold leading-tight line-clamp-2 hover:text-orange-accent transition-colors block">@post.Title</a>
+                                <a asp-action="Details" asp-route-id="@post.Id" asp-route-slug="@KJSWeb.Helpers.SeoHelper.ToSlug(post.Title)" class="text-sm font-semibold leading-tight line-clamp-2 hover:text-orange-accent transition-colors block">@post.Title</a>
                                 <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1 block">@post.CreatedAt.ToString("MMM dd, yyyy")</span>
                             </div>
                         </div>
@@ -91,3 +91,28 @@
         }
     </aside>
 </div>
+
+@section Schema {
+    <script type="application/ld+json">
+    {
+      "@@context": "https://schema.org",
+      "@@type": "BlogPosting",
+      "mainEntityOfPage": {
+        "@@type": "WebPage",
+        "@@id": "@(Context.Request.Scheme + "://" + Context.Request.Host + Context.Request.Path)"
+      },
+      "headline": "@Html.Raw(Model.Title.Replace("\"", "\\\""))",
+      "image": "@Html.Raw(Model.ThumbnailUrl)",  
+      "datePublished": "@Model.CreatedAt.ToString("o")",
+      "dateModified": "@Model.CreatedAt.ToString("o")",
+      "author": {
+        "@@type": "Organization",
+        "name": "SCANDAL69"
+      },
+      "publisher": {
+        "@@type": "Organization",
+        "name": "SCANDAL69"
+      }
+    }
+    </script>
+}

@@ -203,3 +203,28 @@
 })();
 </script>
 }
+
+@section Schema {
+    <script type="application/ld+json">
+    {
+      "@@context": "https://schema.org",
+      "@@type": "BlogPosting",
+      "mainEntityOfPage": {
+        "@@type": "WebPage",
+        "@@id": "@(Context.Request.Scheme + "://" + Context.Request.Host + Context.Request.Path)"
+      },
+      "headline": "@Html.Raw(Model.Title.Replace("\"", "\\\""))",
+      "image": "@Html.Raw(Model.Images.FirstOrDefault())",  
+      "datePublished": "@Model.CreatedAt.ToString("o")",
+      "dateModified": "@Model.CreatedAt.ToString("o")",
+      "author": {
+        "@@type": "Organization",
+        "name": "SCANDAL69"
+      },
+      "publisher": {
+        "@@type": "Organization",
+        "name": "SCANDAL69"
+      }
+    }
+    </script>
+}

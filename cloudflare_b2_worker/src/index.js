@@ -101,6 +101,7 @@ export default {
         const headers = new Headers(b2Response.headers);
         headers.set('Content-Disposition', `attachment; filename="${filename}"`);
         headers.set('Cache-Control', 'no-store');
+        headers.set('Referrer-Policy', 'no-referrer');
 
         return new Response(b2Response.body, { status: b2Response.status, headers });
 

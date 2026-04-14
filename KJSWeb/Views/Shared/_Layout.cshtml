@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewData["Title"] - SCANDAL69</title>
+    <title>@(ViewData["Title"]?.ToString().Contains("SCANDAL69") == true ? ViewData["Title"] : $"{ViewData["Title"]} - SCANDAL69")</title>
     <link rel="icon" type="image/x-icon" href="~/images/favicon.ico" />
     <link rel="icon" type="image/png" sizes="16x16" href="~/images/favicon-16x16.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="~/images/favicon-32x32.png" />
@@ -19,6 +19,7 @@
         var _ogImage  = ViewData["OgImage"] as string ?? "";
         var _ogType   = ViewData["OgType"] as string ?? "website";
     }
+    <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta name="description" content="@_ogDesc" />
     <link rel="canonical" href="@_canonicalUrl" />
     <meta property="og:site_name" content="SCANDAL69" />
@@ -31,6 +32,7 @@
     <meta name="twitter:title"       content="@_ogTitle" />
     <meta name="twitter:description" content="@_ogDesc" />
     @if (!string.IsNullOrEmpty(_ogImage)) { <meta name="twitter:image" content="@_ogImage" /> }
+    @await RenderSectionAsync("Schema", required: false)
     <script>
       (function(){
         var theme = localStorage.getItem('theme') ||

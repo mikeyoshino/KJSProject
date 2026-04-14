@@ -9,6 +9,9 @@
     var fc2Posts      = ViewBag.Fc2Posts      as List<JGirlPost> ?? new List<JGirlPost>();
 }
 
+@* ── SEO Header ───────────────────────────────────────────────────────── *@
+<h1 class="sr-only">SCANDAL69 - Premium Asian Scandal, Buzz69, and JGirl Content Network</h1>
+
 @* ── Buzz69 Section ─────────────────────────────────────────────────── *@
 <section class="mb-20">
     <div class="flex items-center justify-between mb-8">
@@ -19,7 +22,7 @@
         @foreach (var post in buzz69Posts)
         {
             <article class="content-card group cursor-pointer">
-                <a asp-controller="Home" asp-action="Details" asp-route-id="@post.Id">
+                <a asp-controller="Home" asp-action="Details" asp-route-id="@post.Id" asp-route-slug="@KJSWeb.Helpers.SeoHelper.ToSlug(post.Title)">
                     <div class="relative overflow-hidden rounded-sm bg-slate-200 aspect-video mb-3 shadow-sm">
                         <img src="@post.ThumbnailUrl" alt="@post.Title"
                              class="w-full h-full object-cover transition-transform duration-700" loading="lazy">
@@ -40,7 +43,7 @@
                 </a>
                 <div class="space-y-1 text-center">
                     <h3 class="text-sm font-bold leading-tight group-hover:text-orange-accent transition-colors line-clamp-2">
-                        <a asp-controller="Home" asp-action="Details" asp-route-id="@post.Id">@post.Title</a>
+                        <a asp-controller="Home" asp-action="Details" asp-route-id="@post.Id" asp-route-slug="@KJSWeb.Helpers.SeoHelper.ToSlug(post.Title)">@post.Title</a>
                     </h3>
                     <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">@post.CreatedAt.ToString("MMM dd, yyyy")</p>
                 </div>
@@ -59,7 +62,7 @@
         @foreach (var post in asianPosts)
         {
             <article class="content-card group cursor-pointer">
-                <a asp-controller="AsianScandal" asp-action="Details" asp-route-id="@post.Id">
+                <a asp-controller="AsianScandal" asp-action="Details" asp-route-id="@post.Id" asp-route-slug="@KJSWeb.Helpers.SeoHelper.ToSlug(post.Title)">
                     <div class="relative overflow-hidden rounded-sm bg-slate-200 aspect-video mb-3 shadow-sm">
                         <img src="@post.ThumbnailUrl" alt="@post.Title"
                              class="w-full h-full object-cover transition-transform duration-700" loading="lazy">
@@ -80,7 +83,7 @@
                 </a>
                 <div class="space-y-1 text-center">
                     <h3 class="text-sm font-bold leading-tight group-hover:text-orange-accent transition-colors line-clamp-2">
-                        <a asp-controller="AsianScandal" asp-action="Details" asp-route-id="@post.Id">@post.Title</a>
+                        <a asp-controller="AsianScandal" asp-action="Details" asp-route-id="@post.Id" asp-route-slug="@KJSWeb.Helpers.SeoHelper.ToSlug(post.Title)">@post.Title</a>
                     </h3>
                     <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">@post.CreatedAt.ToString("MMM dd, yyyy")</p>
                 </div>
@@ -100,7 +103,7 @@
         {
             var framesJson = JsonSerializer.Serialize(post.Images);
             <article class="group cursor-pointer" data-frames="@framesJson">
-                <a asp-controller="JGirl" asp-action="Details" asp-route-id="@post.Id">
+                <a asp-controller="JGirl" asp-action="Details" asp-route-id="@post.Id" asp-route-slug="@KJSWeb.Helpers.SeoHelper.ToSlug(post.Title)">
                     <div class="relative overflow-hidden rounded-sm bg-slate-900 aspect-video mb-3 shadow-sm select-none">
                         <img class="scrubber-thumb w-full h-full object-cover"
                              src="@post.ThumbnailUrl" alt="@post.Title" loading="lazy" draggable="false" />
@@ -117,7 +120,7 @@
                 </a>
                 <div class="space-y-1 px-0.5">
                     <h3 class="text-sm font-bold leading-tight group-hover:text-orange-accent transition-colors line-clamp-2">
-                        <a asp-controller="JGirl" asp-action="Details" asp-route-id="@post.Id">@post.Title</a>
+                        <a asp-controller="JGirl" asp-action="Details" asp-route-id="@post.Id" asp-route-slug="@KJSWeb.Helpers.SeoHelper.ToSlug(post.Title)">@post.Title</a>
                     </h3>
                     <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">@post.CreatedAt.ToString("MMM dd, yyyy")</p>
                 </div>
@@ -137,7 +140,7 @@
         {
             var framesJson = JsonSerializer.Serialize(post.Images);
             <article class="group cursor-pointer" data-frames="@framesJson">
-                <a asp-controller="JGirl" asp-action="Details" asp-route-id="@post.Id">
+                <a asp-controller="JGirl" asp-action="Details" asp-route-id="@post.Id" asp-route-slug="@KJSWeb.Helpers.SeoHelper.ToSlug(post.Title)">
                     <div class="relative overflow-hidden rounded-sm bg-slate-900 aspect-video mb-3 shadow-sm select-none">
                         <img class="scrubber-thumb w-full h-full object-cover"
                              src="@post.ThumbnailUrl" alt="@post.Title" loading="lazy" draggable="false" />
@@ -154,7 +157,7 @@
                 </a>
                 <div class="space-y-1 px-0.5">
                     <h3 class="text-sm font-bold leading-tight group-hover:text-orange-accent transition-colors line-clamp-2">
-                        <a asp-controller="JGirl" asp-action="Details" asp-route-id="@post.Id">@post.Title</a>
+                        <a asp-controller="JGirl" asp-action="Details" asp-route-id="@post.Id" asp-route-slug="@KJSWeb.Helpers.SeoHelper.ToSlug(post.Title)">@post.Title</a>
                     </h3>
                     <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">@post.CreatedAt.ToString("MMM dd, yyyy")</p>
                 </div>
@@ -174,7 +177,7 @@
         {
             var framesJson = JsonSerializer.Serialize(post.Images);
             <article class="group cursor-pointer" data-frames="@framesJson">
-                <a asp-controller="JGirl" asp-action="Details" asp-route-id="@post.Id">
+                <a asp-controller="JGirl" asp-action="Details" asp-route-id="@post.Id" asp-route-slug="@KJSWeb.Helpers.SeoHelper.ToSlug(post.Title)">
                     <div class="relative overflow-hidden rounded-sm bg-slate-900 aspect-video mb-3 shadow-sm select-none">
                         <img class="scrubber-thumb w-full h-full object-cover"
                              src="@post.ThumbnailUrl" alt="@post.Title" loading="lazy" draggable="false" />
@@ -191,7 +194,7 @@
                 </a>
                 <div class="space-y-1 px-0.5">
                     <h3 class="text-sm font-bold leading-tight group-hover:text-orange-accent transition-colors line-clamp-2">
-                        <a asp-controller="JGirl" asp-action="Details" asp-route-id="@post.Id">@post.Title</a>
+                        <a asp-controller="JGirl" asp-action="Details" asp-route-id="@post.Id" asp-route-slug="@KJSWeb.Helpers.SeoHelper.ToSlug(post.Title)">@post.Title</a>
                     </h3>
                     <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">@post.CreatedAt.ToString("MMM dd, yyyy")</p>
                 </div>
