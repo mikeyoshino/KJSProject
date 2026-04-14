@@ -8,414 +8,137 @@
 }
 
 <style>
-    @@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Archivo:wght@500;700;900&display=swap');
-
-    .premium-download {
-        --accent: #FF4500;
-        --dark: #0F0F0F;
-        --light: #FAFAFA;
-        --border: rgba(255, 69, 0, 0.2);
-        font-family: 'Archivo', sans-serif;
+    .glass-card {
+        background: rgba(17, 24, 39, 0.7);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
     }
-
-    .premium-download__container {
+    .premium-glow {
         position: relative;
-        margin-top: 4rem;
-        overflow: hidden;
     }
-
-    /* ─── LOCKED STATE (Premium/Subscription Required) ─── */
-    .premium-download--locked {
-        background: linear-gradient(135deg, var(--dark) 0%, #1a1a1a 100%);
-        border: 2px solid var(--border);
-        padding: 3rem 2rem;
-        border-radius: 2px;
-    }
-
-    .premium-download--locked::before {
-        content: '';
+    .premium-glow::before {
+        content: "";
         position: absolute;
-        top: 0;
-        right: 0;
-        width: 400px;
-        height: 400px;
-        background: radial-gradient(circle at 100% 0%, rgba(255, 69, 0, 0.08) 0%, transparent 70%);
-        pointer-events: none;
+        inset: -2px;
+        background: linear-gradient(45deg, #FF4500, #ff8c00, #FF4500);
+        border-radius: inherit;
+        z-index: -1;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        filter: blur(8px);
     }
-
-    .premium-download--locked::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(
-            45deg,
-            transparent 0%,
-            rgba(255, 255, 255, 0.02) 50%,
-            transparent 100%
-        );
-        pointer-events: none;
-    }
-
-    .premium-download__content {
-        position: relative;
-        z-index: 2;
-        text-align: center;
-    }
-
-    .premium-download__icon {
-        font-size: 4rem;
-        margin-bottom: 1.5rem;
-        animation: float-icon 3s ease-in-out infinite;
-        display: block;
-    }
-
-    @@keyframes float-icon {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-12px); }
-    }
-
-    .premium-download__title {
-        font-family: 'Space Mono', monospace;
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: white;
-        letter-spacing: 0.05em;
-        margin-bottom: 0.5rem;
-        text-transform: uppercase;
-        margin-top: 0;
-    }
-
-    .premium-download__subtitle {
-        font-size: 0.875rem;
-        color: #999;
-        margin-bottom: 2rem;
-        font-weight: 500;
-        line-height: 1.6;
-        max-width: 420px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    .premium-download__cta {
-        display: inline-block;
-        background: var(--accent);
-        color: white;
-        padding: 1rem 2.5rem;
-        font-family: 'Space Mono', monospace;
-        font-weight: 700;
-        font-size: 0.875rem;
-        letter-spacing: 0.15em;
-        text-transform: uppercase;
-        border: none;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-        text-decoration: none;
-    }
-
-    .premium-download__cta::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: rgba(255, 255, 255, 0.2);
-        transition: left 0.3s ease;
-    }
-
-    .premium-download__cta:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 24px rgba(255, 69, 0, 0.3);
-    }
-
-    .premium-download__cta:hover::before {
-        left: 100%;
-    }
-
-    /* ─── UNLOCKED STATE (Downloads Available) ─── */
-    .premium-download--unlocked {
-        background: white;
-        border: 1px solid #E5E5E5;
-        padding: 2.5rem 2rem;
-    }
-
-    html.dark .premium-download--unlocked {
-        background: #1f2937;
-        border-color: #374151;
-    }
-
-    html.dark .premium-download--unlocked .premium-download__title {
-        color: #f3f4f6;
-    }
-
-    html.dark .premium-download--unlocked .premium-download__header {
-        border-bottom-color: #374151;
-    }
-
-    .premium-download--unlocked::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, var(--accent) 0%, transparent 100%);
-    }
-
-    .premium-download--unlocked .premium-download__header {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        margin-bottom: 2rem;
-        padding-bottom: 1.5rem;
-        border-bottom: 1px solid #F0F0F0;
-    }
-
-    .premium-download--unlocked .premium-download__icon {
-        font-size: 2rem;
-        animation: none;
-        flex-shrink: 0;
-        margin-bottom: 0;
-    }
-
-    .premium-download--unlocked .premium-download__title {
-        color: var(--dark);
-        font-size: 1.25rem;
-        margin: 0;
-        text-align: left;
-    }
-
-    .premium-download__links {
-        display: grid;
-        gap: 1rem;
-        margin-top: 1.5rem;
-    }
-
-    @@media (min-width: 640px) {
-        .premium-download__links {
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        }
-    }
-
-    .premium-download__link {
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.75rem;
-        padding: 1.25rem 1.5rem;
-        background: var(--dark);
-        color: white;
-        font-weight: 700;
-        font-size: 0.875rem;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        text-decoration: none;
-        border: 1px solid transparent;
-        transition: all 0.25s ease;
-        border-radius: 2px;
-    }
-
-    .premium-download__link:hover {
-        background: var(--accent);
-        border-color: var(--accent);
-        transform: translateY(-2px);
-        box-shadow: 0 8px 16px rgba(255, 69, 0, 0.2);
-    }
-
-    .premium-download__link-icon {
-        width: 16px;
-        height: 16px;
-        flex-shrink: 0;
-    }
-
-    .premium-download__link-text {
-        font-size: 0.8125rem;
-    }
-
-    /* ─── RESPONSIVE ─── */
-    @@media (max-width: 640px) {
-        .premium-download--locked {
-            padding: 2rem 1.5rem;
-        }
-
-        .premium-download--unlocked {
-            padding: 1.5rem;
-        }
-
-        .premium-download__title {
-            font-size: 1.125rem;
-        }
-
-        .premium-download__icon {
-            font-size: 3rem;
-        }
-
-        .premium-download__links {
-            gap: 0.75rem;
-        }
-
-        .premium-download__link {
-            padding: 1rem 1.25rem;
-            font-size: 0.8125rem;
-        }
+    .premium-glow:hover::before {
+        opacity: 0.6;
     }
 </style>
 
-@if (hasPublic)
-{
-    <!-- PUBLIC DOWNLOAD (free, speed-limited) -->
-    <style>
-        .public-download {
-            background: #f8f8f8;
-            border: 1px solid #e0e0e0;
-            border-left: 3px solid #4CAF50;
-            padding: 1.5rem 2rem;
-            margin-bottom: 1.5rem;
-            font-family: 'Archivo', sans-serif;
-        }
+<div class="mt-12 mb-8">
+    @if (isSubscribed)
+    {
+        <!-- SUBSCRIBER VIEW: Only show the Direct Premium Download -->
+        <div class="glass-card rounded-2xl p-8 border-l-4 border-l-orange-accent shadow-2xl relative overflow-hidden">
+            <!-- Decorative gradient -->
+            <div class="absolute -top-24 -right-24 w-48 h-48 bg-orange-accent/20 rounded-full blur-3xl pointer-events-none"></div>
+            
+            <div class="flex items-center gap-4 mb-6 relative z-10">
+                <div class="w-12 h-12 rounded-full bg-orange-accent/10 flex items-center justify-center text-orange-accent">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-black text-slate-900 dark:text-white m-0 tracking-tight">Premium Download Ready</h3>
+                    <p class="text-sm font-semibold text-green-500 mt-1 uppercase tracking-wider">Instant • Full Speed • No Ads</p>
+                </div>
+            </div>
 
-        html.dark .public-download {
-            background: #1a2330;
-            border-color: #2d3f50;
-            border-left-color: #4CAF50;
-        }
-
-        .public-download__header {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            margin-bottom: 1rem;
-        }
-
-        .public-download__title {
-            font-family: 'Space Mono', monospace;
-            font-size: 0.875rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: #333;
-            margin: 0;
-        }
-
-        html.dark .public-download__title {
-            color: #d1d5db;
-        }
-
-        .public-download__badge {
-            font-size: 0.7rem;
-            font-weight: 700;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            color: #4CAF50;
-            background: rgba(76, 175, 80, 0.1);
-            border: 1px solid rgba(76, 175, 80, 0.3);
-            padding: 0.15rem 0.5rem;
-            border-radius: 2px;
-        }
-
-        .public-download__links {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.75rem;
-        }
-
-        .public-download__link {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.65rem 1.25rem;
-            background: #4CAF50;
-            color: white;
-            font-size: 0.8125rem;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            text-decoration: none;
-            border-radius: 2px;
-            transition: background 0.2s ease, transform 0.2s ease;
-        }
-
-        .public-download__link:hover {
-            background: #43a047;
-            transform: translateY(-1px);
-        }
-
-        .public-download__note {
-            font-size: 0.75rem;
-            color: #888;
-            margin-top: 0.75rem;
-            margin-bottom: 0;
-        }
-
-        html.dark .public-download__note {
-            color: #6b7280;
-        }
-    </style>
-
-    <div class="public-download">
-        <div class="public-download__header">
-            <span class="public-download__title">Free Download</span>
-            <span class="public-download__badge">5 MB/s</span>
-        </div>
-        <div class="public-download__links">
-            @for (int i = 0; i < publicUrls!.Count; i++)
+            @if (downloadUrls.Any())
             {
-                <a href="@publicUrls[i]" class="public-download__link" target="_blank" rel="noopener">
-                    <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
-                    </svg>
-                    @(publicUrls.Count > 1 ? $"Part {i + 1}" : "Download")
-                </a>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 relative z-10">
+                    @for (int i = 0; i < downloadUrls.Count; i++)
+                    {
+                        <a href="@downloadUrls[i]" download class="premium-glow flex items-center justify-center gap-2 py-4 px-6 bg-slate-900 dark:bg-black text-white rounded-xl font-bold uppercase tracking-wider hover:-translate-y-1 transition-transform duration-300 border border-white/10 hover:border-orange-accent/50 group">
+                            <svg class="w-5 h-5 group-hover:animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            @(dlCount > 1 ? $"Download Part {i + 1}" : "Download File")
+                        </a>
+                    }
+                </div>
             }
         </div>
-        <p class="public-download__note">Free download via ad-supported link &mdash; max 5 MB/s. Upgrade for unlimited speed.</p>
-    </div>
-}
+    }
+    else
+    {
+        <!-- NON-SUBSCRIBER VIEW: Side by side comparison if free is available -->
+        <h3 class="text-sm font-black text-slate-500 uppercase tracking-widest text-center mb-6">Choose Download Method</h3>
+        
+        <div class="grid grid-cols-1 @(hasPublic ? "md:grid-cols-2" : "") gap-6 max-w-5xl mx-auto">
+            
+            @if (hasPublic)
+            {
+                <!-- FREE DOWNLOAD CARD -->
+                <div class="bg-white dark:bg-gray-800/80 rounded-2xl p-6 md:p-8 border border-gray-200 dark:border-gray-700 shadow-lg flex flex-col items-center text-center transition-transform hover:-translate-y-1 duration-300">
+                    <div class="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-gray-700/50 flex items-center justify-center text-gray-500 mb-6">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    
+                    <h4 class="text-xl font-black text-slate-800 dark:text-gray-200 mb-2">Free Download</h4>
+                    <p class="text-sm text-slate-500 dark:text-gray-400 mb-6 flex-grow">
+                        Basic file access supported by our advertising partners.
+                    </p>
 
-@if (isSubscribed)
-{
-    <!-- UNLOCKED STATE -->
-    <div class="premium-download premium-download--unlocked premium-download__container">
-        <div class="premium-download__header">
-            <span class="premium-download__icon">⚡</span>
-            <h3 class="premium-download__title">Download Ready</h3>
-        </div>
+                    <ul class="w-full text-left space-y-3 mb-8">
+                        <li class="flex items-center gap-3 text-sm font-medium text-slate-600 dark:text-gray-300">
+                            <span class="text-red-500">⚠</span> Wait time required
+                        </li>
+                        <li class="flex items-center gap-3 text-sm font-medium text-slate-600 dark:text-gray-300">
+                            <span class="text-red-500">⚠</span> Third-party advertisements
+                        </li>
+                        <li class="flex items-center gap-3 text-sm font-medium text-slate-600 dark:text-gray-300">
+                            <span class="text-orange-400">⚡</span> Speed capped at 5 MB/s
+                        </li>
+                    </ul>
 
-        @if (downloadUrls.Any())
-        {
-            <div class="premium-download__links">
-                @for (int i = 0; i < downloadUrls.Count; i++)
-                {
-                    <a href="@downloadUrls[i]" class="premium-download__link" download>
-                        <svg class="premium-download__link-icon" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
-                        </svg>
-                        <span class="premium-download__link-text">
-                            @(dlCount > 1 ? $"Part {i + 1}" : "Download")
-                        </span>
-                    </a>
-                }
+                    <div class="w-full space-y-3">
+                        @for (int i = 0; i < publicUrls!.Count; i++)
+                        {
+                            <a href="@publicUrls[i]" target="_blank" rel="noopener" class="block w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-slate-700 dark:text-gray-200 font-bold uppercase tracking-wider text-sm rounded-xl transition-colors">
+                                @(publicUrls.Count > 1 ? $"Free Download — Part {i + 1}" : "Free Download")
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- PREMIUM UPGRADE CARD -->
+            <div class="premium-glow relative bg-gradient-to-br from-slate-900 to-black rounded-2xl p-6 md:p-8 border border-white/10 shadow-2xl flex flex-col items-center text-center overflow-hidden transition-transform hover:-translate-y-1 duration-300">
+                <!-- Decorative gradient inside -->
+                <div class="absolute inset-0 bg-gradient-to-t from-orange-accent/10 to-transparent pointer-events-none"></div>
+
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-accent flex items-center justify-center text-white mb-6 relative z-10 shadow-lg shadow-orange-accent/30">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </div>
+                
+                <h4 class="text-xl font-black text-white mb-2 relative z-10">Premium Download</h4>
+                <p class="text-sm text-gray-400 mb-6 flex-grow relative z-10">
+                    Skip the ads and wait times. Instant access for subscribers.
+                </p>
+
+                <ul class="w-full text-left space-y-3 mb-8 relative z-10">
+                    <li class="flex items-center gap-3 text-sm font-bold text-white">
+                        <span class="text-green-400">✓</span> Instant, 0 sec wait time
+                    </li>
+                    <li class="flex items-center gap-3 text-sm font-bold text-white">
+                        <span class="text-green-400">✓</span> Completely Ad-Free
+                    </li>
+                    <li class="flex items-center gap-3 text-sm font-bold text-white">
+                        <span class="text-green-400">✓</span> Unlimited max speed
+                    </li>
+                </ul>
+
+                <a asp-controller="Subscription" asp-action="Pricing" class="w-full py-4 px-4 bg-orange-accent hover:bg-orange-600 text-white font-black uppercase tracking-widest text-sm rounded-xl transition-colors relative z-10 shadow-lg shadow-orange-accent/20">
+                    Unlock Premium Now
+                </a>
             </div>
-        }
-    </div>
-}
-else
-{
-    <!-- LOCKED STATE -->
-    <div class="premium-download premium-download--locked premium-download__container">
-        <div class="premium-download__content">
-            <span class="premium-download__icon">🔐</span>
-            <h3 class="premium-download__title">Premium Access Required</h3>
-            <p class="premium-download__subtitle">
-                Subscribe now to unlock instant downloads, HD quality, and priority support.
-                Gain access to @Model.DownloadCount download link(s) for this exclusive content.
-            </p>
-            <a asp-controller="Subscription" asp-action="Pricing" class="premium-download__cta">
-                ✨ Upgrade to Premium
-            </a>
+            
         </div>
-    </div>
-}
+    }
+</div>
