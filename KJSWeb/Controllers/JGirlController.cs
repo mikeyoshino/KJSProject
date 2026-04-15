@@ -55,7 +55,7 @@ public class JGirlController : Controller
         var b2Base     = _config["B2:PublicBaseUrl"]?.TrimEnd('/') ?? "https://f005.backblazeb2.com/file/KJSProject";
 
         // Fetch related posts in parallel with subscription check
-        var relatedTask = _supabase.GetRelatedJGirlPostsAsync(post.Id, post.Tags.ToList(), post.Source, limit: 6);
+        var relatedTask = _supabase.GetRelatedJGirlPostsAsync(post.Id, post.Tags?.ToList() ?? [], post.Source, limit: 6);
 
         // Capture original download links before URL rewriting (needed for token generation)
         var originalDownloadLinks = post.DownloadLinks.ToList();
