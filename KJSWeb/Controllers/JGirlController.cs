@@ -54,6 +54,9 @@ public class JGirlController : Controller
         var workerBase = _config["CloudflareWorker:DownloadWorkerUrl"]?.TrimEnd('/') ?? "";
         var b2Base     = _config["B2:PublicBaseUrl"]?.TrimEnd('/') ?? "https://f005.backblazeb2.com/file/KJSProject";
 
+        // Fetch related posts in parallel with subscription check
+        var relatedTask = _supabase.GetRelatedJGirlPostsAsync(post.Id, post.Tags.ToList(), post.Source, limit: 6);
+
         // Capture original download links before URL rewriting (needed for token generation)
         var originalDownloadLinks = post.DownloadLinks.ToList();
 
@@ -96,6 +99,13 @@ public class JGirlController : Controller
             ViewBag.HasActiveSubscription = false;
         }
 
+        // Rewrite thumbnails for related posts
+        var related = await relatedTask;
+        foreach (var rp in related)
+            rp.ThumbnailUrl = ResolveRelatedThumb(rp.ThumbnailUrl, workerBase, b2Base);
+
+        ViewBag.RelatedPosts = related;
+
         return View(post);
     }
 
@@ -112,6 +122,14 @@ public class JGirlController : Controller
     }
 
     private static string Rewrite(string url, string workerBase, string b2Base)
+    {
+        if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(workerBase)) return url;
+        if (url.StartsWith(b2Base))
+            return workerBase + url[b2Base.Length..];
+        return url;
+    }
+
+    private static string ResolveRelatedThumb(string url, string workerBase, string b2Base)
     {
         if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(workerBase)) return url;
         if (url.StartsWith(b2Base))
