@@ -25,11 +25,22 @@ public class SearchController : Controller
             return PartialView("_Results", vm);
 
         var workerBase = _config["CloudflareWorker:DownloadWorkerUrl"]?.TrimEnd('/') ?? "";
-        var posts = await _supabase.SearchPostsAsync(q.Trim(), limit: 12);
+        var trimmed    = q.Trim();
+
+        var postsTask  = _supabase.SearchPostsAsync(trimmed, limit: 8);
+        var jgirlTask  = _supabase.SearchJGirlPostsAsync(trimmed, limit: 6);
+        await Task.WhenAll(postsTask, jgirlTask);
+
+        var posts = postsTask.Result;
         foreach (var p in posts)
             p.ThumbnailUrl = ResolveImageUrl(p.ThumbnailUrl, workerBase);
 
-        vm.Posts = posts;
+        var jgirlPosts = jgirlTask.Result;
+        foreach (var jp in jgirlPosts)
+            jp.ThumbnailUrl = ResolveImageUrl(jp.ThumbnailUrl, workerBase);
+
+        vm.Posts      = posts;
+        vm.JGirlPosts = jgirlPosts;
         return PartialView("_Results", vm);
     }
 

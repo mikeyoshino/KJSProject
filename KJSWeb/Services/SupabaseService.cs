@@ -488,6 +488,49 @@ public class SupabaseService
         public long view_count     { get; set; }
     }
 
+    public async Task<List<JGirlPost>> SearchJGirlPostsAsync(string query, int limit = 6)
+    {
+        using var http = _httpClientFactory.CreateClient();
+        var q   = Uri.EscapeDataString($"*{query}*");
+        var url = $"{_supabaseUrl}/rest/v1/jgirl_posts" +
+                  $"?select=id,title,thumbnail_url,source,created_at,tags" +
+                  $"&status=eq.published" +
+                  $"&or=(title.ilike.{q},tags.ilike.{q})" +
+                  $"&order=created_at.desc" +
+                  $"&limit={limit}";
+
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Add("apikey", _supabaseKey);
+        request.Headers.Add("Authorization", $"Bearer {_supabaseKey}");
+
+        var response = await http.SendAsync(request);
+        if (!response.IsSuccessStatusCode) return new();
+
+        var json = await response.Content.ReadAsStringAsync();
+        var dtos = JsonSerializer.Deserialize<List<JGirlSearchDto>>(json);
+        if (dtos == null) return new();
+
+        return dtos.Select(d => new JGirlPost
+        {
+            Id           = Guid.TryParse(d.id, out var g) ? g : Guid.Empty,
+            Title        = d.title,
+            ThumbnailUrl = d.thumbnail_url ?? "",
+            Source       = d.source ?? "",
+            CreatedAt    = DateTime.TryParse(d.created_at, out var dt) ? dt : DateTime.UtcNow,
+            Tags         = d.tags?.ToList() ?? new(),
+        }).ToList();
+    }
+
+    private class JGirlSearchDto
+    {
+        public string id             { get; set; } = "";
+        public string title          { get; set; } = "";
+        public string? thumbnail_url { get; set; }
+        public string? source        { get; set; }
+        public string? created_at    { get; set; }
+        public string[]? tags        { get; set; }
+    }
+
     public async Task IncrementViewCountAsync(Guid postId, string table)
     {
         using var http = _httpClientFactory.CreateClient();
