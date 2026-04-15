@@ -493,6 +493,7 @@ public class SupabaseService
         // No tags → fall back to recent posts from same source
         if (!tags.Any())
         {
+            if (string.IsNullOrEmpty(source)) return new();
             using var fb = _httpClientFactory.CreateClient();
             var fbUrl = $"{_supabaseUrl}/rest/v1/jgirl_posts" +
                         $"?select=id,title,thumbnail_url,source,created_at,tags" +

@@ -130,10 +130,5 @@ public class JGirlController : Controller
     }
 
     private static string ResolveRelatedThumb(string url, string workerBase, string b2Base)
-    {
-        if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(workerBase)) return url;
-        if (url.StartsWith(b2Base))
-            return workerBase + url[b2Base.Length..];
-        return url;
-    }
+        => Rewrite(url, workerBase, b2Base);
 }
