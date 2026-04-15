@@ -488,6 +488,68 @@ public class SupabaseService
         public long view_count     { get; set; }
     }
 
+    public async Task<List<JGirlPost>> GetRelatedJGirlPostsAsync(Guid postId, List<string> tags, string source, int limit = 6)
+    {
+        // No tags → fall back to recent posts from same source
+        if (!tags.Any())
+        {
+            using var fb = _httpClientFactory.CreateClient();
+            var fbUrl = $"{_supabaseUrl}/rest/v1/jgirl_posts" +
+                        $"?select=id,title,thumbnail_url,source,created_at,tags" +
+                        $"&status=eq.published" +
+                        $"&source=eq.{Uri.EscapeDataString(source)}" +
+                        $"&id=neq.{postId}" +
+                        $"&order=created_at.desc" +
+                        $"&limit={limit}";
+            var fbReq = new HttpRequestMessage(HttpMethod.Get, fbUrl);
+            fbReq.Headers.Add("apikey", _supabaseKey);
+            fbReq.Headers.Add("Authorization", $"Bearer {_supabaseKey}");
+            var fbResp = await fb.SendAsync(fbReq);
+            if (!fbResp.IsSuccessStatusCode) return new();
+            var fbDtos = JsonSerializer.Deserialize<List<JGirlSearchDto>>(await fbResp.Content.ReadAsStringAsync());
+            return fbDtos?.Select(MapJGirlSearchDto).ToList() ?? new();
+        }
+
+        using var http = _httpClientFactory.CreateClient();
+        // Fetch a wider candidate pool (30) sorted by recency; re-rank by tag overlap in C#
+        var tagJson = Uri.EscapeDataString("[" + string.Join(",", tags.Select(t => $"\"{t}\"")) + "]");
+        var url = $"{_supabaseUrl}/rest/v1/jgirl_posts" +
+                  $"?select=id,title,thumbnail_url,source,created_at,tags" +
+                  $"&status=eq.published" +
+                  $"&tags=ov.{tagJson}" +
+                  $"&id=neq.{postId}" +
+                  $"&order=created_at.desc" +
+                  $"&limit=30";
+
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Add("apikey", _supabaseKey);
+        request.Headers.Add("Authorization", $"Bearer {_supabaseKey}");
+
+        var response = await http.SendAsync(request);
+        if (!response.IsSuccessStatusCode) return new();
+
+        var dtos = JsonSerializer.Deserialize<List<JGirlSearchDto>>(await response.Content.ReadAsStringAsync());
+        if (dtos == null) return new();
+
+        var tagSet = tags.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return dtos
+            .Select(MapJGirlSearchDto)
+            .OrderByDescending(p => p.Tags.Count(t => tagSet.Contains(t)))
+            .ThenByDescending(p => p.Source == source)
+            .Take(limit)
+            .ToList();
+    }
+
+    private JGirlPost MapJGirlSearchDto(JGirlSearchDto d) => new()
+    {
+        Id           = Guid.TryParse(d.id, out var g) ? g : Guid.Empty,
+        Title        = d.title,
+        ThumbnailUrl = d.thumbnail_url ?? "",
+        Source       = d.source ?? "",
+        CreatedAt    = DateTime.TryParse(d.created_at, out var dt) ? dt : DateTime.UtcNow,
+        Tags         = d.tags?.ToList() ?? new(),
+    };
+
     public async Task<List<JGirlPost>> SearchJGirlPostsAsync(string query, int limit = 6)
     {
         using var http = _httpClientFactory.CreateClient();
