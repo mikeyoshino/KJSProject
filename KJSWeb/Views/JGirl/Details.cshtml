@@ -106,6 +106,9 @@
         </section>
     }
 
+    <!-- Related Posts -->
+    @await Html.PartialAsync("_RelatedPosts", ViewBag.RelatedPosts as List<KJSWeb.Models.JGirlPost> ?? new List<KJSWeb.Models.JGirlPost>())
+
 </div>
 
 @section Scripts {
