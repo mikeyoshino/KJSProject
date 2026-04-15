@@ -512,7 +512,7 @@ public class SupabaseService
 
         using var http = _httpClientFactory.CreateClient();
         // Fetch a wider candidate pool (30) sorted by recency; re-rank by tag overlap in C#
-        var tagJson = Uri.EscapeDataString("[" + string.Join(",", tags.Select(t => $"\"{t}\"")) + "]");
+        var tagJson = Uri.EscapeDataString(JsonSerializer.Serialize(tags));
         var url = $"{_supabaseUrl}/rest/v1/jgirl_posts" +
                   $"?select=id,title,thumbnail_url,source,created_at,tags" +
                   $"&status=eq.published" +
@@ -572,15 +572,7 @@ public class SupabaseService
         var dtos = JsonSerializer.Deserialize<List<JGirlSearchDto>>(json);
         if (dtos == null) return new();
 
-        return dtos.Select(d => new JGirlPost
-        {
-            Id           = Guid.TryParse(d.id, out var g) ? g : Guid.Empty,
-            Title        = d.title,
-            ThumbnailUrl = d.thumbnail_url ?? "",
-            Source       = d.source ?? "",
-            CreatedAt    = DateTime.TryParse(d.created_at, out var dt) ? dt : DateTime.UtcNow,
-            Tags         = d.tags?.ToList() ?? new(),
-        }).ToList();
+        return dtos.Select(MapJGirlSearchDto).ToList();
     }
 
     private class JGirlSearchDto
