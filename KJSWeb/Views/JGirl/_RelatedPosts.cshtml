@@ -1,0 +1,43 @@
+@model List<KJSWeb.Models.JGirlPost>
+@if (Model == null || !Model.Any()) { return; }
+
+<section class="mt-10 border-t border-slate-100 dark:border-gray-700 pt-8">
+    <h3 class="text-[11px] font-black uppercase tracking-[0.3em] border-b-2 border-black dark:border-gray-600 pb-2 mb-6">
+        Related Posts
+    </h3>
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        @foreach (var post in Model)
+        {
+            <a asp-controller="JGirl" asp-action="Details" asp-route-id="@post.Id"
+               class="group block rounded-sm overflow-hidden bg-slate-50 dark:bg-gray-800 hover:shadow-md transition-shadow duration-200">
+                <!-- Thumbnail -->
+                <div class="aspect-video overflow-hidden bg-slate-200 dark:bg-gray-700">
+                    @if (!string.IsNullOrEmpty(post.ThumbnailUrl))
+                    {
+                        <img src="@post.ThumbnailUrl" alt="@post.Title"
+                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                             loading="lazy" />
+                    }
+                </div>
+                <!-- Info -->
+                <div class="p-3">
+                    <p class="text-xs font-bold leading-tight line-clamp-2 group-hover:text-orange-accent transition-colors mb-2">
+                        @post.Title
+                    </p>
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        @if (!string.IsNullOrEmpty(post.Source))
+                        {
+                            <span class="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-sm bg-slate-900 text-white">
+                                @post.Source
+                            </span>
+                        }
+                        @foreach (var tag in post.Tags.Take(2))
+                        {
+                            <span class="text-[9px] text-slate-400 font-semibold">#@tag</span>
+                        }
+                    </div>
+                </div>
+            </a>
+        }
+    </div>
+</section>
