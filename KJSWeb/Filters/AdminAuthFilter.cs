@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using System.Security.Claims;
 
 namespace KJSWeb.Filters;
 
@@ -14,8 +15,8 @@ public class AdminAuthFilter : IActionFilter
 
     public void OnActionExecuting(ActionExecutingContext context)
     {
-        var session = context.HttpContext.Session;
-        var userId = session.GetString("user_id");
+        var user   = context.HttpContext.User;
+        var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
 
         if (string.IsNullOrEmpty(userId))
         {
@@ -23,7 +24,7 @@ public class AdminAuthFilter : IActionFilter
             return;
         }
 
-        var userEmail = session.GetString("user_email") ?? "";
+        var userEmail   = user.FindFirstValue(ClaimTypes.Email) ?? "";
         var adminEmails = _config.GetSection("Admin:Emails").Get<string[]>() ?? Array.Empty<string>();
 
         if (!adminEmails.Contains(userEmail, StringComparer.OrdinalIgnoreCase))
