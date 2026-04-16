@@ -39,6 +39,7 @@ jobs:
               --env-file /opt/kjsweb/.env \
               --network infra_default \
               --restart unless-stopped \
+              -v /opt/kjsweb/keys:/app/keys \
               kjsweb:latest
 
             # Redeploy kjsweb-nginx (port 80 exposed to infra-nginx-1 via network)

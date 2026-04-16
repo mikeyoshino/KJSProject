@@ -15,10 +15,9 @@ builder.Services.AddScoped<KJSWeb.Filters.AdminAuthFilter>();
 builder.Services.AddSingleton<KJSWeb.Services.EmailService>();
 
 // Persist Data Protection keys to disk so encrypted auth cookies survive restarts/redeploys.
-var keysPath = builder.Configuration["DataProtection:KeysPath"]
-    ?? Path.Combine(builder.Environment.ContentRootPath, "keys");
+// Keys are written to /app/keys inside the container — mount this as a persistent volume on the host.
 builder.Services.AddDataProtection()
-    .PersistKeysToFileSystem(new DirectoryInfo(keysPath))
+    .PersistKeysToFileSystem(new DirectoryInfo("/app/keys"))
     .SetApplicationName("SCANDAL69");
 
 // Cookie authentication — replaces AddDistributedMemoryCache + AddSession.

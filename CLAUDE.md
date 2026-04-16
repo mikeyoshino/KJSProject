@@ -30,7 +30,7 @@ This is a two-project solution centered around serving content scraped/migrated 
 The user-facing website. Uses **Supabase** as the backend database (via the `Supabase` C# SDK and raw HTTP calls to the Supabase REST API). Key concerns:
 
 - **SupabaseService** wraps all DB access. Uses the Supabase SDK for reads (`posts`, `asianscandal_posts`, `categories`) but falls back to raw `HttpClient` calls for operations where the SDK has naming conflicts with `IConfiguration` (e.g. `GetTotalPostCountAsync` uses `HEAD` with `Prefer: count=exact`).
-- **Authentication** is session-based (cookie `BUZZ69_Session`, 24h). JWT validation via `System.IdentityModel.Tokens.Jwt`.
+- **Authentication** uses ASP.NET Core Cookie Authentication (`SCANDAL69_Auth`, 30-day sliding expiration). User identity (`user_id`, `user_email`) is stored as encrypted claims inside the cookie. Data Protection keys are persisted to `/app/keys` inside the container (mounted from `/opt/kjsweb/keys` on the host) so cookies survive restarts and redeploys. JWT validation via `System.IdentityModel.Tokens.Jwt` is used only for download tokens.
 - **BlockonomicsService** handles Bitcoin payment webhooks for subscriptions.
 - Two content sections: main posts (`HomeController`) and an asian-scandal section (`AsianScandalController`), each with their own Supabase table.
 - Config keys: `Supabase:Url`, `Supabase:Key`, `Supabase:ServiceKey`.
@@ -79,6 +79,20 @@ Expected response: `1` with status 200. Then revisit the post — download butto
 ### CrakRevenue SmartLink postback URL (set in CrakRevenue dashboard)
 ```
 https://your-domain.com/api/cpa/postback?post_id={aff_sub}&session_key={aff_sub2}&table={aff_sub3}&secret={CrakRevenue:PostbackSecret}
+```
+
+## Production Deployment
+
+Deployed via GitHub Actions (`.github/workflows/deploy-kjsweb.yml`) — push to `master` triggers SSH into the VPS, rebuilds the Docker image, and restarts the container.
+
+- **Config:** `/opt/kjsweb/.env` on the VPS (passed as `--env-file` to `docker run`)
+- **Data Protection keys:** mounted at `/opt/kjsweb/keys` on the host → `/app/keys` inside the container. **This directory must exist on the VPS** (`mkdir -p /opt/kjsweb/keys`) — if it's missing, auth cookies won't persist across restarts.
+- **Nginx:** a separate `kjsweb-nginx` container proxies traffic; both containers share the `infra_default` Docker network.
+
+### First-time setup on a new VPS
+```bash
+mkdir -p /opt/kjsweb/keys
+# Then add all required env vars to /opt/kjsweb/.env
 ```
 
 ## Supabase Tables
