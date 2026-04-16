@@ -490,37 +490,18 @@ public class SupabaseService
 
     public async Task<List<JGirlPost>> GetRelatedJGirlPostsAsync(Guid postId, List<string> tags, string source, int limit = 6)
     {
-        // No tags → fall back to recent posts from same source
-        if (!tags.Any())
-        {
-            if (string.IsNullOrEmpty(source)) return new();
-            using var fb = _httpClientFactory.CreateClient();
-            var fbUrl = $"{_supabaseUrl}/rest/v1/jgirl_posts" +
-                        $"?select=id,title,thumbnail_url,source,created_at,tags" +
-                        $"&status=eq.published" +
-                        $"&source=eq.{Uri.EscapeDataString(source)}" +
-                        $"&id=neq.{postId}" +
-                        $"&order=created_at.desc" +
-                        $"&limit={limit}";
-            var fbReq = new HttpRequestMessage(HttpMethod.Get, fbUrl);
-            fbReq.Headers.Add("apikey", _supabaseKey);
-            fbReq.Headers.Add("Authorization", $"Bearer {_supabaseKey}");
-            var fbResp = await fb.SendAsync(fbReq);
-            if (!fbResp.IsSuccessStatusCode) return new();
-            var fbDtos = JsonSerializer.Deserialize<List<JGirlSearchDto>>(await fbResp.Content.ReadAsStringAsync());
-            return fbDtos?.Select(MapJGirlSearchDto).ToList() ?? new();
-        }
+        // Fetch a candidate pool of recent same-source posts and rank by tag overlap in C#.
+        // Avoids PostgREST array-operator format ambiguity (text[] vs jsonb ov syntax).
+        if (string.IsNullOrEmpty(source)) return new();
 
         using var http = _httpClientFactory.CreateClient();
-        // Fetch a wider candidate pool (30) sorted by recency; re-rank by tag overlap in C#
-        var tagJson = Uri.EscapeDataString(JsonSerializer.Serialize(tags));
         var url = $"{_supabaseUrl}/rest/v1/jgirl_posts" +
                   $"?select=id,title,thumbnail_url,source,created_at,tags" +
                   $"&status=eq.published" +
-                  $"&tags=ov.{tagJson}" +
+                  $"&source=eq.{Uri.EscapeDataString(source)}" +
                   $"&id=neq.{postId}" +
                   $"&order=created_at.desc" +
-                  $"&limit=30";
+                  $"&limit=50";
 
         var request = new HttpRequestMessage(HttpMethod.Get, url);
         request.Headers.Add("apikey", _supabaseKey);
@@ -532,13 +513,28 @@ public class SupabaseService
         var dtos = JsonSerializer.Deserialize<List<JGirlSearchDto>>(await response.Content.ReadAsStringAsync());
         if (dtos == null) return new();
 
+        var candidates = dtos.Select(MapJGirlSearchDto).ToList();
+
+        if (!tags.Any())
+            return candidates.Take(limit).ToList();
+
+        // Tag-matched posts ranked by overlap count — must share at least one tag
         var tagSet = tags.ToHashSet(StringComparer.OrdinalIgnoreCase);
-        return dtos
-            .Select(MapJGirlSearchDto)
+        var tagMatches = candidates
+            .Where(p => p.Tags.Any(t => tagSet.Contains(t)))
             .OrderByDescending(p => p.Tags.Count(t => tagSet.Contains(t)))
-            .ThenByDescending(p => p.Source == source)
-            .Take(limit)
             .ToList();
+
+        if (tagMatches.Count >= limit)
+            return tagMatches.Take(limit).ToList();
+
+        // Pad remaining slots with recent same-source posts that had no tag overlap
+        var matchedIds = tagMatches.Select(p => p.Id).ToHashSet();
+        var fillers = candidates
+            .Where(p => !matchedIds.Contains(p.Id))
+            .Take(limit - tagMatches.Count);
+
+        return tagMatches.Concat(fillers).ToList();
     }
 
     private JGirlPost MapJGirlSearchDto(JGirlSearchDto d) => new()
