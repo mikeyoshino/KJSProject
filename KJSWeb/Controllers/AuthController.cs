@@ -22,7 +22,7 @@ public class AuthController : Controller
     public IActionResult Login(string? returnUrl = null)
     {
         if (User.Identity?.IsAuthenticated == true)
-            return Redirect(returnUrl ?? "/");
+            return Redirect(Url.IsLocalUrl(returnUrl) ? returnUrl! : "/");
         ViewBag.ReturnUrl = returnUrl;
         return View();
     }
@@ -60,7 +60,7 @@ public class AuthController : Controller
         var userEmail    = root.GetProperty("user").GetProperty("email").GetString()!;
 
         await SignInUserAsync(userId, userEmail);
-        return Redirect(!string.IsNullOrEmpty(returnUrl) ? returnUrl : "/");
+        return Redirect(Url.IsLocalUrl(returnUrl) ? returnUrl! : "/");
     }
 
     [HttpGet]
@@ -130,6 +130,7 @@ public class AuthController : Controller
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
     {
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
