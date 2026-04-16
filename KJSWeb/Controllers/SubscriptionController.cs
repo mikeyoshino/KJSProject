@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using KJSWeb.Models;
 using KJSWeb.Services;
+using System.Security.Claims;
 
 namespace KJSWeb.Controllers;
 
@@ -20,7 +21,7 @@ public class SubscriptionController : Controller
     [HttpGet]
     public async Task<IActionResult> Pricing()
     {
-        var userId = HttpContext.Session.GetString("user_id");
+        var userId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
         Subscription? activeSub = null;
         if (!string.IsNullOrEmpty(userId))
         {
@@ -34,7 +35,7 @@ public class SubscriptionController : Controller
     [HttpPost]
     public async Task<IActionResult> Subscribe(string plan)
     {
-        var userId = HttpContext.Session.GetString("user_id");
+        var userId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId))
             return RedirectToAction("Login", "Auth");
 
@@ -79,7 +80,7 @@ public class SubscriptionController : Controller
     [HttpGet]
     public async Task<IActionResult> Payment()
     {
-        var userId = HttpContext.Session.GetString("user_id");
+        var userId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId))
             return RedirectToAction("Login", "Auth");
 
@@ -93,7 +94,7 @@ public class SubscriptionController : Controller
     [HttpGet]
     public async Task<IActionResult> MySubscription()
     {
-        var userId = HttpContext.Session.GetString("user_id");
+        var userId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId))
             return RedirectToAction("Login", "Auth");
 
