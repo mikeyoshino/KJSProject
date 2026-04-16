@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Security.Claims;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using KJSWeb.Models;
@@ -162,7 +163,7 @@ public class HomeController : Controller
         ViewBag.B2DirectBase = _config["B2:PublicBaseUrl"]?.TrimEnd('/') ?? "https://f005.backblazeb2.com/file/KJSProject";
         post.ThumbnailUrl = ResolveImageUrl(post.ThumbnailUrl, workerBaseUrl);
 
-        var userId = HttpContext.Session.GetString("user_id");
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!string.IsNullOrEmpty(userId))
         {
             var activeSub = await _supabase.GetActiveSubscriptionAsync(userId);

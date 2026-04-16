@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using KJSWeb.Models;
 using KJSWeb.Services;
@@ -76,7 +77,7 @@ public class JGirlController : Controller
         ViewData["Description"] = post.Tags.Any() ? string.Join(", ", post.Tags.Take(10)) : post.Title;
         ViewData["OgType"]     = "article";
 
-        var userId = HttpContext.Session.GetString("user_id");
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!string.IsNullOrEmpty(userId))
         {
             var activeSub = await _supabase.GetActiveSubscriptionAsync(userId);

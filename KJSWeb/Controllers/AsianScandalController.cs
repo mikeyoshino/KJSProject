@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using KJSWeb.Models;
@@ -86,7 +87,7 @@ public class AsianScandalController : Controller
 
         post.ThumbnailUrl = ResolveImageUrl(post.ThumbnailUrl, workerBaseUrl);
 
-        var userId = HttpContext.Session.GetString("user_id");
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!string.IsNullOrEmpty(userId))
         {
             var activeSub = await _supabase.GetActiveSubscriptionAsync(userId);
