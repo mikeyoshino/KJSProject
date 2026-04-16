@@ -1,0 +1,42 @@
+@model List<KJSWeb.Models.Post>
+@if (Model == null || !Model.Any()) { return; }
+
+<section class="mt-10 border-t border-slate-100 dark:border-gray-700 pt-8">
+    <h3 class="text-[11px] font-black uppercase tracking-[0.3em] border-b-2 border-black dark:border-gray-600 pb-2 mb-6">
+        Related Posts
+    </h3>
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        @foreach (var post in Model)
+        {
+            var ctrl = post.SourceNameRaw == "AsianScandal" ? "AsianScandal" : "Home";
+            <a asp-controller="@ctrl" asp-action="Details" asp-route-id="@post.Id" asp-route-slug="@KJSWeb.Helpers.SeoHelper.ToSlug(post.Title)"
+               class="group block rounded-sm overflow-hidden bg-slate-50 dark:bg-gray-800 hover:shadow-md transition-shadow duration-200">
+                <!-- Thumbnail -->
+                <div class="aspect-video overflow-hidden bg-slate-200 dark:bg-gray-700">
+                    @if (!string.IsNullOrEmpty(post.ThumbnailUrl))
+                    {
+                        <img src="@post.ThumbnailUrl" alt="@post.Title"
+                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                             loading="lazy" />
+                    }
+                </div>
+                <!-- Info -->
+                <div class="p-3">
+                    <p class="text-xs font-bold leading-tight line-clamp-2 group-hover:text-orange-accent transition-colors mb-2">
+                        @post.Title
+                    </p>
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-sm
+                                     @(post.SourceNameRaw == "AsianScandal" ? "bg-slate-900 text-white" : "bg-orange-accent text-white")">
+                            @(post.SourceNameRaw == "AsianScandal" ? "Asian Scandal" : "Buzz69")
+                        </span>
+                        @if (post.Categories != null && post.Categories.Any())
+                        {
+                            <span class="text-[9px] text-slate-400 font-semibold truncate">@post.Categories.First()</span>
+                        }
+                    </div>
+                </div>
+            </a>
+        }
+    </div>
+</section>

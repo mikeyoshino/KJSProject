@@ -488,6 +488,66 @@ public class SupabaseService
         public long view_count     { get; set; }
     }
 
+    public async Task<List<Post>> GetRelatedPostsAsync(Guid postId, List<string> tags, PostSource source, int limit = 6)
+    {
+        using var http = _httpClientFactory.CreateClient();
+        var url = $"{_supabaseUrl}/rest/v1/posts" +
+                  $"?select=id,title,thumbnail_url,source_name,created_at,categories,tags" +
+                  $"&status=eq.published" +
+                  $"&source_name=eq.{source}" +
+                  $"&id=neq.{postId}" +
+                  $"&order=created_at.desc" +
+                  $"&limit=50";
+
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Add("apikey", _supabaseKey);
+        request.Headers.Add("Authorization", $"Bearer {_supabaseKey}");
+
+        var response = await http.SendAsync(request);
+        if (!response.IsSuccessStatusCode) return new();
+
+        var dtos = JsonSerializer.Deserialize<List<PostRelatedDto>>(await response.Content.ReadAsStringAsync());
+        if (dtos == null) return new();
+
+        var candidates = dtos.Select(d => new Post
+        {
+            Id            = Guid.TryParse(d.id, out var g) ? g : Guid.Empty,
+            Title         = d.title,
+            ThumbnailUrl  = d.thumbnail_url ?? "",
+            SourceNameRaw = d.source_name ?? source.ToString(),
+            CreatedAt     = DateTime.TryParse(d.created_at, out var dt) ? dt : DateTime.UtcNow,
+            Categories    = d.categories?.ToList() ?? new(),
+            Tags          = d.tags?.ToList() ?? new(),
+        }).ToList();
+
+        if (!tags.Any())
+            return candidates.Take(limit).ToList();
+
+        var tagSet = tags.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var tagMatches = candidates
+            .Where(p => p.Tags.Any(t => tagSet.Contains(t)))
+            .OrderByDescending(p => p.Tags.Count(t => tagSet.Contains(t)))
+            .ToList();
+
+        if (tagMatches.Count >= limit)
+            return tagMatches.Take(limit).ToList();
+
+        var matchedIds = tagMatches.Select(p => p.Id).ToHashSet();
+        var fillers    = candidates.Where(p => !matchedIds.Contains(p.Id)).Take(limit - tagMatches.Count);
+        return tagMatches.Concat(fillers).ToList();
+    }
+
+    private class PostRelatedDto
+    {
+        public string id             { get; set; } = "";
+        public string title          { get; set; } = "";
+        public string? thumbnail_url { get; set; }
+        public string? source_name   { get; set; }
+        public string? created_at    { get; set; }
+        public string[]? categories  { get; set; }
+        public string[]? tags        { get; set; }
+    }
+
     public async Task<List<JGirlPost>> GetRelatedJGirlPostsAsync(Guid postId, List<string> tags, string source, int limit = 6)
     {
         // Fetch a candidate pool of recent same-source posts and rank by tag overlap in C#.

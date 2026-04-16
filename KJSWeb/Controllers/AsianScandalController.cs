@@ -76,6 +76,7 @@ public class AsianScandalController : Controller
         var post = await _supabase.GetPostByIdAsync(id);
         if (post == null) return NotFound();
 
+        var relatedTask = _supabase.GetRelatedPostsAsync(post.Id, post.Tags?.ToList() ?? [], PostSource.AsianScandal, limit: 6);
         var (recentPosts, _) = await _supabase.GetLatestPostsAsync(1, 5);
         ViewBag.RecentPosts = recentPosts;
 
@@ -119,6 +120,11 @@ public class AsianScandalController : Controller
         ViewData["Description"] = StripHtml(post.ContentHtml);
         ViewData["OgImage"]    = post.ThumbnailUrl;
         ViewData["OgType"]     = "article";
+
+        var related = await relatedTask;
+        foreach (var rp in related)
+            rp.ThumbnailUrl = ResolveImageUrl(rp.ThumbnailUrl, workerBaseUrl);
+        ViewBag.RelatedPosts = related;
 
         if (ShouldCountView(id))
             _ = _supabase.IncrementViewCountAsync(post.Id, "posts");

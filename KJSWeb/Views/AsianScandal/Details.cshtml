@@ -78,6 +78,9 @@
                     </div>
                 </div>
             }
+
+            <!-- Related Posts -->
+            @await Html.PartialAsync("_RelatedPostsGrid", ViewBag.RelatedPosts as List<KJSWeb.Models.Post> ?? new List<KJSWeb.Models.Post>())
         </article>
     </div>
 
