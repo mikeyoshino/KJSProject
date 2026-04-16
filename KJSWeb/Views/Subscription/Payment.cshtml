@@ -2,8 +2,8 @@
 @{
     ViewData["Title"] = "Payment";
     var btcPrice = (decimal)(ViewBag.BtcPrice ?? 0m);
-    var userId = Context.Session.GetString("user_id");
-    var isAuthenticated = !string.IsNullOrEmpty(userId);
+    var userId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
 }
 
 <div class="max-w-lg mx-auto">

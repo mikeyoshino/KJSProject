@@ -2,7 +2,7 @@
     ViewData["Title"] = "Pricing";
     var plans = ViewBag.Plans as Dictionary<string, (string Label, decimal PriceUsd, int DurationDays, string SaveText)>;
     var activeSub = ViewBag.ActiveSubscription as KJSWeb.Models.Subscription;
-    var userId = Context.Session.GetString("user_id");
+    var userId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
 }
 
 <!-- Pricing Header -->

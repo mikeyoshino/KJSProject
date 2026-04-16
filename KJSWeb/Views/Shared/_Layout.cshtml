@@ -164,13 +164,13 @@
                     </svg>
                 </button>
 
-                @if (Context.Session.GetString("user_id") != null)
+                @if (User.Identity?.IsAuthenticated == true)
                 {
                     <!-- Profile dropdown (desktop) -->
                     <div class="relative dropdown">
                         <button class="flex items-center gap-2 py-4 -my-4 hover:opacity-80 transition-opacity">
                             <div class="w-8 h-8 rounded-full bg-orange-accent flex items-center justify-center text-white text-[13px] font-black select-none">
-                                @(Context.Session.GetString("user_email")?[0].ToString().ToUpper() ?? "U")
+                                @(User.FindFirstValue(System.Security.Claims.ClaimTypes.Email)?[0].ToString().ToUpper() ?? "U")
                             </div>
                             <span class="text-[10px]">▼</span>
                         </button>
@@ -178,7 +178,7 @@
                             <div class="bg-[#121212] dark:bg-gray-900 border border-white/10 shadow-2xl">
                                 <div class="px-4 py-3 border-b border-white/10">
                                     <p class="text-[10px] text-slate-400 uppercase tracking-widest">Signed in as</p>
-                                    <p class="text-white text-xs font-bold truncate mt-0.5">@Context.Session.GetString("user_email")</p>
+                                    <p class="text-white text-xs font-bold truncate mt-0.5">@User.FindFirstValue(System.Security.Claims.ClaimTypes.Email)</p>
                                 </div>
                                 <div class="py-1">
                                     <a asp-controller="Subscription" asp-action="MySubscription"
@@ -224,13 +224,13 @@
                     <a asp-controller="AsianScandal" asp-action="Index" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5 text-orange-accent italic">Asian Scandal ✨</a>
                     <a asp-controller="JGirl" asp-action="Index" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5">JGirl</a>
                     <a asp-controller="Subscription" asp-action="Pricing" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5">Upgrade</a>
-                    @if (Context.Session.GetString("user_id") != null)
+                    @if (User.Identity?.IsAuthenticated == true)
                     {
                         <div class="flex items-center gap-3 py-3 border-b border-white/5">
                             <div class="w-8 h-8 rounded-full bg-orange-accent flex items-center justify-center text-white text-[13px] font-black shrink-0">
-                                @(Context.Session.GetString("user_email")?[0].ToString().ToUpper() ?? "U")
+                                @(User.FindFirstValue(System.Security.Claims.ClaimTypes.Email)?[0].ToString().ToUpper() ?? "U")
                             </div>
-                            <span class="text-slate-400 text-[11px] truncate">@Context.Session.GetString("user_email")</span>
+                            <span class="text-slate-400 text-[11px] truncate">@User.FindFirstValue(System.Security.Claims.ClaimTypes.Email)</span>
                         </div>
                         <a asp-controller="Subscription" asp-action="MySubscription" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5 pl-4">My Subscription</a>
                         <a asp-controller="Support" asp-action="Tickets" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5 pl-4">My Tickets</a>
