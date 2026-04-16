@@ -1,4 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 
@@ -18,7 +21,7 @@ public class AuthController : Controller
     [HttpGet]
     public IActionResult Login(string? returnUrl = null)
     {
-        if (HttpContext.Session.GetString("user_id") != null)
+        if (User.Identity?.IsAuthenticated == true)
             return Redirect(returnUrl ?? "/");
         ViewBag.ReturnUrl = returnUrl;
         return View();
@@ -29,47 +32,41 @@ public class AuthController : Controller
     {
         if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
         {
-            ViewBag.Error = "Email and password are required.";
+            ViewBag.Error    = "Email and password are required.";
             ViewBag.ReturnUrl = returnUrl;
             return View();
         }
 
-        using var http = new HttpClient();
-        var payload = JsonSerializer.Serialize(new { email, password });
-        var request = new HttpRequestMessage(HttpMethod.Post,
+        using var http    = new HttpClient();
+        var payload       = JsonSerializer.Serialize(new { email, password });
+        var request       = new HttpRequestMessage(HttpMethod.Post,
             $"{_supabaseUrl}/auth/v1/token?grant_type=password");
         request.Headers.Add("apikey", _supabaseKey);
-        request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
+        request.Content   = new StringContent(payload, Encoding.UTF8, "application/json");
 
         var response = await http.SendAsync(request);
-        var json = await response.Content.ReadAsStringAsync();
+        var json     = await response.Content.ReadAsStringAsync();
 
         if (!response.IsSuccessStatusCode)
         {
-            ViewBag.Error = "Invalid email or password.";
+            ViewBag.Error    = "Invalid email or password.";
             ViewBag.ReturnUrl = returnUrl;
             return View();
         }
 
-        using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
+        using var doc    = JsonDocument.Parse(json);
+        var root         = doc.RootElement;
+        var userId       = root.GetProperty("user").GetProperty("id").GetString()!;
+        var userEmail    = root.GetProperty("user").GetProperty("email").GetString()!;
 
-        var accessToken = root.GetProperty("access_token").GetString()!;
-        var userId = root.GetProperty("user").GetProperty("id").GetString()!;
-        var userEmail = root.GetProperty("user").GetProperty("email").GetString()!;
-
-        // Store in session
-        HttpContext.Session.SetString("access_token", accessToken);
-        HttpContext.Session.SetString("user_id", userId);
-        HttpContext.Session.SetString("user_email", userEmail);
-
+        await SignInUserAsync(userId, userEmail);
         return Redirect(!string.IsNullOrEmpty(returnUrl) ? returnUrl : "/");
     }
 
     [HttpGet]
     public IActionResult Signup()
     {
-        if (HttpContext.Session.GetString("user_id") != null)
+        if (User.Identity?.IsAuthenticated == true)
             return RedirectToAction("Index", "Home");
         return View();
     }
@@ -95,53 +92,65 @@ public class AuthController : Controller
             return View();
         }
 
-        using var http = new HttpClient();
-        var payload = JsonSerializer.Serialize(new { email, password });
-        var request = new HttpRequestMessage(HttpMethod.Post,
-            $"{_supabaseUrl}/auth/v1/signup");
+        using var http  = new HttpClient();
+        var payload     = JsonSerializer.Serialize(new { email, password });
+        var request     = new HttpRequestMessage(HttpMethod.Post, $"{_supabaseUrl}/auth/v1/signup");
         request.Headers.Add("apikey", _supabaseKey);
         request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
 
         var response = await http.SendAsync(request);
-        var json = await response.Content.ReadAsStringAsync();
+        var json     = await response.Content.ReadAsStringAsync();
 
         if (!response.IsSuccessStatusCode)
         {
-            // Try to parse error message
             try
             {
-                using var doc = JsonDocument.Parse(json);
-                var msg = doc.RootElement.GetProperty("msg").GetString();
-                ViewBag.Error = msg ?? "Signup failed. Please try again.";
+                using var errDoc = JsonDocument.Parse(json);
+                ViewBag.Error = errDoc.RootElement.GetProperty("msg").GetString()
+                                ?? "Signup failed. Please try again.";
             }
-            catch
-            {
-                ViewBag.Error = "Signup failed. Please try again.";
-            }
+            catch { ViewBag.Error = "Signup failed. Please try again."; }
             return View();
         }
 
-        // Auto-login after signup
-        using var doc2 = JsonDocument.Parse(json);
-        var root = doc2.RootElement;
+        using var doc = JsonDocument.Parse(json);
+        var root      = doc.RootElement;
 
-        if (root.TryGetProperty("access_token", out var tokenProp))
+        if (root.TryGetProperty("access_token", out _))
         {
-            HttpContext.Session.SetString("access_token", tokenProp.GetString()!);
-            HttpContext.Session.SetString("user_id", root.GetProperty("user").GetProperty("id").GetString()!);
-            HttpContext.Session.SetString("user_email", root.GetProperty("user").GetProperty("email").GetString()!);
+            var userId    = root.GetProperty("user").GetProperty("id").GetString()!;
+            var userEmail = root.GetProperty("user").GetProperty("email").GetString()!;
+            await SignInUserAsync(userId, userEmail);
             return RedirectToAction("Index", "Home");
         }
 
-        // If email confirmation is required
+        // Email confirmation required
         ViewBag.Success = "Account created! Check your email to confirm, then log in.";
         return View("Login");
     }
 
     [HttpPost]
-    public IActionResult Logout()
+    public async Task<IActionResult> Logout()
     {
-        HttpContext.Session.Clear();
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return RedirectToAction("Index", "Home");
+    }
+
+    // ── Private helpers ──────────────────────────────────────────────────────
+
+    private async Task SignInUserAsync(string userId, string userEmail)
+    {
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, userId),
+            new Claim(ClaimTypes.Email, userEmail),
+        };
+        var identity  = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        var principal = new ClaimsPrincipal(identity);
+
+        await HttpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            principal,
+            new AuthenticationProperties { IsPersistent = true });
     }
 }
