@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using KJSWeb.Models;
 using KJSWeb.Services;
+using System.Security.Claims;
 
 namespace KJSWeb.Controllers;
 
@@ -23,8 +24,8 @@ public class SupportController : Controller
 
     private (string? UserId, string? UserEmail) GetSession()
     {
-        var userId    = HttpContext.Session.GetString("user_id");
-        var userEmail = HttpContext.Session.GetString("user_email");
+        var userId    = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var userEmail = User.FindFirstValue(ClaimTypes.Email);
         return (userId, userEmail);
     }
 

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using KJSWeb.Filters;
 using KJSWeb.Services;
+using System.Security.Claims;
 
 namespace KJSWeb.Controllers;
 
@@ -120,7 +121,7 @@ public class CrmController : Controller
         var user = await _admin.GetUserByIdAsync(userId);
         if (user == null) return NotFound();
 
-        var adminEmail = HttpContext.Session.GetString("user_email") ?? "";
+        var adminEmail = User.FindFirstValue(ClaimTypes.Email) ?? "";
         await _supabase.BanUserAsync(userId, user.Email, reason, adminEmail);
         TempData["Success"] = $"User {user.Email} has been banned.";
         return RedirectToAction(nameof(UserDetail), new { userId });
@@ -281,8 +282,8 @@ public class CrmController : Controller
             return RedirectToAction(nameof(TicketDetail), new { id });
         }
 
-        var adminId    = HttpContext.Session.GetString("user_id")    ?? "admin";
-        var adminEmail = HttpContext.Session.GetString("user_email") ?? "Support Team";
+        var adminId    = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "admin";
+        var adminEmail = User.FindFirstValue(ClaimTypes.Email) ?? "Support Team";
         var ok = await _supabase.AddTicketMessageAsync(id, adminId, message, isAdmin: true);
 
         if (ok && !string.IsNullOrEmpty(ticket.UserEmail))
