@@ -30,7 +30,7 @@ python jgirl_backfill.py --source all --workers 2
 Scrapes new posts from asianscandal.net, uploads images to B2, rewrites content via Ollama.
 
 ```bash
-python asianscandal_backfill.py --start-page 0 --pages 5
+python asianscandal_backfill.py --start-page 0 --pages 2 --with-downloads
 ```
 
 - `--start-page 0` starts from the newest posts (page 0 = most recent)
