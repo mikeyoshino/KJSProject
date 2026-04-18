@@ -42,3 +42,6 @@ publish/
 .DS_Store
 Thumbs.db
 KJSWeb/keys/
+
+# Git worktrees
+.worktrees/
