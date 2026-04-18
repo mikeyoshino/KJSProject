@@ -266,4 +266,167 @@
   <data name="Request ID" xml:space="preserve">
     <value>リクエストID</value>
   </data>
+
+  <!-- Sidebar / Details -->
+  <data name="Recent Posts" xml:space="preserve">
+    <value>最近の投稿</value>
+  </data>
+  <data name="More from Network" xml:space="preserve">
+    <value>ネットワークの他の投稿</value>
+  </data>
+  <data name="Added:" xml:space="preserve">
+    <value>追加日:</value>
+  </data>
+  <data name="Original" xml:space="preserve">
+    <value>オリジナル</value>
+  </data>
+  <data name="Metadata Tags" xml:space="preserve">
+    <value>タグ</value>
+  </data>
+  <data name="Drag to scrub frames" xml:space="preserve">
+    <value>ドラッグでフレームを操作</value>
+  </data>
+  <data name="Images" xml:space="preserve">
+    <value>画像</value>
+  </data>
+  <data name="All" xml:space="preserve">
+    <value>すべて</value>
+  </data>
+  <data name="Amount Paid" xml:space="preserve">
+    <value>支払金額</value>
+  </data>
+  <data name="New" xml:space="preserve">
+    <value>新着</value>
+  </data>
+
+  <!-- Support Tickets -->
+  <data name="Title" xml:space="preserve">
+    <value>タイトル</value>
+  </data>
+  <data name="Last Reply" xml:space="preserve">
+    <value>最終返信</value>
+  </data>
+  <data name="No tickets yet" xml:space="preserve">
+    <value>チケットなし</value>
+  </data>
+  <data name="Open a new ticket to get help from our support team." xml:space="preserve">
+    <value>サポートチームに問い合わせるには、新しいチケットを開いてください。</value>
+  </data>
+  <data name="In Progress" xml:space="preserve">
+    <value>対応中</value>
+  </data>
+  <data name="Resolved" xml:space="preserve">
+    <value>解決済み</value>
+  </data>
+  <data name="No messages yet." xml:space="preserve">
+    <value>まだメッセージはありません。</value>
+  </data>
+  <data name="Use the form below to add your first message." xml:space="preserve">
+    <value>以下のフォームで最初のメッセージを送信してください。</value>
+  </data>
+  <data name="Support Team" xml:space="preserve">
+    <value>サポートチーム</value>
+  </data>
+  <data name="You" xml:space="preserve">
+    <value>あなた</value>
+  </data>
+  <data name="This ticket is resolved and closed for new replies." xml:space="preserve">
+    <value>このチケットは解決済みで、返信は締め切られています。</value>
+  </data>
+  <data name="Opened" xml:space="preserve">
+    <value>作成日</value>
+  </data>
+  <data name="Write your reply…" xml:space="preserve">
+    <value>返信を入力…</value>
+  </data>
+  <data name="Submitting…" xml:space="preserve">
+    <value>送信中…</value>
+  </data>
+
+  <!-- Payment -->
+  <data name="Awaiting Payment" xml:space="preserve">
+    <value>支払い待ち</value>
+  </data>
+  <data name="Confirming Transaction..." xml:space="preserve">
+    <value>トランザクション確認中...</value>
+  </data>
+  <data name="Payment Confirmed!" xml:space="preserve">
+    <value>支払い確認済み！</value>
+  </data>
+  <data name="Payment will be detected automatically. Do not close this page." xml:space="preserve">
+    <value>支払いは自動的に検出されます。このページを閉じないでください。</value>
+  </data>
+  <data name="Contact Support" xml:space="preserve">
+    <value>サポートへ連絡</value>
+  </data>
+  <data name="Send Ticket" xml:space="preserve">
+    <value>チケットを送信</value>
+  </data>
+
+  <!-- Premium Download -->
+  <data name="Instant • Full Speed • No Ads" xml:space="preserve">
+    <value>即時 • 最高速度 • 広告なし</value>
+  </data>
+  <data name="Download File" xml:space="preserve">
+    <value>ファイルをダウンロード</value>
+  </data>
+  <data name="Free Download" xml:space="preserve">
+    <value>無料ダウンロード</value>
+  </data>
+  <data name="Premium Download" xml:space="preserve">
+    <value>プレミアムダウンロード</value>
+  </data>
+  <data name="Skip the ads and wait times. Instant access for subscribers." xml:space="preserve">
+    <value>広告と待機時間なし。会員は即時アクセス。</value>
+  </data>
+  <data name="Instant, 0 sec wait time" xml:space="preserve">
+    <value>待機時間ゼロ</value>
+  </data>
+  <data name="Completely Ad-Free" xml:space="preserve">
+    <value>完全広告なし</value>
+  </data>
+  <data name="Unlimited max speed" xml:space="preserve">
+    <value>速度制限なし</value>
+  </data>
+  <data name="Wait time required" xml:space="preserve">
+    <value>待機時間あり</value>
+  </data>
+  <data name="Third-party advertisements" xml:space="preserve">
+    <value>第三者広告あり</value>
+  </data>
+  <data name="Speed capped at 5 MB/s" xml:space="preserve">
+    <value>速度制限 5 MB/s</value>
+  </data>
+  <data name="Basic file access supported by our advertising partners." xml:space="preserve">
+    <value>広告パートナーによる基本ファイルアクセス。</value>
+  </data>
+
+  <!-- Pricing -->
+  <data name="Unlimited Downloads" xml:space="preserve">
+    <value>無制限ダウンロード</value>
+  </data>
+  <data name="Full HD Content" xml:space="preserve">
+    <value>フルHDコンテンツ</value>
+  </data>
+  <data name="No Ads" xml:space="preserve">
+    <value>広告なし</value>
+  </data>
+  <data name="Early Access" xml:space="preserve">
+    <value>早期アクセス</value>
+  </data>
+  <data name="Secure Payment" xml:space="preserve">
+    <value>安全な支払い</value>
+  </data>
+  <data name="Instant Access" xml:space="preserve">
+    <value>即時アクセス</value>
+  </data>
+  <data name="New to Bitcoin? Read our guide →" xml:space="preserve">
+    <value>Bitcoinが初めての方はガイドを読む →</value>
+  </data>
+  <data name="No posts this period" xml:space="preserve">
+    <value>この期間の投稿はありません</value>
+  </data>
+  <data name="Popular" xml:space="preserve">
+    <value>人気</value>
+  </data>
 </root>

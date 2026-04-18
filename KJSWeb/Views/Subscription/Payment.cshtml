@@ -20,19 +20,19 @@
             @if (Model.Status == "pending")
             {
                 <span class="inline-block bg-yellow-500/20 text-yellow-400 text-[11px] font-bold uppercase tracking-widest px-4 py-2">
-                    ⏳ Awaiting Payment
+                    ⏳ @Localizer["Awaiting Payment"]
                 </span>
             }
             else if (Model.Status == "confirming")
             {
                 <span class="inline-block bg-blue-500/20 text-blue-400 text-[11px] font-bold uppercase tracking-widest px-4 py-2">
-                    🔄 Confirming Transaction...
+                    🔄 @Localizer["Confirming Transaction..."]
                 </span>
             }
             else if (Model.Status == "active")
             {
                 <span class="inline-block bg-green-500/20 text-green-400 text-[11px] font-bold uppercase tracking-widest px-4 py-2">
-                    ✓ Payment Confirmed!
+                    ✓ @Localizer["Payment Confirmed!"]
                 </span>
             }
         </div>
@@ -65,7 +65,7 @@
         </div>
 
         <p class="text-slate-500 text-[10px] uppercase tracking-wider">
-            Payment will be detected automatically. Do not close this page.
+            @Localizer["Payment will be detected automatically. Do not close this page."]
         </p>
         <a asp-controller="Subscription" asp-action="BitcoinGuide"
            class="inline-block mt-4 text-slate-400 hover:text-orange-accent text-[10px] font-bold uppercase tracking-widest transition-colors">
@@ -88,13 +88,13 @@
     <!-- Support Modal -->
     <div id="support-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md p-6">
-            <h3 class="text-lg font-black text-slate-900 dark:text-gray-100 mb-1">Contact Support</h3>
+            <h3 class="text-lg font-black text-slate-900 dark:text-gray-100 mb-1">@Localizer["Contact Support"]</h3>
             <p class="text-slate-400 dark:text-gray-500 text-sm mb-5">Tell us how we can help with your payment.</p>
             <form id="support-form" class="space-y-4">
                 @Html.AntiForgeryToken()
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">Subject</label>
+                    <label class="block text-xs font-bold text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">@Localizer["Subject"]</label>
                     <input type="text" name="title" placeholder="e.g. Payment issue, missing download"
                            required
                            class="w-full border border-slate-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-accent" />
@@ -112,7 +112,7 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">Description</label>
+                    <label class="block text-xs font-bold text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">@Localizer["Message"]</label>
                     <textarea name="description" rows="4" placeholder="Please describe your issue in detail..."
                               required
                               class="w-full border border-slate-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-accent resize-none"></textarea>
@@ -122,11 +122,11 @@
 
                 <div class="flex gap-3">
                     <button type="submit" class="flex-1 bg-orange-accent text-white py-2.5 text-sm font-bold rounded-lg hover:opacity-90 transition-opacity">
-                        Send Ticket
+                        @Localizer["Send Ticket"]
                     </button>
                     <button type="button" onclick="document.getElementById('support-modal').classList.add('hidden')"
                             class="flex-1 bg-slate-100 dark:bg-gray-700 text-slate-700 dark:text-gray-300 py-2.5 text-sm font-bold rounded-lg hover:bg-slate-200 dark:hover:bg-gray-600 transition-colors">
-                        Cancel
+                        @Localizer["Cancel"]
                     </button>
                 </div>
             </form>

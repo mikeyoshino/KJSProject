@@ -14,9 +14,9 @@
 
     string StatusLabel(TicketStatus status) => status switch
     {
-        TicketStatus.Open       => "Open",
-        TicketStatus.InProgress => "In Progress",
-        TicketStatus.Resolved   => "Resolved",
+        TicketStatus.Open       => Localizer["Open"].Value,
+        TicketStatus.InProgress => Localizer["In Progress"].Value,
+        TicketStatus.Resolved   => Localizer["Resolved"].Value,
         _                       => status.ToString()
     };
 
@@ -44,11 +44,11 @@
                         #@Model.Id.Substring(0, Math.Min(8, Model.Id.Length))
                     </span>
                     <span>·</span>
-                    <span>Opened @Model.CreatedAt.ToString("MMM dd, yyyy")</span>
+                    <span>@Localizer["Opened"] @Model.CreatedAt.ToString("MMM dd, yyyy")</span>
                     @if (Model.LastReplyAt.HasValue)
                     {
                         <span>·</span>
-                        <span>Last reply @Model.LastReplyAt.Value.ToString("MMM dd, yyyy")</span>
+                        <span>@Localizer["Last Reply"] @Model.LastReplyAt.Value.ToString("MMM dd, yyyy")</span>
                     }
                 </div>
             </div>
@@ -78,10 +78,10 @@
         @if (!messages.Any())
         {
             <div class="text-center py-10 bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-sm">
-                <p class="text-slate-400 dark:text-gray-500 text-sm font-semibold">No messages yet.</p>
+                <p class="text-slate-400 dark:text-gray-500 text-sm font-semibold">@Localizer["No messages yet."]</p>
                 @if (canReply)
                 {
-                    <p class="text-slate-400 dark:text-gray-500 text-xs mt-1">Use the form below to add your first message.</p>
+                    <p class="text-slate-400 dark:text-gray-500 text-xs mt-1">@Localizer["Use the form below to add your first message."]</p>
                 }
             </div>
         }
@@ -99,7 +99,7 @@
                         <div class="flex-1 min-w-0">
                             <div class="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-sm px-4 py-3">
                                 <div class="flex items-center gap-2 mb-2">
-                                    <span class="text-[10px] font-black uppercase tracking-widest text-orange-accent">Support Team</span>
+                                    <span class="text-[10px] font-black uppercase tracking-widest text-orange-accent">@Localizer["Support Team"]</span>
                                     <span class="text-[10px] text-slate-400 dark:text-gray-500">@msg.CreatedAt.ToString("MMM dd, yyyy 'at' h:mm tt")</span>
                                 </div>
                                 <p class="text-sm text-slate-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap break-words">@msg.Message</p>
@@ -114,7 +114,7 @@
                         <div class="flex-1 min-w-0 flex flex-col items-end">
                             <div class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-sm px-4 py-3 max-w-prose w-full">
                                 <div class="flex items-center gap-2 mb-2">
-                                    <span class="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-gray-400">You</span>
+                                    <span class="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-gray-400">@Localizer["You"]</span>
                                     <span class="text-[10px] text-slate-400 dark:text-gray-500">@msg.CreatedAt.ToString("MMM dd, yyyy 'at' h:mm tt")</span>
                                 </div>
                                 <p class="text-sm text-slate-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap break-words">@msg.Message</p>
@@ -139,7 +139,7 @@
                 <div class="mb-4">
                     <textarea name="message" rows="4" required maxlength="5000"
                               class="w-full border border-slate-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 px-3 py-2.5 text-sm focus:outline-none focus:border-orange-accent transition-colors resize-none"
-                              placeholder="Write your reply…"></textarea>
+                              placeholder="@Localizer["Write your reply…"]"></textarea>
                 </div>
                 <div class="flex justify-end">
                     <button type="submit"
@@ -157,7 +157,7 @@
     {
         <div class="bg-slate-50 dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-sm p-5 text-center">
             <p class="text-sm text-slate-500 dark:text-gray-400 font-medium">
-                This ticket is resolved and closed for new replies.
+                @Localizer["This ticket is resolved and closed for new replies."]
             </p>
         </div>
     }

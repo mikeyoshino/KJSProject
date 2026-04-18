@@ -47,7 +47,7 @@
                 </div>
                 <div>
                     <h3 class="text-2xl font-black text-slate-900 dark:text-white m-0 tracking-tight">@Localizer["Premium"] @Localizer["Download"]</h3>
-                    <p class="text-sm font-semibold text-green-500 mt-1 uppercase tracking-wider">Instant • Full Speed • No Ads</p>
+                    <p class="text-sm font-semibold text-green-500 mt-1 uppercase tracking-wider">@Localizer["Instant • Full Speed • No Ads"]</p>
                 </div>
             </div>
 
@@ -58,7 +58,7 @@
                     {
                         <a href="@downloadUrls[i]" download class="premium-glow flex items-center justify-center gap-2 py-4 px-6 bg-slate-900 dark:bg-black text-white rounded-xl font-bold uppercase tracking-wider hover:-translate-y-1 transition-transform duration-300 border border-white/10 hover:border-orange-accent/50 group">
                             <svg class="w-5 h-5 group-hover:animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                            @(dlCount > 1 ? $"Download Part {i + 1}" : "Download File")
+                            @(dlCount > 1 ? $"{Localizer["Download File"].Value} Part {i + 1}" : Localizer["Download File"].Value)
                         </a>
                     }
                 </div>
@@ -80,20 +80,20 @@
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     </div>
                     
-                    <h4 class="text-xl font-black text-slate-800 dark:text-gray-200 mb-2">Free Download</h4>
+                    <h4 class="text-xl font-black text-slate-800 dark:text-gray-200 mb-2">@Localizer["Free Download"]</h4>
                     <p class="text-sm text-slate-500 dark:text-gray-400 mb-6 flex-grow">
-                        Basic file access supported by our advertising partners.
+                        @Localizer["Basic file access supported by our advertising partners."]
                     </p>
 
                     <ul class="w-full text-left space-y-3 mb-8">
                         <li class="flex items-center gap-3 text-sm font-medium text-slate-600 dark:text-gray-300">
-                            <span class="text-red-500">⚠</span> Wait time required
+                            <span class="text-red-500">⚠</span> @Localizer["Wait time required"]
                         </li>
                         <li class="flex items-center gap-3 text-sm font-medium text-slate-600 dark:text-gray-300">
-                            <span class="text-red-500">⚠</span> Third-party advertisements
+                            <span class="text-red-500">⚠</span> @Localizer["Third-party advertisements"]
                         </li>
                         <li class="flex items-center gap-3 text-sm font-medium text-slate-600 dark:text-gray-300">
-                            <span class="text-orange-400">⚡</span> Speed capped at 5 MB/s
+                            <span class="text-orange-400">⚡</span> @Localizer["Speed capped at 5 MB/s"]
                         </li>
                     </ul>
 
@@ -101,7 +101,7 @@
                         @for (int i = 0; i < publicUrls!.Count; i++)
                         {
                             <a href="@publicUrls[i]" target="_blank" rel="noopener" class="block w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-slate-700 dark:text-gray-200 font-bold uppercase tracking-wider text-sm rounded-xl transition-colors">
-                                @(publicUrls.Count > 1 ? $"Free Download — Part {i + 1}" : "Free Download")
+                                @(publicUrls.Count > 1 ? $"{Localizer["Free Download"].Value} — Part {i + 1}" : Localizer["Free Download"].Value)
                             </a>
                         }
                     </div>
@@ -117,20 +117,20 @@
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                 </div>
                 
-                <h4 class="text-xl font-black text-white mb-2 relative z-10">Premium Download</h4>
+                <h4 class="text-xl font-black text-white mb-2 relative z-10">@Localizer["Premium Download"]</h4>
                 <p class="text-sm text-gray-400 mb-6 flex-grow relative z-10">
-                    Skip the ads and wait times. Instant access for subscribers.
+                    @Localizer["Skip the ads and wait times. Instant access for subscribers."]
                 </p>
 
                 <ul class="w-full text-left space-y-3 mb-8 relative z-10">
                     <li class="flex items-center gap-3 text-sm font-bold text-white">
-                        <span class="text-green-400">✓</span> Instant, 0 sec wait time
+                        <span class="text-green-400">✓</span> @Localizer["Instant, 0 sec wait time"]
                     </li>
                     <li class="flex items-center gap-3 text-sm font-bold text-white">
-                        <span class="text-green-400">✓</span> Completely Ad-Free
+                        <span class="text-green-400">✓</span> @Localizer["Completely Ad-Free"]
                     </li>
                     <li class="flex items-center gap-3 text-sm font-bold text-white">
-                        <span class="text-green-400">✓</span> Unlimited max speed
+                        <span class="text-green-400">✓</span> @Localizer["Unlimited max speed"]
                     </li>
                 </ul>
 

@@ -117,12 +117,12 @@
     {
         <aside class="w-full md:w-56 lg:w-64 shrink-0">
             <div>
-                <h4 class="text-[11px] font-black uppercase tracking-[0.3em] border-b-2 border-black dark:border-gray-600 pb-2 mb-4">Categories</h4>
+                <h4 class="text-[11px] font-black uppercase tracking-[0.3em] border-b-2 border-black dark:border-gray-600 pb-2 mb-4">@Localizer["Categories"]</h4>
                 <ul>
                     <li>
                         <a href="/jgirl"
                            class="flex items-center justify-between py-2 text-sm font-semibold hover:text-orange-accent transition-colors border-b border-slate-100 dark:border-gray-700 @(string.IsNullOrEmpty(activeSource) ? "text-orange-accent" : "")">
-                            <span>All</span>
+                            <span>@Localizer["All"]</span>
                         </a>
                     </li>
                     @foreach (var src in sources)

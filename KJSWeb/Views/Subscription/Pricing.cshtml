@@ -9,7 +9,7 @@
 <div class="text-center mb-16">
     <h1 class="text-4xl font-black tracking-tight mb-4">@Localizer["Choose your plan"]</h1>
     <p class="text-slate-500 dark:text-gray-400 text-sm max-w-lg mx-auto">Unlock premium downloads with Bitcoin. Direct wallet-to-wallet payments — no middleman, no data shared.</p>
-    <a asp-controller="Subscription" asp-action="BitcoinGuide" class="inline-block mt-3 text-orange-accent text-[11px] font-bold uppercase tracking-widest hover:opacity-70 transition-opacity">New to Bitcoin? Read our guide →</a>
+    <a asp-controller="Subscription" asp-action="BitcoinGuide" class="inline-block mt-3 text-orange-accent text-[11px] font-bold uppercase tracking-widest hover:opacity-70 transition-opacity">@Localizer["New to Bitcoin? Read our guide →"]</a>
 </div>
 
 @if (TempData["Error"] != null)
@@ -69,16 +69,16 @@
 
                 <ul class="text-left text-sm space-y-3 mb-8 @(isHighlighted ? "text-slate-300" : "text-slate-600 dark:text-gray-400")">
                     <li class="flex items-center gap-2">
-                        <span class="text-orange-accent font-bold">✓</span> Unlimited Downloads
+                        <span class="text-orange-accent font-bold">✓</span> @Localizer["Unlimited Downloads"]
                     </li>
                     <li class="flex items-center gap-2">
-                        <span class="text-orange-accent font-bold">✓</span> Full HD Content
+                        <span class="text-orange-accent font-bold">✓</span> @Localizer["Full HD Content"]
                     </li>
                     <li class="flex items-center gap-2">
-                        <span class="text-orange-accent font-bold">✓</span> No Ads
+                        <span class="text-orange-accent font-bold">✓</span> @Localizer["No Ads"]
                     </li>
                     <li class="flex items-center gap-2">
-                        <span class="text-orange-accent font-bold">✓</span> Early Access
+                        <span class="text-orange-accent font-bold">✓</span> @Localizer["Early Access"]
                     </li>
                 </ul>
 
@@ -106,8 +106,8 @@
 
 <!-- Trust Badges -->
 <div class="flex flex-wrap justify-center gap-8 mt-16 text-slate-400 dark:text-gray-500 text-[10px] font-bold uppercase tracking-widest">
-    <span>🔒 Secure Payment</span>
+    <span>🔒 @Localizer["Secure Payment"]</span>
     <span>₿ Bitcoin Only</span>
-    <span>⚡ Instant Access</span>
+    <span>⚡ @Localizer["Instant Access"]</span>
     <span>🚫 No KYC Required</span>
 </div>
