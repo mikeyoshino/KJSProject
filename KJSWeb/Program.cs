@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.DataProtection;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
+builder.Services.AddControllersWithViews()
+    .AddViewLocalization();
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<KJSWeb.Services.SupabaseService>();
 builder.Services.AddSingleton<KJSWeb.Services.BlockonomicsService>();
@@ -43,6 +45,12 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
     app.UseHttpsRedirection();
 }
+
+var supportedCultures = new[] { "en", "ja" };
+app.UseRequestLocalization(new RequestLocalizationOptions()
+    .SetDefaultCulture("en")
+    .AddSupportedCultures(supportedCultures)
+    .AddSupportedUICultures(supportedCultures));
 
 app.UseRouting();
 

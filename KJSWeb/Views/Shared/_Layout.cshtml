@@ -1,5 +1,11 @@
+@using System.Globalization
 <!DOCTYPE html>
-<html lang="en">
+@{
+    var _lang         = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var _toggleCulture = _lang == "ja" ? "en" : "ja";
+    var _toggleLabel   = _toggleCulture == "ja" ? "日本語" : "English";
+}
+<html lang="@_lang">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -159,18 +165,28 @@
 
             <!-- Tier 2: Desktop Navigation Links — HIDDEN on mobile via CSS -->
             <nav class="desktop-nav flex flex-wrap justify-center items-center space-x-6 sm:space-x-10 text-[13px] font-bold uppercase tracking-widest">
-                <a asp-controller="Home" asp-action="Index" class="hover:text-orange-accent transition-colors">Home</a>
-                <a asp-controller="Home" asp-action="Buzz69" class="hover:text-orange-accent transition-colors">Buzz69</a>
-                <a asp-controller="AsianScandal" asp-action="Index" class="hover:text-orange-accent transition-colors">Asian Scandal</a>
-                <a asp-controller="JGirl" asp-action="Index" class="hover:text-orange-accent transition-colors">JGirl</a>
+                <a asp-controller="Home" asp-action="Index" class="hover:text-orange-accent transition-colors">@Localizer["Home"]</a>
+                <a asp-controller="Home" asp-action="Buzz69" class="hover:text-orange-accent transition-colors">@Localizer["Buzz69"]</a>
+                <a asp-controller="AsianScandal" asp-action="Index" class="hover:text-orange-accent transition-colors">@Localizer["Asian Scandal"]</a>
+                <a asp-controller="JGirl" asp-action="Index" class="hover:text-orange-accent transition-colors">@Localizer["JGirl"]</a>
 
-                <a asp-controller="Subscription" asp-action="Pricing" class="hover:text-orange-accent transition-colors">Upgrade</a>
+                <a asp-controller="Subscription" asp-action="Pricing" class="hover:text-orange-accent transition-colors">@Localizer["Upgrade"]</a>
 
-                <button id="searchOpen" aria-label="Search" class="hover:text-orange-accent transition-colors p-1 -m-1">
+                <button id="searchOpen" aria-label="@Localizer["Search"]" class="hover:text-orange-accent transition-colors p-1 -m-1">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
                     </svg>
                 </button>
+
+                <!-- Language toggle -->
+                <form method="post" asp-controller="Language" asp-action="Set">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="culture" value="@_toggleCulture" />
+                    <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                    <button type="submit" class="hover:text-orange-accent transition-colors text-[13px] font-bold tracking-widest normal-case">
+                        @_toggleLabel
+                    </button>
+                </form>
 
                 @if (User.Identity?.IsAuthenticated == true)
                 {
@@ -185,31 +201,31 @@
                         <div class="dropdown-menu hidden absolute right-0 pt-4 w-56 z-50">
                             <div class="bg-[#121212] dark:bg-gray-900 border border-white/10 shadow-2xl">
                                 <div class="px-4 py-3 border-b border-white/10">
-                                    <p class="text-[10px] text-slate-400 uppercase tracking-widest">Signed in as</p>
+                                    <p class="text-[10px] text-slate-400 uppercase tracking-widest">@Localizer["Signed in as"]</p>
                                     <p class="text-white text-xs font-bold truncate mt-0.5">@User.FindFirstValue(System.Security.Claims.ClaimTypes.Email)</p>
                                 </div>
                                 <div class="py-1">
                                     <a asp-controller="Subscription" asp-action="MySubscription"
                                        class="flex items-center gap-3 px-4 py-3 text-[12px] font-bold uppercase tracking-widest hover:bg-white/5 hover:text-orange-accent transition-colors">
                                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>
-                                        My Subscription
+                                        @Localizer["My Subscription"]
                                     </a>
                                     <a asp-controller="Subscription" asp-action="Pricing"
                                        class="flex items-center gap-3 px-4 py-3 text-[12px] font-bold uppercase tracking-widest hover:bg-white/5 hover:text-orange-accent transition-colors">
                                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                        Upgrade
+                                        @Localizer["Upgrade"]
                                     </a>
                                     <a asp-controller="Support" asp-action="Tickets"
                                        class="flex items-center gap-3 px-4 py-3 text-[12px] font-bold uppercase tracking-widest hover:bg-white/5 hover:text-orange-accent transition-colors">
                                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" /></svg>
-                                        My Tickets
+                                        @Localizer["My Tickets"]
                                     </a>
                                 </div>
                                 <div class="border-t border-white/10 py-1">
                                     <form method="post" asp-controller="Auth" asp-action="Logout">
                                         <button type="submit" class="flex items-center gap-3 w-full px-4 py-3 text-[12px] font-bold uppercase tracking-widest hover:bg-white/5 hover:text-orange-accent transition-colors text-left">
                                             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                                            Logout
+                                            @Localizer["Logout"]
                                         </button>
                                     </form>
                                 </div>
@@ -219,19 +235,19 @@
                 }
                 else
                 {
-                    <a asp-controller="Auth" asp-action="Login" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" class="hover:text-orange-accent transition-colors">Login</a>
-                    <a asp-controller="Auth" asp-action="Signup" class="hover:text-orange-accent transition-colors">Sign Up</a>
+                    <a asp-controller="Auth" asp-action="Login" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" class="hover:text-orange-accent transition-colors">@Localizer["Login"]</a>
+                    <a asp-controller="Auth" asp-action="Signup" class="hover:text-orange-accent transition-colors">@Localizer["Sign Up"]</a>
                 }
             </nav>
 
             <!-- Mobile Navigation — ONLY visible when toggled on mobile -->
             <nav class="mobile-nav" id="mobileNav">
                 <div class="mt-4 border-t border-white/10 pt-4 space-y-0">
-                    <a asp-controller="Home" asp-action="Index" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5">Home</a>
-                    <a asp-controller="Home" asp-action="Buzz69" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5">Buzz69</a>
-                    <a asp-controller="AsianScandal" asp-action="Index" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5 text-orange-accent italic">Asian Scandal ✨</a>
-                    <a asp-controller="JGirl" asp-action="Index" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5">JGirl</a>
-                    <a asp-controller="Subscription" asp-action="Pricing" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5">Upgrade</a>
+                    <a asp-controller="Home" asp-action="Index" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5">@Localizer["Home"]</a>
+                    <a asp-controller="Home" asp-action="Buzz69" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5">@Localizer["Buzz69"]</a>
+                    <a asp-controller="AsianScandal" asp-action="Index" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5 text-orange-accent italic">@Localizer["Asian Scandal"] ✨</a>
+                    <a asp-controller="JGirl" asp-action="Index" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5">@Localizer["JGirl"]</a>
+                    <a asp-controller="Subscription" asp-action="Pricing" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5">@Localizer["Upgrade"]</a>
                     @if (User.Identity?.IsAuthenticated == true)
                     {
                         <div class="flex items-center gap-3 py-3 border-b border-white/5">
@@ -240,24 +256,33 @@
                             </div>
                             <span class="text-slate-400 text-[11px] truncate">@User.FindFirstValue(System.Security.Claims.ClaimTypes.Email)</span>
                         </div>
-                        <a asp-controller="Subscription" asp-action="MySubscription" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5 pl-4">My Subscription</a>
-                        <a asp-controller="Support" asp-action="Tickets" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5 pl-4">My Tickets</a>
+                        <a asp-controller="Subscription" asp-action="MySubscription" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5 pl-4">@Localizer["My Subscription"]</a>
+                        <a asp-controller="Support" asp-action="Tickets" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5 pl-4">@Localizer["My Tickets"]</a>
                         <form method="post" asp-controller="Auth" asp-action="Logout">
-                            <button type="submit" class="block w-full text-left py-3 pl-4 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5">Logout</button>
+                            <button type="submit" class="block w-full text-left py-3 pl-4 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5">@Localizer["Logout"]</button>
                         </form>
                     }
                     else
                     {
-                        <a asp-controller="Auth" asp-action="Login" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5">Login</a>
-                        <a asp-controller="Auth" asp-action="Signup" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors">Sign Up</a>
+                        <a asp-controller="Auth" asp-action="Login" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5">@Localizer["Login"]</a>
+                        <a asp-controller="Auth" asp-action="Signup" class="block py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-b border-white/5">@Localizer["Sign Up"]</a>
                     }
                     <!-- Mobile search -->
                     <button id="searchOpenMobile" class="flex items-center gap-3 w-full py-3 text-[13px] font-bold uppercase tracking-widest hover:text-orange-accent transition-colors border-t border-white/5 mt-1 pt-4">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
                         </svg>
-                        Search
+                        @Localizer["Search"]
                     </button>
+                    <!-- Mobile language toggle -->
+                    <form method="post" asp-controller="Language" asp-action="Set" class="border-t border-white/5">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="culture" value="@_toggleCulture" />
+                        <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                        <button type="submit" class="block w-full text-left py-3 text-[13px] font-bold tracking-widest hover:text-orange-accent transition-colors normal-case">
+                            @_toggleLabel
+                        </button>
+                    </form>
                 </div>
             </nav>
         </div>
@@ -273,29 +298,29 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12 text-center md:text-left">
                 <div class="col-span-1 md:col-span-2">
                     <a asp-controller="Home" asp-action="Index" class="text-3xl font-black tracking-tighter text-white mb-6 block hover:text-white">SCANDAL69</a>
-                    <p class="text-xs leading-relaxed max-w-sm mx-auto md:mx-0">Premium content delivery network specializing in high-quality updates and community curation. Est 2026.</p>
+                    <p class="text-xs leading-relaxed max-w-sm mx-auto md:mx-0">@Localizer["Premium content delivery network specializing in high-quality updates and community curation. Est 2026."]</p>
                 </div>
                 <div>
-                    <h4 class="text-white font-bold mb-6 uppercase text-[10px] tracking-[0.3em]">Network</h4>
+                    <h4 class="text-white font-bold mb-6 uppercase text-[10px] tracking-[0.3em]">@Localizer["Network"]</h4>
                     <ul class="space-y-3 text-[11px] font-bold uppercase tracking-wider">
-                        <li><a href="#" class="hover:text-orange-accent transition-colors">Privacy</a></li>
-                        <li><a href="#" class="hover:text-orange-accent transition-colors">Terms</a></li>
+                        <li><a href="#" class="hover:text-orange-accent transition-colors">@Localizer["Privacy"]</a></li>
+                        <li><a href="#" class="hover:text-orange-accent transition-colors">@Localizer["Terms"]</a></li>
                         <li><a href="#" class="hover:text-orange-accent transition-colors">2257</a></li>
                         <li><a href="#" class="hover:text-orange-accent transition-colors">DMCA</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h4 class="text-white font-bold mb-6 uppercase text-[10px] tracking-[0.3em]">Support</h4>
+                    <h4 class="text-white font-bold mb-6 uppercase text-[10px] tracking-[0.3em]">@Localizer["Support"]</h4>
                     <ul class="space-y-3 text-[11px] font-bold uppercase tracking-wider">
-                        <li><a href="#" class="hover:text-orange-accent transition-colors">Help</a></li>
-                        <li><a href="#" class="hover:text-orange-accent transition-colors">Contact</a></li>
-                        <li><a href="#" class="hover:text-orange-accent transition-colors">Ads</a></li>
-                        <li><a href="#" class="hover:text-orange-accent transition-colors">Affiliates</a></li>
+                        <li><a href="#" class="hover:text-orange-accent transition-colors">@Localizer["Help"]</a></li>
+                        <li><a href="#" class="hover:text-orange-accent transition-colors">@Localizer["Contact"]</a></li>
+                        <li><a href="#" class="hover:text-orange-accent transition-colors">@Localizer["Ads"]</a></li>
+                        <li><a href="#" class="hover:text-orange-accent transition-colors">@Localizer["Affiliates"]</a></li>
                     </ul>
                 </div>
             </div>
             <div class="mt-16 pt-8 border-t border-white/5 text-center text-[9px] uppercase tracking-[0.4em]">
-                &copy; @DateTime.Now.Year SCANDAL69. Strictly 18+.
+                &copy; @DateTime.Now.Year SCANDAL69. @Localizer["Strictly 18+."]
             </div>
         </div>
     </footer>
@@ -318,7 +343,7 @@
                 <svg class="w-5 h-5 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
                 </svg>
-                <input id="searchInput" type="text" name="q" placeholder="Search posts…" autocomplete="off"
+                <input id="searchInput" type="text" name="q" placeholder="@Localizer["Search posts…"]" autocomplete="off"
                        class="flex-1 text-lg font-semibold outline-none placeholder-slate-300 bg-transparent dark:text-gray-100 dark:placeholder-gray-500"
                        hx-get="/search/results"
                        hx-trigger="input delay:300ms, keyup[key=='Enter']"
@@ -337,7 +362,7 @@
     </div>
 
     <!-- Dark mode toggle — fixed bottom-left -->
-    <button id="theme-toggle" aria-label="Toggle dark mode"
+    <button id="theme-toggle" aria-label="@Localizer["Toggle dark mode"]"
             style="position:fixed;bottom:20px;left:20px;z-index:9999;"
             class="w-11 h-11 flex items-center justify-center rounded-full bg-gray-900 dark:bg-white border border-white/20 dark:border-gray-300 shadow-xl hover:scale-110 transition-transform">
         <!-- Sun icon (shown in dark mode) — Heroicons outline -->

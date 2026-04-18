@@ -28,7 +28,7 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
         <h1 class="text-2xl font-bold text-slate-800 dark:text-gray-100 border-l-4 border-orange-accent pl-4 uppercase tracking-tight">
-            My Support Tickets
+            @Localizer["My Tickets"]
         </h1>
         <button
             onclick="document.getElementById('new-ticket-modal').classList.remove('hidden')"
@@ -36,7 +36,7 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
             </svg>
-            New Ticket
+            @Localizer["New Ticket"]
         </button>
     </div>
 
@@ -181,7 +181,7 @@
     <div class="absolute inset-0 bg-black/60" onclick="document.getElementById('new-ticket-modal').classList.add('hidden')"></div>
     <div class="relative bg-white dark:bg-gray-800 w-full max-w-lg shadow-2xl rounded-sm">
         <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-gray-700">
-            <h3 class="text-[11px] font-black uppercase tracking-[0.3em]">Open New Ticket</h3>
+            <h3 class="text-[11px] font-black uppercase tracking-[0.3em]">@Localizer["New Ticket"]</h3>
             <button onclick="document.getElementById('new-ticket-modal').classList.add('hidden')"
                     class="text-slate-400 dark:text-gray-500 hover:text-black dark:hover:text-gray-100 transition-colors p-1">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -218,11 +218,11 @@
                 <button type="button"
                         onclick="document.getElementById('new-ticket-modal').classList.add('hidden')"
                         class="px-5 py-2.5 text-[12px] font-bold uppercase tracking-wider border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors">
-                    Cancel
+                    @Localizer["Cancel"]
                 </button>
                 <button type="submit" id="ticket-submit-btn"
                         class="px-5 py-2.5 text-[12px] font-bold uppercase tracking-wider bg-orange-accent text-white hover:opacity-90 transition-opacity">
-                    Submit Ticket
+                    @Localizer["Submit"]
                 </button>
             </div>
         </form>

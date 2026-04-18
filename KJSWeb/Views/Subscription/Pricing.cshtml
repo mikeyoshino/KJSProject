@@ -7,7 +7,7 @@
 
 <!-- Pricing Header -->
 <div class="text-center mb-16">
-    <h1 class="text-4xl font-black tracking-tight mb-4">Choose Your Plan</h1>
+    <h1 class="text-4xl font-black tracking-tight mb-4">@Localizer["Choose your plan"]</h1>
     <p class="text-slate-500 dark:text-gray-400 text-sm max-w-lg mx-auto">Unlock premium downloads with Bitcoin. Direct wallet-to-wallet payments — no middleman, no data shared.</p>
     <a asp-controller="Subscription" asp-action="BitcoinGuide" class="inline-block mt-3 text-orange-accent text-[11px] font-bold uppercase tracking-widest hover:opacity-70 transition-opacity">New to Bitcoin? Read our guide →</a>
 </div>
@@ -22,7 +22,7 @@
 @if (activeSub != null)
 {
     <div class="max-w-2xl mx-auto bg-green-500/10 border border-green-500/30 text-green-700 px-6 py-4 text-sm mb-8 text-center">
-        <span class="font-bold">✓ Active Subscription:</span>
+        <span class="font-bold">✓ @Localizer["Manage Subscription"]:</span>
         @(plans != null && plans.ContainsKey(activeSub.Plan) ? plans[activeSub.Plan].Label : activeSub.Plan)
         — expires @(activeSub.ExpiresAt?.ToString("MMMM dd, yyyy") ?? "N/A")
     </div>
@@ -34,7 +34,7 @@
     {
         var planKeys = new[] { "monthly", "3month", "yearly" };
         var highlights = new[] { false, true, false }; // 3-month is highlighted
-        var badges = new[] { "", "BEST VALUE", "MOST POPULAR" };
+        var badges = new[] { "", Localizer["BEST VALUE"].Value, Localizer["MOST POPULAR"].Value };
 
         @for (int i = 0; i < planKeys.Length; i++)
         {
@@ -86,7 +86,7 @@
                 {
                     <a asp-action="Login" asp-controller="Auth" asp-route-returnUrl="/subscription/pricing"
                        class="block w-full @(isHighlighted ? "bg-orange-accent" : "bg-black dark:bg-gray-900") text-white py-3 text-[13px] font-bold uppercase tracking-widest hover:opacity-90 transition-opacity text-center">
-                        Login to Subscribe
+                        @Localizer["Login"]
                     </a>
                 }
                 else
@@ -95,7 +95,7 @@
                         <input type="hidden" name="plan" value="@key" />
                         <button type="submit"
                                 class="w-full @(isHighlighted ? "bg-orange-accent" : "bg-black dark:bg-gray-900") text-white py-3 text-[13px] font-bold uppercase tracking-widest hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
-                            <span>₿</span> Pay with Bitcoin
+                            <span>₿</span> @Localizer["Pay with Bitcoin"]
                         </button>
                     </form>
                 }

@@ -8,7 +8,7 @@
 
 <div class="max-w-lg mx-auto">
     <div class="bg-black text-white p-6 sm:p-10 shadow-2xl text-center">
-        <h1 class="text-2xl font-black tracking-tight mb-2">Complete Payment</h1>
+        <h1 class="text-2xl font-black tracking-tight mb-2">@Localizer["Pay with Bitcoin"]</h1>
         <p class="text-slate-400 text-[11px] uppercase tracking-widest mb-8">
             @(KJSWeb.Models.SubscriptionPlans.All.ContainsKey(Model.Plan)
                 ? KJSWeb.Models.SubscriptionPlans.All[Model.Plan].Label
@@ -47,7 +47,7 @@
 
         <!-- BTC Amount -->
         <div class="bg-[#121212] border border-white/10 p-5 mb-4">
-            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2">Send Exactly</p>
+            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2">@Localizer["Send exactly"]</p>
             <p class="text-2xl font-black text-orange-accent" id="btcAmount">
                 ₿ @Model.AmountBtc?.ToString("0.00000000")
             </p>
@@ -56,11 +56,11 @@
 
         <!-- BTC Address -->
         <div class="bg-[#121212] border border-white/10 p-5 mb-6">
-            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-3">To This Address</p>
+            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-3">@Localizer["To this address"]</p>
             <p class="text-white font-mono text-sm break-all text-center mb-3" id="btcAddress">@Model.BtcAddress</p>
             <button onclick="copyAddress()" id="copyBtn"
                     class="w-full bg-orange-accent text-white text-[10px] font-bold uppercase px-3 py-2 hover:opacity-80 transition-opacity">
-                Copy Address
+                @Localizer["Copy address"]
             </button>
         </div>
 

@@ -18,15 +18,15 @@
 @if (string.IsNullOrWhiteSpace(Model.Query) || Model.Query.Trim().Length < 2)
 {
     <div class="px-2 py-8 text-center text-slate-400 text-sm font-semibold">
-        Type at least 2 characters to search…
+        @Localizer["Search posts…"]
     </div>
 }
 else if (totalCount == 0)
 {
     <div class="bg-white dark:bg-gray-800 rounded-sm px-6 py-10 text-center">
         <p class="text-2xl mb-3">🔍</p>
-        <p class="text-slate-700 dark:text-gray-300 font-bold">No results for <span class="text-orange-accent">@Model.Query</span></p>
-        <p class="text-slate-400 dark:text-gray-500 text-sm mt-1">Try a different keyword.</p>
+        <p class="text-slate-700 dark:text-gray-300 font-bold">@Localizer["No results found"] — <span class="text-orange-accent">@Model.Query</span></p>
+        <p class="text-slate-400 dark:text-gray-500 text-sm mt-1">@Localizer["No results found"]</p>
     </div>
 }
 else

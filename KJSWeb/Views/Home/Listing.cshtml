@@ -122,7 +122,7 @@
             {
                 var previewCats = sidebarCategories.Take(6).ToList();
                 <div>
-                    <h4 class="text-[11px] font-black uppercase tracking-[0.3em] border-b-2 border-black dark:border-gray-600 pb-2 mb-4">Categories</h4>
+                    <h4 class="text-[11px] font-black uppercase tracking-[0.3em] border-b-2 border-black dark:border-gray-600 pb-2 mb-4">@Localizer["Categories"]</h4>
                     <ul>
                         @foreach (var cat in previewCats)
                         {
@@ -151,7 +151,7 @@
                     <!-- Panel -->
                     <div class="relative bg-white dark:bg-gray-800 w-full max-w-2xl max-h-[80vh] overflow-y-auto shadow-2xl rounded-sm">
                         <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800 z-10">
-                            <h3 class="text-[11px] font-black uppercase tracking-[0.3em]">All Categories</h3>
+                            <h3 class="text-[11px] font-black uppercase tracking-[0.3em]">@Localizer["Categories"]</h3>
                             <button onclick="document.getElementById('cat-modal').classList.add('hidden')"
                                     class="text-slate-400 dark:text-gray-500 hover:text-black dark:hover:text-gray-100 transition-colors p-1">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -173,7 +173,7 @@
 
             <!-- Popular Posts Widget -->
             <div>
-                <h4 class="text-[11px] font-black uppercase tracking-[0.3em] border-b-2 border-black dark:border-gray-600 pb-2 mb-4">Popular</h4>
+                <h4 class="text-[11px] font-black uppercase tracking-[0.3em] border-b-2 border-black dark:border-gray-600 pb-2 mb-4">@Localizer["Popular posts"]</h4>
                 <div id="popular-widget">
                     @await Html.PartialAsync("_PopularPosts", popularPosts)
                 </div>

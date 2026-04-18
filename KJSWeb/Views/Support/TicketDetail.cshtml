@@ -31,7 +31,7 @@
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
         </svg>
-        All Tickets
+        @Localizer["My Tickets"]
     </a>
 
     <!-- Ticket Header -->
@@ -133,7 +133,7 @@
     @if (canReply)
     {
         <div class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-sm p-6">
-            <h3 class="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-gray-400 mb-4">Reply</h3>
+            <h3 class="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-gray-400 mb-4">@Localizer["Reply"]</h3>
             <form method="post" action="/support/tickets/@Model.Id/reply">
                 @Html.AntiForgeryToken()
                 <div class="mb-4">
@@ -147,7 +147,7 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/>
                         </svg>
-                        Send Reply
+                        @Localizer["Reply"]
                     </button>
                 </div>
             </form>

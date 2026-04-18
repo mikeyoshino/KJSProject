@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms</value>
+  </resheader>
+
+  <!-- Navigation / Layout -->
+  <data name="Home" xml:space="preserve">
+    <value>ホーム</value>
+  </data>
+  <data name="Buzz69" xml:space="preserve">
+    <value>Buzz69</value>
+  </data>
+  <data name="Asian Scandal" xml:space="preserve">
+    <value>アジアスキャンダル</value>
+  </data>
+  <data name="JGirl" xml:space="preserve">
+    <value>JGirl</value>
+  </data>
+  <data name="Upgrade" xml:space="preserve">
+    <value>アップグレード</value>
+  </data>
+  <data name="Login" xml:space="preserve">
+    <value>ログイン</value>
+  </data>
+  <data name="Sign Up" xml:space="preserve">
+    <value>新規登録</value>
+  </data>
+  <data name="Signed in as" xml:space="preserve">
+    <value>ログイン中</value>
+  </data>
+  <data name="My Subscription" xml:space="preserve">
+    <value>マイサブスクリプション</value>
+  </data>
+  <data name="My Tickets" xml:space="preserve">
+    <value>マイチケット</value>
+  </data>
+  <data name="Logout" xml:space="preserve">
+    <value>ログアウト</value>
+  </data>
+  <data name="Search" xml:space="preserve">
+    <value>検索</value>
+  </data>
+  <data name="Search posts…" xml:space="preserve">
+    <value>投稿を検索…</value>
+  </data>
+  <data name="Toggle dark mode" xml:space="preserve">
+    <value>ダークモード切替</value>
+  </data>
+  <data name="Network" xml:space="preserve">
+    <value>ネットワーク</value>
+  </data>
+  <data name="Support" xml:space="preserve">
+    <value>サポート</value>
+  </data>
+  <data name="Privacy" xml:space="preserve">
+    <value>プライバシー</value>
+  </data>
+  <data name="Terms" xml:space="preserve">
+    <value>利用規約</value>
+  </data>
+  <data name="Help" xml:space="preserve">
+    <value>ヘルプ</value>
+  </data>
+  <data name="Contact" xml:space="preserve">
+    <value>お問い合わせ</value>
+  </data>
+  <data name="Ads" xml:space="preserve">
+    <value>広告</value>
+  </data>
+  <data name="Affiliates" xml:space="preserve">
+    <value>アフィリエイト</value>
+  </data>
+  <data name="Premium content delivery network specializing in high-quality updates and community curation. Est 2026." xml:space="preserve">
+    <value>高品質なコンテンツと厳選コミュニティを提供するプレミアムネットワーク。2026年設立。</value>
+  </data>
+  <data name="Strictly 18+." xml:space="preserve">
+    <value>18歳以上限定。</value>
+  </data>
+
+  <!-- Auth -->
+  <data name="Email" xml:space="preserve">
+    <value>メールアドレス</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>パスワード</value>
+  </data>
+  <data name="Create Account" xml:space="preserve">
+    <value>アカウント作成</value>
+  </data>
+  <data name="Already have an account?" xml:space="preserve">
+    <value>すでにアカウントをお持ちの方</value>
+  </data>
+  <data name="Don't have an account?" xml:space="preserve">
+    <value>アカウントをお持ちでない方</value>
+  </data>
+  <data name="Welcome back" xml:space="preserve">
+    <value>おかえりなさい</value>
+  </data>
+  <data name="Sign in to continue" xml:space="preserve">
+    <value>続けるにはサインインしてください</value>
+  </data>
+  <data name="Confirm Password" xml:space="preserve">
+    <value>パスワード確認</value>
+  </data>
+
+  <!-- Subscription / Pricing -->
+  <data name="Monthly" xml:space="preserve">
+    <value>月額</value>
+  </data>
+  <data name="Annual" xml:space="preserve">
+    <value>年額</value>
+  </data>
+  <data name="BEST VALUE" xml:space="preserve">
+    <value>最もお得</value>
+  </data>
+  <data name="MOST POPULAR" xml:space="preserve">
+    <value>人気No.1</value>
+  </data>
+  <data name="Subscribe" xml:space="preserve">
+    <value>登録する</value>
+  </data>
+  <data name="Active" xml:space="preserve">
+    <value>有効</value>
+  </data>
+  <data name="Expired" xml:space="preserve">
+    <value>期限切れ</value>
+  </data>
+  <data name="Days remaining" xml:space="preserve">
+    <value>残り日数</value>
+  </data>
+  <data name="Manage Subscription" xml:space="preserve">
+    <value>サブスクリプション管理</value>
+  </data>
+  <data name="No active subscription" xml:space="preserve">
+    <value>有効なサブスクリプションがありません</value>
+  </data>
+  <data name="Pricing" xml:space="preserve">
+    <value>料金プラン</value>
+  </data>
+  <data name="Choose your plan" xml:space="preserve">
+    <value>プランを選択</value>
+  </data>
+  <data name="Pay with Bitcoin" xml:space="preserve">
+    <value>Bitcoinで支払う</value>
+  </data>
+  <data name="Send exactly" xml:space="preserve">
+    <value>正確に送金してください</value>
+  </data>
+  <data name="To this address" xml:space="preserve">
+    <value>このアドレスへ</value>
+  </data>
+  <data name="Copy address" xml:space="preserve">
+    <value>アドレスをコピー</value>
+  </data>
+  <data name="Payment pending" xml:space="preserve">
+    <value>支払い待ち</value>
+  </data>
+  <data name="Payment confirmed" xml:space="preserve">
+    <value>支払い確認済み</value>
+  </data>
+  <data name="Expires" xml:space="preserve">
+    <value>有効期限</value>
+  </data>
+
+  <data name="Cancel" xml:space="preserve">
+    <value>キャンセル</value>
+  </data>
+
+  <!-- Download / Support -->
+  <data name="Download" xml:space="preserve">
+    <value>ダウンロード</value>
+  </data>
+  <data name="Starting download" xml:space="preserve">
+    <value>ダウンロード開始</value>
+  </data>
+  <data name="Submit" xml:space="preserve">
+    <value>送信</value>
+  </data>
+  <data name="New Ticket" xml:space="preserve">
+    <value>新しいチケット</value>
+  </data>
+  <data name="Open" xml:space="preserve">
+    <value>オープン</value>
+  </data>
+  <data name="Closed" xml:space="preserve">
+    <value>クローズ</value>
+  </data>
+  <data name="Reply" xml:space="preserve">
+    <value>返信</value>
+  </data>
+  <data name="Subject" xml:space="preserve">
+    <value>件名</value>
+  </data>
+  <data name="Message" xml:space="preserve">
+    <value>メッセージ</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>ステータス</value>
+  </data>
+  <data name="Created" xml:space="preserve">
+    <value>作成日</value>
+  </data>
+
+  <!-- Common -->
+  <data name="Loading…" xml:space="preserve">
+    <value>読み込み中…</value>
+  </data>
+  <data name="No results found" xml:space="preserve">
+    <value>結果が見つかりません</value>
+  </data>
+  <data name="View all" xml:space="preserve">
+    <value>すべて見る</value>
+  </data>
+  <data name="Related posts" xml:space="preserve">
+    <value>関連投稿</value>
+  </data>
+  <data name="Popular posts" xml:space="preserve">
+    <value>人気投稿</value>
+  </data>
+  <data name="Premium" xml:space="preserve">
+    <value>プレミアム</value>
+  </data>
+  <data name="Free" xml:space="preserve">
+    <value>無料</value>
+  </data>
+  <data name="Error" xml:space="preserve">
+    <value>エラー</value>
+  </data>
+  <data name="Back to home" xml:space="preserve">
+    <value>ホームに戻る</value>
+  </data>
+  <data name="Get premium access" xml:space="preserve">
+    <value>プレミアムアクセスを取得</value>
+  </data>
+  <data name="Unlock all downloads" xml:space="preserve">
+    <value>すべてのダウンロードを解放</value>
+  </data>
+  <data name="Load more" xml:space="preserve">
+    <value>もっと見る</value>
+  </data>
+  <data name="Details" xml:space="preserve">
+    <value>詳細</value>
+  </data>
+  <data name="Categories" xml:space="preserve">
+    <value>カテゴリ</value>
+  </data>
+  <data name="Tags" xml:space="preserve">
+    <value>タグ</value>
+  </data>
+  <data name="Date" xml:space="preserve">
+    <value>日付</value>
+  </data>
+  <data name="An error occurred" xml:space="preserve">
+    <value>エラーが発生しました</value>
+  </data>
+  <data name="Request ID" xml:space="preserve">
+    <value>リクエストID</value>
+  </data>
+</root>

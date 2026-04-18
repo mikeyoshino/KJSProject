@@ -46,7 +46,7 @@
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                 </div>
                 <div>
-                    <h3 class="text-2xl font-black text-slate-900 dark:text-white m-0 tracking-tight">Premium Download Ready</h3>
+                    <h3 class="text-2xl font-black text-slate-900 dark:text-white m-0 tracking-tight">@Localizer["Premium"] @Localizer["Download"]</h3>
                     <p class="text-sm font-semibold text-green-500 mt-1 uppercase tracking-wider">Instant • Full Speed • No Ads</p>
                 </div>
             </div>
@@ -68,7 +68,7 @@
     else
     {
         <!-- NON-SUBSCRIBER VIEW: Side by side comparison if free is available -->
-        <h3 class="text-sm font-black text-slate-500 uppercase tracking-widest text-center mb-6">Choose Download Method</h3>
+        <h3 class="text-sm font-black text-slate-500 uppercase tracking-widest text-center mb-6">@Localizer["Download"]</h3>
         
         <div class="grid grid-cols-1 @(hasPublic ? "md:grid-cols-2" : "") gap-6 max-w-5xl mx-auto">
             
@@ -135,7 +135,7 @@
                 </ul>
 
                 <a asp-controller="Subscription" asp-action="Pricing" class="w-full py-4 px-4 bg-orange-accent hover:bg-orange-600 text-white font-black uppercase tracking-widest text-sm rounded-xl transition-colors relative z-10 shadow-lg shadow-orange-accent/20">
-                    Unlock Premium Now
+                    @Localizer["Unlock all downloads"]
                 </a>
             </div>
             
