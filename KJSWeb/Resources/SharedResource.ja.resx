@@ -429,4 +429,13 @@
   <data name="Popular" xml:space="preserve">
     <value>人気</value>
   </data>
+  <data name="Unlock premium downloads with Bitcoin. Direct wallet-to-wallet payments — no middleman, no data shared." xml:space="preserve">
+    <value>Bitcoinでプレミアムダウンロードを解放。ウォレット直接送金、仲介業者なし、個人情報不要。</value>
+  </data>
+  <data name="Need help? View Bitcoin payment guide →" xml:space="preserve">
+    <value>お困りですか？Bitcoinガイドを見る →</value>
+  </data>
+  <data name="Tell us how we can help with your payment." xml:space="preserve">
+    <value>お支払いに関するお問い合わせ内容をお聞かせください。</value>
+  </data>
 </root>

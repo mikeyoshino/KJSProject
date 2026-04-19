@@ -1,2 +1,2 @@
-namespace KJSWeb.Resources;
+namespace KJSWeb;
 public class SharedResource { }
