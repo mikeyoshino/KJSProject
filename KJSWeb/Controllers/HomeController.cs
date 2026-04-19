@@ -102,8 +102,8 @@ public class HomeController : Controller
         ViewBag.PopularPeriod     = period;
         ViewBag.ShowSidebar       = true;
 
-        ViewData["OgTitle"]    = "Buzz69 – Asian Viral Leaked Videos | SCANDAL69";
-        ViewData["Description"] = "Browse the hottest Buzz69 Asian leaked videos and scandal clips on SCANDAL69. Viral content updated daily.";
+        ViewData["OgTitle"]    = "Korean Japan Leak – K-Pop & Japanese Leaked Videos | SCANDAL69";
+        ViewData["Description"] = "Watch and download exclusive Korean and Japanese leaked videos, K-drama scandals, and Japanese idol content on SCANDAL69. Updated daily.";
         ViewData["OgType"]     = "website";
         return View("Listing", posts);
     }
