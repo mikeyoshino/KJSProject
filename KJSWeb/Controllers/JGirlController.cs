@@ -40,8 +40,8 @@ public class JGirlController : Controller
         ViewBag.Sources       = sources;
         ViewBag.ActiveSource  = source;
 
-        ViewData["OgTitle"]    = "JGirl — SCANDAL69";
-        ViewData["Description"] = "Browse the latest JGirl content on SCANDAL69.";
+        ViewData["OgTitle"]    = "JGirl – Japanese Photobooks & Upskirt Clips | SCANDAL69";
+        ViewData["Description"] = "Browse exclusive JGirl Japanese photobooks, upskirt clips, and bathroom videos on SCANDAL69. High-quality content updated regularly.";
         ViewData["OgType"]     = "website";
         return View(posts);
     }

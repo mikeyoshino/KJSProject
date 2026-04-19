@@ -52,8 +52,8 @@ public class AsianScandalController : Controller
         ViewBag.PopularPeriod     = period;
         ViewBag.ShowSidebar       = true;
 
-        ViewData["OgTitle"]    = "Asian Scandal — SCANDAL69";
-        ViewData["Description"] = "Browse the latest Asian Scandal content on SCANDAL69.";
+        ViewData["OgTitle"]    = "Asian Scandal – Exclusive Leaked Videos | SCANDAL69";
+        ViewData["Description"] = "Watch and download exclusive Asian scandal leaked videos on SCANDAL69. Uncensored content from Japan, Korea, and across Asia. Updated daily.";
         ViewData["OgType"]     = "website";
         return View("~/Views/Home/Listing.cshtml", posts);
     }

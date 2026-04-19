@@ -59,8 +59,8 @@ public class HomeController : Controller
         ViewBag.BathroomPosts = bathroomPosts;
         ViewBag.Fc2Posts      = fc2Posts;
 
-        ViewData["OgTitle"]    = "SCANDAL69 — Premium Content";
-        ViewData["Description"] = "Premium content delivery network specializing in high-quality updates and community curation.";
+        ViewData["OgTitle"]    = "SCANDAL69 – Exclusive Asian Leak Content";
+        ViewData["Description"] = "Stream and download exclusive Asian leaked videos, JGirl photobooks, upskirt clips, and uncensored scandal content. New updates added daily. Premium HD quality.";
         ViewData["OgType"]     = "website";
         return View();
     }
@@ -102,8 +102,8 @@ public class HomeController : Controller
         ViewBag.PopularPeriod     = period;
         ViewBag.ShowSidebar       = true;
 
-        ViewData["OgTitle"]    = "Buzz69 — SCANDAL69";
-        ViewData["Description"] = "Browse the latest Buzz69 content on SCANDAL69.";
+        ViewData["OgTitle"]    = "Buzz69 – Asian Viral Leaked Videos | SCANDAL69";
+        ViewData["Description"] = "Browse the hottest Buzz69 Asian leaked videos and scandal clips on SCANDAL69. Viral content updated daily.";
         ViewData["OgType"]     = "website";
         return View("Listing", posts);
     }
@@ -142,8 +142,8 @@ public class HomeController : Controller
         };
         ViewBag.CategoryName = name;
 
-        ViewData["OgTitle"]    = $"{name} — SCANDAL69";
-        ViewData["Description"] = $"Browse {name} posts on SCANDAL69.";
+        ViewData["OgTitle"]    = $"{name} – Leaked Content | SCANDAL69";
+        ViewData["Description"] = $"Browse exclusive {name} leaked videos and content on SCANDAL69. HD quality, updated regularly.";
         ViewData["OgType"]     = "website";
         return View("Listing", posts);
     }
