@@ -12,7 +12,6 @@ builder.Services.AddSingleton<KJSWeb.Services.SupabaseService>();
 builder.Services.AddSingleton<KJSWeb.Services.BlockonomicsService>();
 builder.Services.AddSingleton<KJSWeb.Services.TokenGenService>();
 builder.Services.AddScoped<KJSWeb.Services.AdminService>();
-builder.Services.AddScoped<KJSWeb.Services.ExeIoService>();
 builder.Services.AddScoped<KJSWeb.Filters.AdminAuthFilter>();
 builder.Services.AddSingleton<KJSWeb.Services.EmailService>();
 

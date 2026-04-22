@@ -61,6 +61,28 @@ public class SupabaseService
         return response.IsSuccessStatusCode;
     }
 
+    public async Task<bool> CreateTrialSubscriptionAsync(string userId)
+    {
+        using var http = _httpClientFactory.CreateClient();
+        var payload = JsonSerializer.Serialize(new
+        {
+            user_id = userId,
+            plan = "trial",
+            status = "active",
+            amount_usd = 0m,
+            expires_at = DateTime.UtcNow.AddDays(1).ToString("o")
+        });
+
+        var request = new HttpRequestMessage(HttpMethod.Post, $"{_supabaseUrl}/rest/v1/subscriptions");
+        request.Headers.Add("apikey", _serviceKey);
+        request.Headers.Add("Authorization", $"Bearer {_serviceKey}");
+        request.Headers.Add("Prefer", "return=minimal");
+        request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
+
+        var response = await http.SendAsync(request);
+        return response.IsSuccessStatusCode;
+    }
+
     public async Task<Subscription?> GetSubscriptionByAddressAsync(string btcAddress)
     {
         using var http = _httpClientFactory.CreateClient();

@@ -88,8 +88,7 @@
         {
             DownloadCount = Model.DownloadLinks.Count,
             DownloadUrls = ViewBag.DownloadUrls as List<string> ?? new List<string>(),
-            IsSubscribed = ViewBag.HasActiveSubscription == true,
-            PublicDownloadUrls = ViewBag.PublicDownloadUrls as List<string>
+            IsSubscribed = ViewBag.HasActiveSubscription == true
         })
     }
 

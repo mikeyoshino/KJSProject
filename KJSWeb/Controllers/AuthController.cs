@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
+using KJSWeb.Services;
 
 namespace KJSWeb.Controllers;
 
@@ -11,11 +12,15 @@ public class AuthController : Controller
 {
     private readonly string _supabaseUrl;
     private readonly string _supabaseKey;
+    private readonly SupabaseService _supabase;
+    private readonly ILogger<AuthController> _logger;
 
-    public AuthController(IConfiguration config)
+    public AuthController(IConfiguration config, SupabaseService supabase, ILogger<AuthController> logger)
     {
         _supabaseUrl = config["Supabase:Url"]!;
         _supabaseKey = config["Supabase:Key"]!;
+        _supabase = supabase;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -121,6 +126,16 @@ public class AuthController : Controller
             var userId    = root.GetProperty("user").GetProperty("id").GetString()!;
             var userEmail = root.GetProperty("user").GetProperty("email").GetString()!;
             await SignInUserAsync(userId, userEmail);
+
+            try
+            {
+                await _supabase.CreateTrialSubscriptionAsync(userId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create trial subscription for user {UserId}", userId);
+            }
+
             return RedirectToAction("Index", "Home");
         }
 

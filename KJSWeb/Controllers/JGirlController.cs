@@ -63,15 +63,6 @@ public class JGirlController : Controller
 
         RewritePost(post);
 
-        // Always show free download buttons — exe.io link generated on first click
-        if (originalDownloadLinks.Any())
-        {
-            var siteBase = $"{Request.Scheme}://{Request.Host.Value}";
-            ViewBag.PublicDownloadUrls = originalDownloadLinks
-                .Select((_, i) => $"{siteBase}/download/public?postId={post.Id}&table=jgirl_posts&part={i}")
-                .ToList();
-        }
-
         ViewData["OgTitle"]    = post.Title;
         ViewData["OgImage"]    = !string.IsNullOrEmpty(post.ThumbnailUrl) ? post.ThumbnailUrl : post.Images.FirstOrDefault() ?? "";
         ViewData["Description"] = post.Tags.Any() ? string.Join(", ", post.Tags.Take(10)) : post.Title;
