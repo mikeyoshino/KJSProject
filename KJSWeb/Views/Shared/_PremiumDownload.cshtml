@@ -130,15 +130,31 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 relative z-10 select-none">
-                @for (int i = 0; i < Math.Max(Model.DownloadCount, 1); i++)
-                {
-                    <div class="flex items-center justify-center gap-2 py-4 px-6 bg-white/5 text-gray-500 rounded-xl font-bold uppercase tracking-wider border border-white/5 cursor-not-allowed">
-                        <svg class="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                        @(Model.DownloadCount > 1 ? $"{Localizer["Download File"].Value} Part {i + 1}" : Localizer["Download File"].Value)
-                    </div>
-                }
-            </div>
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 relative z-10 select-none">
+                    @for (int i = 0; i < Math.Max(Model.DownloadCount, 1); i++)
+                    {
+                        <div class="flex items-center justify-center gap-2 py-4 px-6 bg-white/5 text-gray-500 rounded-xl font-bold uppercase tracking-wider border border-white/5 cursor-not-allowed">
+                            <svg class="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                            @(Model.DownloadCount > 1 ? $"{Localizer["Download File"].Value} Part {i + 1}" : Localizer["Download File"].Value)
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 relative z-10">
+                    @for (int i = 0; i < Math.Max(Model.DownloadCount, 1); i++)
+                    {
+                        <a href="/auth/signup" class="premium-glow flex items-center justify-center gap-2 py-4 px-6 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold uppercase tracking-wider border border-orange-400/30 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                            @(Model.DownloadCount > 1 ? $"Sign Up Free — Part {i + 1}" : "Sign Up — 1 Day Free")
+                        </a>
+                    }
+                </div>
+                <p class="text-center text-gray-500 text-xs mt-4 relative z-10">No credit card needed &middot; Instant access for 24 hours</p>
+            }
         </div>
     }
 </div>
