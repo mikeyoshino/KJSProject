@@ -70,7 +70,7 @@ public class AbyssOrchestrator
                 foreach (var zipUrl in post.OurDownloadLink)
                 {
                     ct.ThrowIfCancellationRequested();
-                    var zipFilename = Path.GetFileName(new Uri(zipUrl).LocalPath);
+                    var zipFilename = Path.GetFileName(zipUrl.Replace('\\', '/'));
                     var zipPath = Path.Combine(postTempDir, zipFilename);
                     await _b2.DownloadAsync(zipUrl, zipPath, ct);
                     ExtractArchive(zipPath, extractDir);

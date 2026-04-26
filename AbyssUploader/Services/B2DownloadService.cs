@@ -53,6 +53,11 @@ public class B2DownloadService
 
     private string ExtractObjectKey(string b2Url)
     {
+        // Plain path stored in DB (no scheme) — use as-is
+        if (!b2Url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+            !b2Url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            return b2Url.TrimStart('/');
+
         var prefix = _b2.PublicBaseUrl.TrimEnd('/') + "/";
         if (b2Url.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
             return b2Url[prefix.Length..];
