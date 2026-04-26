@@ -81,7 +81,7 @@ public class AbyssUploadService
 
         try
         {
-            using var http = _httpClientFactory.CreateClient("Abyss");
+            var http = _httpClientFactory.CreateClient("Abyss");
 
             await using var stream = File.OpenRead(filePath);
             using var content = new MultipartFormDataContent();
@@ -108,6 +108,10 @@ public class AbyssUploadService
 
             _logger.LogInformation("Uploaded {File} → slug: {Slug}", filename, slug);
             return slug;
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
