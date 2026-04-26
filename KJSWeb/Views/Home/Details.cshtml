@@ -53,6 +53,69 @@
                 @Html.Raw(content)
             </div>
 
+            @* ── Video Carousel ───────────────────────────────────────────── *@
+            @if (Model.IsStreaming && Model.AbyssVideos.Any())
+            {
+                var videos = Model.AbyssVideos;
+                var single = videos.Count == 1;
+                <div class="mb-10">
+                    <h2 class="text-sm font-black text-slate-500 uppercase tracking-widest mb-4">@Localizer["Watch Online"]</h2>
+
+                    <div class="relative">
+                        @if (!single)
+                        {
+                            <button onclick="carousel.prev()" class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-9 h-9 flex items-center justify-center bg-black/70 hover:bg-orange-accent text-white rounded-full transition-colors" aria-label="Previous">&#8592;</button>
+                            <button onclick="carousel.next()" class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-9 h-9 flex items-center justify-center bg-black/70 hover:bg-orange-accent text-white rounded-full transition-colors" aria-label="Next">&#8594;</button>
+                        }
+
+                        <div class="relative w-full" style="padding-bottom:56.25%;">
+                            <iframe id="abyss-player"
+                                    src="https://abysscdn.com/?v=@videos[0].Slug"
+                                    allowfullscreen
+                                    class="absolute inset-0 w-full h-full rounded-sm border border-white/10"
+                                    frameborder="0">
+                            </iframe>
+                        </div>
+                    </div>
+
+                    @if (!single)
+                    {
+                        <div class="flex gap-2 mt-3 overflow-x-auto pb-1">
+                            @for (int i = 0; i < videos.Count; i++)
+                            {
+                                <button onclick="carousel.go(@i)"
+                                        id="abyss-thumb-@i"
+                                        class="flex-shrink-0 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-sm border transition-colors @(i == 0 ? "border-orange-accent text-orange-accent bg-orange-accent/10" : "border-white/10 text-slate-400 hover:border-white/30")">
+                                    Video @(i + 1)
+                                </button>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <script>
+                    (function () {
+                        var slugs = [@Html.Raw(string.Join(", ", videos.Select(v => $"'{v.Slug}'")))];
+                        var current = 0;
+                        window.carousel = {
+                            go: function (index) {
+                                current = index;
+                                document.getElementById('abyss-player').src = 'https://abysscdn.com/?v=' + slugs[index];
+                                document.querySelectorAll('[id^="abyss-thumb-"]').forEach(function (btn, i) {
+                                    btn.classList.toggle('border-orange-accent', i === index);
+                                    btn.classList.toggle('text-orange-accent', i === index);
+                                    btn.classList.toggle('bg-orange-accent/10', i === index);
+                                    btn.classList.toggle('border-white/10', i !== index);
+                                    btn.classList.toggle('text-slate-400', i !== index);
+                                });
+                            },
+                            prev: function () { this.go((current - 1 + slugs.length) % slugs.length); },
+                            next: function () { this.go((current + 1) % slugs.length); }
+                        };
+                    })();
+                </script>
+            }
+
             @if (Model.OurDownloadLink != null && Model.OurDownloadLink.Any())
             {
                 @await Html.PartialAsync("_PremiumDownload", new KJSWeb.Models.DownloadComponentModel

@@ -56,4 +56,10 @@ public class Post : BaseModel
     [System.Text.Json.Serialization.JsonIgnore]
     public PostStatus Status =>
         Enum.TryParse<PostStatus>(StatusRaw, ignoreCase: true, out var v) ? v : PostStatus.Published;
+
+    [Column("is_streaming")]
+    public bool IsStreaming { get; set; }
+
+    [Column("abyss_videos")]
+    public List<AbyssVideo> AbyssVideos { get; set; } = new();
 }
