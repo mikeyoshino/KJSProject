@@ -1,12 +1,12 @@
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace KJSWeb.Models;
 
 public class StreamVideo
 {
-    [JsonPropertyName("video_id")]
+    [JsonProperty("video_id")]
     public string VideoId { get; set; } = "";
 
-    [JsonPropertyName("filename")]
+    [JsonProperty("filename")]
     public string Filename { get; set; } = "";
 }
