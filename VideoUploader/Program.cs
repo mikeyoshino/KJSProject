@@ -1,10 +1,11 @@
-using AbyssUploader;
-using AbyssUploader.Configuration;
-using AbyssUploader.Services;
+using VideoUploader;
+using VideoUploader.Configuration;
+using VideoUploader.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 var builder = Host.CreateDefaultBuilder(args);
 
@@ -21,14 +22,20 @@ builder.ConfigureServices((context, services) =>
 {
     services.Configure<SupabaseSettings>(context.Configuration.GetSection("Supabase"));
     services.Configure<B2Settings>(context.Configuration.GetSection("B2"));
-    services.Configure<AbyssSettings>(context.Configuration.GetSection("AbyssUploader"));
-
-    services.AddHttpClient("Abyss", client => client.Timeout = Timeout.InfiniteTimeSpan);
+    services.Configure<BunnySettings>(context.Configuration.GetSection("Bunny"));
 
     services.AddSingleton<SupabaseMigrationService>();
     services.AddSingleton<B2DownloadService>();
-    services.AddSingleton<AbyssUploadService>();
-    services.AddSingleton<AbyssOrchestrator>();
+
+    services.AddHttpClient("Bunny", (sp, client) =>
+    {
+        var settings = sp.GetRequiredService<IOptions<BunnySettings>>().Value;
+        client.DefaultRequestHeaders.Add("AccessKey", settings.ApiKey);
+        client.Timeout = Timeout.InfiniteTimeSpan;
+    });
+
+    services.AddSingleton<BunnyUploadService>();
+    services.AddSingleton<VideoOrchestrator>();
 });
 
 builder.ConfigureLogging((_, logging) =>
@@ -40,7 +47,7 @@ builder.ConfigureLogging((_, logging) =>
 var host = builder.Build();
 
 var logger = host.Services.GetRequiredService<ILogger<Program>>();
-var orchestrator = host.Services.GetRequiredService<AbyssOrchestrator>();
+var orchestrator = host.Services.GetRequiredService<VideoOrchestrator>();
 
 var cts = new CancellationTokenSource();
 Console.CancelKeyPress += (_, e) =>
@@ -53,14 +60,14 @@ Console.CancelKeyPress += (_, e) =>
 try
 {
     await orchestrator.RunAsync(cts.Token);
-    logger.LogInformation("AbyssUploader completed successfully");
+    logger.LogInformation("VideoUploader completed successfully");
 }
 catch (OperationCanceledException)
 {
-    logger.LogInformation("AbyssUploader cancelled");
+    logger.LogInformation("VideoUploader cancelled");
 }
 catch (Exception ex)
 {
-    logger.LogError(ex, "AbyssUploader failed");
+    logger.LogError(ex, "VideoUploader failed");
     Environment.Exit(1);
 }

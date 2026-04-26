@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KJSWeb", "KJSWeb\KJSWeb.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RgToB2Migrator", "RgToB2Migrator\RgToB2Migrator.csproj", "{4DCD2E6D-4C65-40AB-9DD4-A371A459A8F5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AbyssUploader", "AbyssUploader\AbyssUploader.csproj", "{B8F6008D-1F42-4811-B8CB-C3B672965F49}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VideoUploader", "VideoUploader\VideoUploader.csproj", "{B8F6008D-1F42-4811-B8CB-C3B672965F49}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

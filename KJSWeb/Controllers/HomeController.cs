@@ -172,6 +172,8 @@ public class HomeController : Controller
                 .ToList();
         }
 
+        ViewBag.BunnyLibraryId = _config["Bunny:LibraryId"] ?? "";
+
         ViewData["OgTitle"]    = post.Title;
         ViewData["Description"] = StripHtml(post.ContentHtml);
         ViewData["OgImage"]    = post.ThumbnailUrl;

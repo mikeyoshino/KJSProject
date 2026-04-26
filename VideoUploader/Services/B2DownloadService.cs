@@ -1,10 +1,10 @@
-using AbyssUploader.Configuration;
+using VideoUploader.Configuration;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace AbyssUploader.Services;
+namespace VideoUploader.Services;
 
 public class B2DownloadService
 {

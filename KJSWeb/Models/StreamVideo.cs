@@ -2,10 +2,10 @@ using System.Text.Json.Serialization;
 
 namespace KJSWeb.Models;
 
-public class AbyssVideo
+public class StreamVideo
 {
-    [JsonPropertyName("slug")]
-    public string Slug { get; set; } = "";
+    [JsonPropertyName("video_id")]
+    public string VideoId { get; set; } = "";
 
     [JsonPropertyName("filename")]
     public string Filename { get; set; } = "";

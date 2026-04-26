@@ -1,32 +1,32 @@
-using AbyssUploader.Configuration;
-using AbyssUploader.Services;
+using VideoUploader.Configuration;
+using VideoUploader.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SharpCompress.Archives;
 using SharpCompress.Common;
 
-namespace AbyssUploader;
+namespace VideoUploader;
 
-public class AbyssOrchestrator
+public class VideoOrchestrator
 {
     private readonly SupabaseMigrationService _supabase;
     private readonly B2DownloadService _b2;
-    private readonly AbyssUploadService _abyss;
-    private readonly AbyssSettings _settings;
-    private readonly ILogger<AbyssOrchestrator> _logger;
+    private readonly BunnyUploadService _bunny;
+    private readonly BunnySettings _settings;
+    private readonly ILogger<VideoOrchestrator> _logger;
 
     private const long BytesPerGb = 1024L * 1024 * 1024;
 
-    public AbyssOrchestrator(
+    public VideoOrchestrator(
         SupabaseMigrationService supabase,
         B2DownloadService b2,
-        AbyssUploadService abyss,
-        IOptions<AbyssSettings> settings,
-        ILogger<AbyssOrchestrator> logger)
+        BunnyUploadService bunny,
+        IOptions<BunnySettings> settings,
+        ILogger<VideoOrchestrator> logger)
     {
         _supabase = supabase;
         _b2 = b2;
-        _abyss = abyss;
+        _bunny = bunny;
         _settings = settings.Value;
         _logger = logger;
     }
@@ -36,7 +36,7 @@ public class AbyssOrchestrator
         var dailyLimitBytes = (long)(_settings.DailyLimitGb * BytesPerGb);
         long bytesUploadedThisRun = 0;
 
-        _logger.LogInformation("AbyssUploader starting. Daily limit: {LimitGb} GB", _settings.DailyLimitGb);
+        _logger.LogInformation("VideoUploader starting. Daily limit: {LimitGb} GB", _settings.DailyLimitGb);
 
         var posts = await _supabase.FetchUnprocessedPostsAsync(_settings.BatchSize, ct);
 
@@ -66,7 +66,6 @@ public class AbyssOrchestrator
                 var extractDir = Path.Combine(postTempDir, "extracted");
                 Directory.CreateDirectory(extractDir);
 
-                // Download and extract each zip
                 foreach (var zipUrl in post.OurDownloadLink)
                 {
                     ct.ThrowIfCancellationRequested();
@@ -77,18 +76,15 @@ public class AbyssOrchestrator
                     File.Delete(zipPath);
                 }
 
-                // Check daily limit before uploading
-                var videoSize = AbyssUploadService.GetVideoFilesSize(extractDir);
+                var videoSize = BunnyUploadService.GetVideoFilesSize(extractDir);
                 if (bytesUploadedThisRun + videoSize > dailyLimitBytes)
                 {
                     _logger.LogWarning("Post {Id} would exceed daily limit, stopping", post.Id);
                     break;
                 }
 
-                // Upload videos to Abyss.to
-                var videos = await _abyss.UploadVideosAsync(extractDir, ct);
+                var videos = await _bunny.UploadVideosAsync(extractDir, ct);
 
-                // Mark done (even if no videos — avoids infinite retry on image-only posts)
                 await _supabase.MarkStreamingDoneAsync(post.Id, videos, ct);
 
                 bytesUploadedThisRun += videoSize;

@@ -1,4 +1,4 @@
-namespace AbyssUploader.Configuration;
+namespace VideoUploader.Configuration;
 
 public class SupabaseSettings
 {
@@ -16,11 +16,11 @@ public class B2Settings
     public string PublicBaseUrl { get; set; } = "";
 }
 
-public class AbyssSettings
+public class BunnySettings
 {
     public string ApiKey { get; set; } = "";
-    public string ApiBaseUrl { get; set; } = "http://up.abyss.to";
+    public string LibraryId { get; set; } = "";
     public double DailyLimitGb { get; set; } = 95;
-    public int BatchSize { get; set; } = 50;
-    public string TempFolder { get; set; } = "/tmp/abyss-uploader";
+    public int BatchSize { get; set; } = 5;
+    public string TempFolder { get; set; } = "/tmp/video-uploader";
 }

@@ -54,10 +54,11 @@
             </div>
 
             @* ── Video Carousel ───────────────────────────────────────────── *@
-            @if (Model.IsStreaming && Model.AbyssVideos.Any())
+            @if (Model.IsStreaming && Model.StreamVideos.Any())
             {
-                var videos = Model.AbyssVideos;
+                var videos = Model.StreamVideos;
                 var single = videos.Count == 1;
+                var libraryId = (string)(ViewBag.BunnyLibraryId ?? "");
                 <div class="mb-10">
                     <h2 class="text-sm font-black text-slate-500 uppercase tracking-widest mb-4">@Localizer["Watch Online"]</h2>
 
@@ -69,8 +70,8 @@
                         }
 
                         <div class="relative w-full" style="padding-bottom:56.25%;">
-                            <iframe id="abyss-player"
-                                    src="https://abysscdn.com/?v=@videos[0].Slug"
+                            <iframe id="stream-player"
+                                    src="https://iframe.mediadelivery.net/embed/@libraryId/@videos[0].VideoId"
                                     allowfullscreen
                                     class="absolute inset-0 w-full h-full rounded-sm border border-white/10"
                                     frameborder="0">
@@ -84,7 +85,7 @@
                             @for (int i = 0; i < videos.Count; i++)
                             {
                                 <button onclick="carousel.go(@i)"
-                                        id="abyss-thumb-@i"
+                                        id="stream-thumb-@i"
                                         class="flex-shrink-0 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-sm border transition-colors @(i == 0 ? "border-orange-accent text-orange-accent bg-orange-accent/10" : "border-white/10 text-slate-400 hover:border-white/30")">
                                     Video @(i + 1)
                                 </button>
@@ -95,13 +96,14 @@
 
                 <script>
                     (function () {
-                        var slugs = [@Html.Raw(string.Join(", ", videos.Select(v => $"'{v.Slug}'")))];
+                        var ids = [@Html.Raw(string.Join(", ", videos.Select(v => $"'{v.VideoId}'")))];
+                        var libraryId = '@libraryId';
                         var current = 0;
                         window.carousel = {
                             go: function (index) {
                                 current = index;
-                                document.getElementById('abyss-player').src = 'https://abysscdn.com/?v=' + slugs[index];
-                                document.querySelectorAll('[id^="abyss-thumb-"]').forEach(function (btn, i) {
+                                document.getElementById('stream-player').src = 'https://iframe.mediadelivery.net/embed/' + libraryId + '/' + ids[index];
+                                document.querySelectorAll('[id^="stream-thumb-"]').forEach(function (btn, i) {
                                     btn.classList.toggle('border-orange-accent', i === index);
                                     btn.classList.toggle('text-orange-accent', i === index);
                                     btn.classList.toggle('bg-orange-accent/10', i === index);
@@ -109,8 +111,8 @@
                                     btn.classList.toggle('text-slate-400', i !== index);
                                 });
                             },
-                            prev: function () { this.go((current - 1 + slugs.length) % slugs.length); },
-                            next: function () { this.go((current + 1) % slugs.length); }
+                            prev: function () { this.go((current - 1 + ids.length) % ids.length); },
+                            next: function () { this.go((current + 1) % ids.length); }
                         };
                     })();
                 </script>

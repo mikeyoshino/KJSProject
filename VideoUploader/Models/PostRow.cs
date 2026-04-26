@@ -1,4 +1,4 @@
-namespace AbyssUploader.Models;
+namespace VideoUploader.Models;
 
 public class PostRow
 {

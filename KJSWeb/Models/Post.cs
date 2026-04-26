@@ -60,6 +60,6 @@ public class Post : BaseModel
     [Column("is_streaming")]
     public bool IsStreaming { get; set; }
 
-    [Column("abyss_videos")]
-    public List<AbyssVideo> AbyssVideos { get; set; } = new();
+    [Column("stream_videos")]
+    public List<StreamVideo> StreamVideos { get; set; } = new();
 }

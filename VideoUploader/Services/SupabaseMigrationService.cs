@@ -1,12 +1,12 @@
-using AbyssUploader.Configuration;
-using AbyssUploader.Models;
+using VideoUploader.Configuration;
+using VideoUploader.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Text;
 
-namespace AbyssUploader.Services;
+namespace VideoUploader.Services;
 
 public class SupabaseMigrationService
 {
@@ -57,7 +57,7 @@ public class SupabaseMigrationService
         return result;
     }
 
-    public async Task MarkStreamingDoneAsync(Guid postId, List<AbyssVideo> videos, CancellationToken ct = default)
+    public async Task MarkStreamingDoneAsync(Guid postId, List<StreamVideo> videos, CancellationToken ct = default)
     {
         using var http = CreateClient();
         var url = $"{_url}/rest/v1/posts?id=eq.{postId}";
@@ -65,7 +65,7 @@ public class SupabaseMigrationService
         var payload = new
         {
             is_streaming = true,
-            abyss_videos = videos
+            stream_videos = videos
         };
 
         var json = JsonConvert.SerializeObject(payload);
