@@ -1,0 +1,56 @@
+@{
+    var filename = ViewData["Filename"] as string ?? "your file";
+    var workerUrl = ViewData["WorkerUrl"] as string;
+}
+
+<div class="max-w-xl mx-auto text-center py-20">
+    <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl border border-gray-100 dark:border-gray-700">
+        <div class="mb-6 inline-flex p-4 rounded-full bg-orange-accent/10">
+            <svg class="w-12 h-12 text-orange-accent animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+        </div>
+
+        <h1 class="text-3xl font-black mb-4 text-slate-900 dark:text-white">@Localizer["Starting download"]...</h1>
+        <p class="text-slate-500 dark:text-slate-400 mb-8">
+            <strong class="text-slate-700 dark:text-slate-200">@filename</strong>
+            <br />@Localizer["Loading…"]
+        </p>
+
+        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-8 overflow-hidden">
+            <div class="bg-orange-accent h-2.5 rounded-full w-0 transition-all duration-1000 ease-out" id="progressBar"></div>
+        </div>
+
+        <p class="text-sm text-slate-400 dark:text-slate-500">
+            If your download doesn't start automatically,
+            <a href="@workerUrl" class="text-orange-accent font-bold hover:underline" id="manualDownload">click here</a>.
+        </p>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate progress bar
+            const bar = document.getElementById('progressBar');
+            setTimeout(() => {
+                bar.style.width = '100%';
+            }, 100);
+
+            // Auto-trigger download after a brief delay
+            setTimeout(() => {
+                const downloadUrl = document.getElementById('manualDownload').href;
+
+                // Method 1: Create an invisible iframe (often works well for keeping people on the page)
+                var iframe = document.createElement("iframe");
+                iframe.style.display = "none";
+                iframe.src = downloadUrl;
+                document.body.appendChild(iframe);
+
+                // Method 2 fallback: standard window.location (if needed)
+                // window.location.href = downloadUrl;
+
+            }, 1500); // Wait 1.5 seconds so they see the page
+        });
+    </script>
+}

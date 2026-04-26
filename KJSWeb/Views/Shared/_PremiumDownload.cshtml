@@ -3,6 +3,8 @@
     var downloadUrls = Model.DownloadUrls ?? new List<string>();
     var dlCount = downloadUrls.Count;
     var isSubscribed = Model.IsSubscribed;
+    var publicUrls = Model.PublicDownloadUrls;
+    var hasPublic = publicUrls != null && publicUrls.Any();
 }
 
 <style>
@@ -34,8 +36,9 @@
 <div class="mt-12 mb-8">
     @if (isSubscribed)
     {
-        <!-- SUBSCRIBER VIEW -->
+        <!-- SUBSCRIBER VIEW: Only show the Direct Premium Download -->
         <div class="glass-card rounded-2xl p-8 border-l-4 border-l-orange-accent shadow-2xl relative overflow-hidden">
+            <!-- Decorative gradient -->
             <div class="absolute -top-24 -right-24 w-48 h-48 bg-orange-accent/20 rounded-full blur-3xl pointer-events-none"></div>
 
             <div class="flex items-center gap-4 mb-6 relative z-10">
@@ -64,97 +67,78 @@
     }
     else
     {
-        <!-- LOCKED VIEW -->
+        <!-- NON-SUBSCRIBER VIEW: Side by side comparison if free is available -->
+        <h3 class="text-sm font-black text-slate-500 uppercase tracking-widest text-center mb-6">@Localizer["Download"]</h3>
 
-        <!-- Overlay -->
-        <div id="subscribe-modal-overlay"
-             class="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm"
-             style="display:none !important"></div>
+        <div class="grid grid-cols-1 @(hasPublic ? "md:grid-cols-2" : "") gap-6 max-w-5xl mx-auto">
 
-        <!-- Modal -->
-        <div id="subscribe-modal"
-             class="fixed inset-0 z-50 flex items-center justify-center p-4"
-             style="display:none !important">
-            <div class="relative bg-gray-900 border border-white/10 rounded-2xl shadow-2xl max-w-sm w-full p-8 text-center">
-                <button onclick="document.getElementById('subscribe-modal').style.cssText='display:none !important'; document.getElementById('subscribe-modal-overlay').style.cssText='display:none !important';"
-                        class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors text-xl leading-none"
-                        aria-label="Dismiss">&#x2715;</button>
+            @if (hasPublic)
+            {
+                <!-- FREE DOWNLOAD CARD -->
+                <div class="bg-white dark:bg-gray-800/80 rounded-2xl p-6 md:p-8 border border-gray-200 dark:border-gray-700 shadow-lg flex flex-col items-center text-center transition-transform hover:-translate-y-1 duration-300">
+                    <div class="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-gray-700/50 flex items-center justify-center text-gray-500 mb-6">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
 
-                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white mx-auto mb-6 shadow-lg shadow-orange-500/30">
+                    <h4 class="text-xl font-black text-slate-800 dark:text-gray-200 mb-2">@Localizer["Free Download"]</h4>
+                    <p class="text-sm text-slate-500 dark:text-gray-400 mb-6 flex-grow">
+                        @Localizer["Basic file access supported by our advertising partners."]
+                    </p>
+
+                    <ul class="w-full text-left space-y-3 mb-8">
+                        <li class="flex items-center gap-3 text-sm font-medium text-slate-600 dark:text-gray-300">
+                            <span class="text-red-500">⚠</span> @Localizer["Wait time required"]
+                        </li>
+                        <li class="flex items-center gap-3 text-sm font-medium text-slate-600 dark:text-gray-300">
+                            <span class="text-red-500">⚠</span> @Localizer["Third-party advertisements"]
+                        </li>
+                        <li class="flex items-center gap-3 text-sm font-medium text-slate-600 dark:text-gray-300">
+                            <span class="text-orange-400">⚡</span> @Localizer["Speed capped at 5 MB/s"]
+                        </li>
+                    </ul>
+
+                    <div class="w-full space-y-3">
+                        @for (int i = 0; i < publicUrls!.Count; i++)
+                        {
+                            <a href="@publicUrls[i]" target="_blank" rel="noopener" class="block w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-slate-700 dark:text-gray-200 font-bold uppercase tracking-wider text-sm rounded-xl transition-colors">
+                                @(publicUrls.Count > 1 ? $"{Localizer["Free Download"].Value} — Part {i + 1}" : Localizer["Free Download"].Value)
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- PREMIUM UPGRADE CARD -->
+            <div class="premium-glow relative bg-gradient-to-br from-slate-900 to-black rounded-2xl p-6 md:p-8 border border-white/10 shadow-2xl flex flex-col items-center text-center overflow-hidden transition-transform hover:-translate-y-1 duration-300">
+                <!-- Decorative gradient inside -->
+                <div class="absolute inset-0 bg-gradient-to-t from-orange-accent/10 to-transparent pointer-events-none"></div>
+
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-accent flex items-center justify-center text-white mb-6 relative z-10 shadow-lg shadow-orange-accent/30">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                 </div>
 
-                @if (User.Identity?.IsAuthenticated == true)
-                {
-                    <h2 class="text-xl font-black text-white mb-2">Your access has expired</h2>
-                    <p class="text-gray-400 text-sm mb-6">Subscribe to restore instant, unlimited downloads.</p>
-                    <a href="/subscription/pricing"
-                       class="block w-full py-3 px-6 bg-orange-500 hover:bg-orange-600 text-white font-black uppercase tracking-wider rounded-xl transition-colors shadow-lg shadow-orange-500/20">
-                        Subscribe from $5/month
-                    </a>
-                }
-                else
-                {
-                    <h2 class="text-xl font-black text-white mb-2">Get 1 free day</h2>
-                    <p class="text-gray-400 text-sm mb-6">Create a free account and get instant access for 24 hours — no credit card needed.</p>
-                    <a href="/auth/signup"
-                       class="block w-full py-3 px-6 bg-orange-500 hover:bg-orange-600 text-white font-black uppercase tracking-wider rounded-xl transition-colors shadow-lg shadow-orange-500/20 mb-3">
-                        Create Free Account
-                    </a>
-                    <a href="/auth/login"
-                       class="block w-full py-3 px-6 bg-white/5 hover:bg-white/10 text-gray-300 font-bold uppercase tracking-wider rounded-xl transition-colors text-sm">
-                        Already have an account? Log in
-                    </a>
-                }
-            </div>
-        </div>
+                <h4 class="text-xl font-black text-white mb-2 relative z-10">@Localizer["Premium Download"]</h4>
+                <p class="text-sm text-gray-400 mb-6 flex-grow relative z-10">
+                    @Localizer["Skip the ads and wait times. Instant access for subscribers."]
+                </p>
 
-        <script>
-            (function () {
-                document.getElementById('subscribe-modal-overlay').style.cssText = '';
-                document.getElementById('subscribe-modal').style.cssText = '';
-            })();
-        </script>
+                <ul class="w-full text-left space-y-3 mb-8 relative z-10">
+                    <li class="flex items-center gap-3 text-sm font-bold text-white">
+                        <span class="text-green-400">✓</span> @Localizer["Instant, 0 sec wait time"]
+                    </li>
+                    <li class="flex items-center gap-3 text-sm font-bold text-white">
+                        <span class="text-green-400">✓</span> @Localizer["Completely Ad-Free"]
+                    </li>
+                    <li class="flex items-center gap-3 text-sm font-bold text-white">
+                        <span class="text-green-400">✓</span> @Localizer["Unlimited max speed"]
+                    </li>
+                </ul>
 
-        <!-- Locked premium box -->
-        <div class="premium-glow relative bg-gradient-to-br from-slate-900 to-black rounded-2xl p-8 border border-white/10 shadow-2xl overflow-hidden max-w-lg mx-auto">
-            <div class="absolute inset-0 bg-gradient-to-t from-orange-accent/10 to-transparent pointer-events-none"></div>
-
-            <div class="flex items-center gap-4 mb-6 relative z-10">
-                <div class="w-12 h-12 rounded-full bg-orange-accent/10 flex items-center justify-center text-orange-accent">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                </div>
-                <div>
-                    <h3 class="text-2xl font-black text-white m-0 tracking-tight">@Localizer["Premium"] @Localizer["Download"]</h3>
-                    <p class="text-sm font-semibold text-orange-400 mt-1 uppercase tracking-wider">@Localizer["Subscription Required"]</p>
-                </div>
+                <a asp-controller="Subscription" asp-action="Pricing" class="w-full py-4 px-4 bg-orange-accent hover:bg-orange-600 text-white font-black uppercase tracking-widest text-sm rounded-xl transition-colors relative z-10 shadow-lg shadow-orange-accent/20">
+                    @Localizer["Unlock all downloads"]
+                </a>
             </div>
 
-            @if (User.Identity?.IsAuthenticated == true)
-            {
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 relative z-10 select-none">
-                    @for (int i = 0; i < Math.Max(Model.DownloadCount, 1); i++)
-                    {
-                        <div class="flex items-center justify-center gap-2 py-4 px-6 bg-white/5 text-gray-500 rounded-xl font-bold uppercase tracking-wider border border-white/5 cursor-not-allowed">
-                            <svg class="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                            @(Model.DownloadCount > 1 ? $"{Localizer["Download File"].Value} Part {i + 1}" : Localizer["Download File"].Value)
-                        </div>
-                    }
-                </div>
-            }
-            else
-            {
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 relative z-10">
-                    @for (int i = 0; i < Math.Max(Model.DownloadCount, 1); i++)
-                    {
-                        <a href="/auth/signup" class="flex items-center justify-center gap-2 py-4 px-6 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold transition-colors whitespace-nowrap">
-                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                            @(Model.DownloadCount > 1 ? $"Get 1 Day Free — Part {i + 1}" : "Get 1 Day Free Trial")
-                        </a>
-                    }
-                </div>
-                <p class="text-center text-gray-500 text-xs mt-4 relative z-10">No credit card needed &middot; Instant access for 24 hours</p>
-            }
         </div>
     }
 </div>

@@ -31,36 +31,15 @@ public class HomeController : Controller
 
         var (buzz69Posts, _)   = await _supabase.GetLatestPostsAsync(1, 8, PostSource.Buzz69);
         var (asianPosts, _)    = await _supabase.GetLatestPostsAsync(1, 8, PostSource.AsianScandal);
-        var (upskirtPosts, _)  = await _supabase.GetJGirlPostsAsync(1, 8, "upskirt");
-        var (bathroomPosts, _) = await _supabase.GetJGirlPostsAsync(1, 8, "bathroom");
-        var (fc2Posts, _)      = await _supabase.GetJGirlPostsAsync(1, 8, "fc2");
 
         foreach (var p in buzz69Posts) p.ThumbnailUrl = ResolveImageUrl(p.ThumbnailUrl, workerBase);
         foreach (var p in asianPosts)  p.ThumbnailUrl = ResolveImageUrl(p.ThumbnailUrl, workerBase);
-        foreach (var p in upskirtPosts)
-        {
-            p.ThumbnailUrl = RewriteB2(p.ThumbnailUrl, workerBase, b2Base);
-            p.Images       = p.Images.Select(u => RewriteB2(u, workerBase, b2Base)).ToList();
-        }
-        foreach (var p in bathroomPosts)
-        {
-            p.ThumbnailUrl = RewriteB2(p.ThumbnailUrl, workerBase, b2Base);
-            p.Images       = p.Images.Select(u => RewriteB2(u, workerBase, b2Base)).ToList();
-        }
-        foreach (var p in fc2Posts)
-        {
-            p.ThumbnailUrl = RewriteB2(p.ThumbnailUrl, workerBase, b2Base);
-            p.Images       = p.Images.Select(u => RewriteB2(u, workerBase, b2Base)).ToList();
-        }
 
         ViewBag.Buzz69Posts   = buzz69Posts;
         ViewBag.AsianPosts    = asianPosts;
-        ViewBag.UpskirtPosts  = upskirtPosts;
-        ViewBag.BathroomPosts = bathroomPosts;
-        ViewBag.Fc2Posts      = fc2Posts;
 
         ViewData["OgTitle"]    = "SCANDAL69 – Exclusive Asian Leak Content";
-        ViewData["Description"] = "Stream and download exclusive Asian leaked videos, JGirl photobooks, upskirt clips, and uncensored scandal content. New updates added daily. Premium HD quality.";
+        ViewData["Description"] = "Stream and download exclusive Asian leaked videos and uncensored scandal content. New updates added daily. Premium HD quality.";
         ViewData["OgType"]     = "website";
         return View();
     }
@@ -182,6 +161,15 @@ public class HomeController : Controller
         else
         {
             ViewBag.HasActiveSubscription = false;
+        }
+
+        // Always show free download buttons — exe.io link generated on first click
+        if (post.OurDownloadLink != null && post.OurDownloadLink.Any())
+        {
+            var siteBase = $"{Request.Scheme}://{Request.Host.Value}";
+            ViewBag.PublicDownloadUrls = post.OurDownloadLink
+                .Select((_, i) => $"{siteBase}/download/public?postId={post.Id}&table=posts&part={i}")
+                .ToList();
         }
 
         ViewData["OgTitle"]    = post.Title;

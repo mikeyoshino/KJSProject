@@ -91,6 +91,15 @@ public class JGirlController : Controller
             ViewBag.HasActiveSubscription = false;
         }
 
+        // Always show free download buttons — exe.io link generated on first click
+        if (originalDownloadLinks.Any())
+        {
+            var siteBase = $"{Request.Scheme}://{Request.Host.Value}";
+            ViewBag.PublicDownloadUrls = originalDownloadLinks
+                .Select((_, i) => $"{siteBase}/download/public?postId={post.Id}&table=jgirl_posts&part={i}")
+                .ToList();
+        }
+
         // Rewrite thumbnails for related posts
         var related = await relatedTask;
         foreach (var rp in related)

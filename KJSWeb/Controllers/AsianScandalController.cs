@@ -108,6 +108,15 @@ public class AsianScandalController : Controller
             ViewBag.HasActiveSubscription = false;
         }
 
+        // Always show free download buttons — exe.io link generated on first click
+        if (post.OurDownloadLink != null && post.OurDownloadLink.Any())
+        {
+            var siteBase = $"{Request.Scheme}://{Request.Host.Value}";
+            ViewBag.PublicDownloadUrls = post.OurDownloadLink
+                .Select((_, i) => $"{siteBase}/download/public?postId={post.Id}&table=posts&part={i}")
+                .ToList();
+        }
+
         ViewData["OgTitle"]    = post.Title;
         ViewData["Description"] = StripHtml(post.ContentHtml);
         ViewData["OgImage"]    = post.ThumbnailUrl;
